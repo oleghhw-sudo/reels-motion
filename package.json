@@ -1,0 +1,33 @@
+{
+  "name": "reels-motion",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Личная система моушн-дизайна для Reels на Remotion",
+  "scripts": {
+    "check": "node scripts/check-env.mjs",
+    "check:self-test": "node scripts/check-env.mjs --self-test",
+    "test:contrast": "node --experimental-strip-types src/theme/contrast.test.ts",
+    "studio": "remotion studio src/index.ts",
+    "still": "node scripts/still.mjs",
+    "sfx:collect": "node sfx/collect.mjs",
+    "sfx:lab": "node sfx/lab/serve.mjs"
+  },
+  "dependencies": {
+    "@paper-design/shaders": "0.0.81",
+    "@paper-design/shaders-react": "0.0.81",
+    "@remotion/cli": "4.0.534",
+    "@remotion/fonts": "4.0.534",
+    "@remotion/noise": "4.0.534",
+    "@types/node": "22.18.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "remotion": "4.0.534",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "fontkit": "2.0.4",
+    "typescript": "5.9.3"
+  }
+}

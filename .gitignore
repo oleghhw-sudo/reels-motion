@@ -1,0 +1,9 @@
+node_modules
+out
+sfx/raw
+sfx/library
+.env
+sfx/raw/
+sfx/library/
+sfx/manifest.json
+sfx/approved.backup.json
