@@ -13,7 +13,9 @@ export type FontId =
   | 'Lora'
   | 'Oswald'
   | 'Exo2'
-  | 'Montserrat';
+  | 'Montserrat'
+  | 'PlayfairDisplayItalic'
+  | 'Manrope';
 
 export type FontDef = {
   /** CSS-семейство с префиксом RM, чтобы никогда не подхватить системный шрифт с тем же именем. */
@@ -22,6 +24,8 @@ export type FontDef = {
   file: string;
   /** Диапазон осей веса variable-шрифта, как строка для @font-face */
   weight: string;
+  /** Начертание для @font-face. Италик — отдельный файл того же семейства (font-style: italic). */
+  style?: 'normal' | 'italic';
 };
 
 export const FONTS: Record<FontId, FontDef> = {
@@ -36,4 +40,13 @@ export const FONTS: Record<FontId, FontDef> = {
   Oswald: { family: 'RM Oswald', file: 'fonts/Oswald/Oswald-VF.ttf', weight: '200 700' },
   Exo2: { family: 'RM Exo 2', file: 'fonts/Exo2/Exo2-VF.ttf', weight: '100 900' },
   Montserrat: { family: 'RM Montserrat', file: 'fonts/Montserrat/Montserrat-VF.ttf', weight: '100 900' },
+  // Тот же family, что PlayfairDisplay: в CSS курсив включается fontStyle: 'italic' (как на сайте beautystudiozp.com).
+  PlayfairDisplayItalic: {
+    family: 'RM Playfair Display',
+    file: 'fonts/PlayfairDisplay/PlayfairDisplay-Italic-VF.ttf',
+    weight: '400 900',
+    style: 'italic',
+  },
+  // В Manrope нет ʼ U+02BC — в текстах только ’ U+2019 (см. env.manifest.json).
+  Manrope: { family: 'RM Manrope', file: 'fonts/Manrope/Manrope-VF.ttf', weight: '200 800' },
 };

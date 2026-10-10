@@ -1,0 +1,141 @@
+# НЕВОССТАНОВИМОЕ (CLAUDE.md, гейт 5): сценарий Reels-презентации beautystudiozp.com.
+# Правит только человек. Композиция BeautyStudioReel читает этот файл при сборке (webpack: yaml как текст,
+# разбор + проверка схемой в src/videos/beauty-studio/script.ts). Ошибка схемы = громкий отказ сборки.
+#
+# Тексты — дословно STYLE_HANDOFF §7. Апостроф только ’ (U+2019). Неразрывный пробел — " "
+# (как &nbsp; на сайте: после коротких предлогов/союзов, в телефоне, адресе).
+# Курсив-акцент (Playfair italic, бронза) — *звёздочками*.
+# Время — секунды от начала ролика; внутри сцен — секунды от начала сцены.
+
+id: beauty-studio
+format: { width: 1080, height: 1920, fps: 30, durationSec: 30 }
+
+# Фон подбирается под ролик (ARCHITECTURE.md, решение 2026-10-10). Бренд-ролик → поверхности сайта.
+# surface: milk-paper | blush-paper | studio-paper | dark | hero-video | logo-milk
+background:
+  brandSurface: beauty-studio
+  preset: beauty-studio
+  overrides: {}
+  perScene:
+    hook: hero-video
+    approach: milk-paper
+    works: dark
+    services: dark
+    details: milk-paper
+    studio: studio-paper
+    contacts: dark
+    logo: logo-milk
+  # Кандидаты для BackgroundPicker (рендер с текстом хука). Выбор Олега — в perScene.
+  candidates:
+    - { id: milk-paper, why: "основная поверхность сайта: молоко + «бумага» §3.1" }
+    - { id: blush-paper, why: "второй тёплый фон сайта (#eadbd5) — тизер «Навчання», «Засновниця»" }
+    - { id: dark, why: "тёмные секции сайта #171513 — плоско, без шума" }
+    - { id: hero-video, why: "кадр hero-видео со скримом §4.4 — как первый экран сайта" }
+
+# Слот трека пользователя. file: путь относительно videos/beauty-studio/ (например music/track.mp3),
+# null — без музыки. prepare-assets нормализует трек к targetLufs; volume — линейный множитель в ролике.
+music:
+  file: null
+  targetLufs: -16
+  volume: 1
+  fadeInSec: 0.5
+  fadeOutSec: 0.5
+
+# Звук: бренд = тишина. anchor — событие анимации; пик звука (transientMs из манифеста)
+# ставится на момент, когда шторка раскрыта наполовину.
+sfx:
+  cues:
+    - { sound: remotion__whoosh, anchor: approach.macro, volume: 0.2 }
+    - { sound: remotion__whoosh, anchor: services.photo.0, volume: 0.18 }
+    - { sound: soundcn__click-soft, anchor: services.change.1, volume: 0.1 }
+    - { sound: soundcn__click-soft, anchor: services.change.2, volume: 0.1 }
+    - { sound: soundcn__click-soft, anchor: services.change.3, volume: 0.1 }
+
+# enter — как сцена входит поверх предыдущей: curtain (шторка снизу вверх, clip-path) | dissolve | cut.
+scenes:
+  - id: hook
+    from: 0
+    to: 2.5
+    enter: { type: cut, ms: 0 }
+    video: { asset: hero, startSec: 20.8, objectPosition: "88% 50%" }
+    kicker: ["Студія вій", "Запоріжжя"]
+    title: ["Погляд, який", "говорить більше"]
+    subtitle: "Студія професійного нарощування вій у Запоріжжі"
+    timing: { kickerSec: 0.08, titleSec: [0.2, 0.34], titleMs: 1100, subtitleSec: 0.62 }
+
+  - id: approach
+    from: 2.5
+    to: 6
+    enter: { type: curtain, ms: 800 }
+    label: ["beautystudio_zp", "01 / Підхід"]
+    title: ["Тонка робота.", "Природний результат.", "Погляд лишається вашим."]
+    coda: "Не змінюємо вас — *підкреслюємо* ваше."
+    image: macro
+    timing: { labelSec: 0.25, titleSec: 0.35, staggerMs: 100, imageSec: 1.05, codaSec: 1.55 }
+
+  - id: works
+    from: 6
+    to: 11
+    enter: { type: curtain, ms: 800 }
+    title: ["Наші", "роботи"]
+    counter: "02 / Одна історія"
+    text: "Деталь і результат рухаються як одна сцена — від першого погляду до цілісного образу."
+    # кадры a–e как на сайте (§8.2, §5.4)
+    frames: [work-detail-05, work-result-01, work-result-02, work-detail-06, work-result-03]
+    timing: { titleSec: 0.3, copySec: 0.9 }
+
+  - id: services
+    from: 11
+    to: 16
+    enter: { type: dissolve, ms: 600 }
+    label: ["Напрями роботи", "03 / Послуги"]
+    stepSec: 1.25
+    items:
+      - { n: "01", name: "Нарощування вій", text: "Індивідуальний вибір форми, довжини та об’єму.", image: process }
+      - { n: "02", name: "Корекція вій", text: "Оновлення форми та акуратності наявного нарощування.", image: work-detail-02 }
+      - { n: "03", name: "Зняття вій", text: "Дбайливе професійне зняття нарощених вій.", image: work-detail-03 }
+      - { n: "04", name: "Догляд", text: "Базові рекомендації для охайного результату вдома.", image: work-detail-04 }
+    timing: { firstPhotoSec: 0.15 }
+
+  - id: details
+    from: 16
+    to: 19.5
+    enter: { type: curtain, ms: 800 }
+    label: ["Форма і пропорції", "04 / Деталі"]
+    title: ["Погляд", "у деталях"]
+    text: "Кожен результат створюємо для конкретного погляду — без повторення готової схеми."
+    faces: [face-01, face-02, face-03, face-04, face-05]
+    timing: { titleSec: 0.3, firstChangeSec: 0.5, intervalSec: 0.62, fadeMs: 700 }
+
+  - id: studio
+    from: 19.5
+    to: 23
+    enter: { type: dissolve, ms: 700 }
+    label: ["Простір для вас", "05 / Студія"]
+    title: ["Тиша, точність", "і увага до вас."]
+    frames:
+      - { image: studio-01, objectPosition: "72% 50%" }
+      - { image: studio-02-detail, objectPosition: "50% 50%" }
+      - { image: studio-01, objectPosition: "72% 50%" }
+    timing: { labelSec: 0.3, titleSec: 0.45, changesSec: [0.75, 2.05], fadeMs: 1100 }
+
+  - id: contacts
+    from: 23
+    to: 27
+    enter: { type: curtain, ms: 800 }
+    label: ["beautystudio_zp", "08 / Контакти"]
+    title: ["Місце, де починається", "*ваш новий образ.*"]
+    button: "Записатися"
+    hours: "Щодня, 09:00–20:00"
+    phone: "+380 93 488 76 39"
+    address: "просп. Соборний, 158 · БЦ «Форум»"
+    instagram: "@beautystudio_zp"
+    timing: { titleSec: 0.3, buttonSec: 1.0, fillSec: 1.5, infoSec: 1.25 }
+
+  - id: logo
+    from: 27
+    to: 30
+    enter: { type: dissolve, ms: 600 }
+    video: { asset: logo, startSec: 1.5, widthFrac: 0.92 }
+    caption: "beautystudio_zp · Запоріжжя"
+    timing: { captionLastSec: 1.2 }

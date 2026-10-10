@@ -1,0 +1,338 @@
+{
+  "$comment": "ПРОИЗВОДНОЕ: пишет videos/beauty-studio/prepare-assets.mjs. Пути file — относительно public/videos/beauty-studio (staticFile).",
+  "generatedAt": "2026-10-10T06:38:22.915Z",
+  "scriptVersion": "2.0.0",
+  "publicPrefix": "videos/beauty-studio",
+  "scenesSha256": "03cd25e6d6a2de90a7e387ad6bd00384cd6f8cc6a627070fb5f76739945c98f7",
+  "assets": {
+    "macro": {
+      "id": "macro",
+      "kind": "image",
+      "file": "images/macro.jpg",
+      "width": 1536,
+      "height": 1024,
+      "sha256": "3f170666a449b7ba30e81a56153dfaceff10da6f5bb9957c986280dccf343345",
+      "source": {
+        "path": "media/site/images/macro.webp",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "site",
+        "sha256": "325d1ecc35a225b6ef82c907eeee82c70b1b83a81296835681ded3490f4e3123"
+      },
+      "note": "оригинала нет в проекте (§8.2) — версия с сайта"
+    },
+    "process": {
+      "id": "process",
+      "kind": "image",
+      "file": "images/process.jpg",
+      "width": 1024,
+      "height": 1535,
+      "sha256": "357751aadcdcccf3c0dd193d5bf8adb75bcea7e35452cafff31f4e0f5d6e725f",
+      "source": {
+        "path": "media/originals/process-2026-08-25.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "6cdb48b31a2987f0ef6d3aaeb3fdd163b3f7a1566a47626e4f29c066eea86bb4"
+      }
+    },
+    "work-detail-02": {
+      "id": "work-detail-02",
+      "kind": "image",
+      "file": "images/work-detail-02.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "25240ca9b82f8a4a367847fbd699c8ad1ae3c96c92776dd2b8d929eac32d8611",
+      "source": {
+        "path": "media/originals/works/details/work-detail-02.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "01b4bfade46e79f5016b1412c4ddf271202b240f8a324638eb9494305cf1a609"
+      }
+    },
+    "work-detail-03": {
+      "id": "work-detail-03",
+      "kind": "image",
+      "file": "images/work-detail-03.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "e368ace4d8e6959a60f8dbc939b0a0497d8550912e791c77d47db67dbf77175f",
+      "source": {
+        "path": "media/originals/works/details/work-detail-03.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "2ade99c627bc01580af8540afe02224b9caeee2644ab5420bdb776324b3537ce"
+      }
+    },
+    "work-detail-04": {
+      "id": "work-detail-04",
+      "kind": "image",
+      "file": "images/work-detail-04.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "aa896f7006b259d3956611c53c007fec4898a832b06b52f9fccac5992c421134",
+      "source": {
+        "path": "media/originals/works/details/work-detail-04.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "9256d4e465af65e0ea535120362d23abb3e4509a4e22bb45ee0d816276e020ff"
+      }
+    },
+    "work-detail-05": {
+      "id": "work-detail-05",
+      "kind": "image",
+      "file": "images/work-detail-05.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "fd70035585aa128d77478ec6968681e9a2f11bcfe3a9dad7cb09e18bfb3e1f70",
+      "source": {
+        "path": "media/originals/works/details/work-detail-05.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "1073bfb3f4f736d08c40eab90f2523a54ee137998e411885d5165e1819fd4b82"
+      }
+    },
+    "work-detail-06": {
+      "id": "work-detail-06",
+      "kind": "image",
+      "file": "images/work-detail-06.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "ff72d65b5d46685b6cfca85607b20a25d431ad1d7317cecb2583b502f320c0ee",
+      "source": {
+        "path": "media/originals/works/details/work-detail-06.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "b6a4f88f637c1caf3b6217a6eee3f57db3b0e9587d80e36e898bbefa6d27af29"
+      }
+    },
+    "work-result-01": {
+      "id": "work-result-01",
+      "kind": "image",
+      "file": "images/work-result-01.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "d520ab25d908382397429fee07556e964d6592848126a9ec4b269d0407a0e563",
+      "source": {
+        "path": "media/originals/works/results/work-result-01.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "3420457c1455add38cecd410fbd618fb7aba3ce011247d35faac6eae9c9bc92f"
+      }
+    },
+    "work-result-02": {
+      "id": "work-result-02",
+      "kind": "image",
+      "file": "images/work-result-02.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "8668923cb1416775b643975bc142a842d610cf5a45fa87b93ab868eed72d9f2d",
+      "source": {
+        "path": "media/originals/works/results/work-result-02.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "6534af2f13b04686021a6ad3256640b7eb4c091dbdef46a671c390cf8a22b3e0"
+      }
+    },
+    "work-result-03": {
+      "id": "work-result-03",
+      "kind": "image",
+      "file": "images/work-result-03.jpg",
+      "width": 1086,
+      "height": 1448,
+      "sha256": "9a392566646420df241d7c5470aabcb6167482240e0d9ce67cf722ad0ba5ad71",
+      "source": {
+        "path": "media/originals/works/results/work-result-03.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "e0290f9e951811c57a4713a2de448a583c76b9e48b717f666a07be02d1ca6c03"
+      }
+    },
+    "face-01": {
+      "id": "face-01",
+      "kind": "image",
+      "file": "images/face-01.jpg",
+      "width": 1122,
+      "height": 1402,
+      "sha256": "64911e407e59f3bbbb774a60ff08e84da22b650e1927142bde049f83a92af106",
+      "source": {
+        "path": "media/originals/works/faces/work-01.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "23ad54d838734aa87d07092c13e993c136390ebfbbe8bf82f09e2f6f417d8fff"
+      }
+    },
+    "face-02": {
+      "id": "face-02",
+      "kind": "image",
+      "file": "images/face-02.jpg",
+      "width": 1122,
+      "height": 1402,
+      "sha256": "f6daa0919c19388cea3429a5a35bfdc8ee20ac6619340e0e41afe9f33380c81d",
+      "source": {
+        "path": "media/originals/works/faces/work-02.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "3a17f76e355e43dad8bbed009f0ae0669ad5d2b2357425e4c0905782a4c340d9"
+      }
+    },
+    "face-03": {
+      "id": "face-03",
+      "kind": "image",
+      "file": "images/face-03.jpg",
+      "width": 1122,
+      "height": 1402,
+      "sha256": "3921a1061c756a5bbae22b5098d276eec374fbb458c42b8407bf39007ed7aa1e",
+      "source": {
+        "path": "media/originals/works/faces/work-03.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "c96bb58f0308cc40d0e11e30648300cf5da1a5eb4b00e8c3a7a329e7ad9d2482"
+      }
+    },
+    "face-04": {
+      "id": "face-04",
+      "kind": "image",
+      "file": "images/face-04.jpg",
+      "width": 1122,
+      "height": 1402,
+      "sha256": "b24095f13216329e7332149f18e241fe366d2484959b6dc4b18d9a20e1e35b27",
+      "source": {
+        "path": "media/originals/works/faces/work-04.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "bbd055f77a13850b4aeb37ffc2b54ff634e1d30ffb3266200e7862b7a0aa0006"
+      }
+    },
+    "face-05": {
+      "id": "face-05",
+      "kind": "image",
+      "file": "images/face-05.jpg",
+      "width": 1122,
+      "height": 1402,
+      "sha256": "43659a2b5ab436f4e5d04d1069d7bd4f4438c999e582d30ae320d7af649fb2f4",
+      "source": {
+        "path": "media/originals/works/faces/work-05.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "6a50cc54176a9e52468a7e8270c7cda98707c818ee000a56195aac7c6aa59f30"
+      }
+    },
+    "studio-01": {
+      "id": "studio-01",
+      "kind": "image",
+      "file": "images/studio-01.jpg",
+      "width": 2160,
+      "height": 1206,
+      "sha256": "ae480d0f9c8dc031677dd6e5d3e00911d665a5c1a15f67eed4d67cf08b673134",
+      "source": {
+        "path": "media/originals/studio/studio-01.jpg",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "f65107313c31e7367a7052c179f7515f109b86e875d59d1102e10528849ab298"
+      }
+    },
+    "studio-03": {
+      "id": "studio-03",
+      "kind": "image",
+      "file": "images/studio-03.jpg",
+      "width": 1679,
+      "height": 938,
+      "sha256": "34bcbf3ff8cd34b35b873e1995ed8be1d886cbc0c17671c1b6329b40fe15fcea",
+      "source": {
+        "path": "media/originals/studio/studio-03.png",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "1be2a94dd099375535ed8151e34a101804c1fbf44d2c236ecbabc6dd05bd36c5"
+      }
+    },
+    "studio-02-detail": {
+      "id": "studio-02-detail",
+      "kind": "image",
+      "file": "images/studio-02-detail.jpg",
+      "width": 1252,
+      "height": 1536,
+      "sha256": "c6fd97cff1b554ccdcd6410c25ae9623363183cfb1cc479c2f59bcd188980442",
+      "source": {
+        "path": "media/originals/studio/studio-02.jpg",
+        "root": "/home/claude/beauty/handoff",
+        "quality": "original",
+        "sha256": "fea5e66ec8d0c5e4cd5c5779ef35e8d48b644ffb613142a1048677d15f90e63d",
+        "crop": {
+          "w": 1252,
+          "h": 1536,
+          "x": 1500,
+          "y": 0
+        }
+      }
+    },
+    "hero": {
+      "id": "hero",
+      "kind": "video",
+      "file": "video/hero-1080p.mp4",
+      "width": 1920,
+      "height": 1080,
+      "durationSec": 30.133,
+      "fps": 30,
+      "audio": null,
+      "sha256": "0f48dad1929467caf682cd0d2b5eb9ac3f721b84a526bde19a4a005a71bbe84a",
+      "source": {
+        "path": "media/originals/video/hero-source-2026-08-28.mp4",
+        "root": "/home/claude/beauty/video",
+        "quality": "original",
+        "sha256": "47ac89141ce69d6806760ffbf940107c1539113765e8dc494c90b92b26ed92da"
+      }
+    },
+    "logo": {
+      "id": "logo",
+      "kind": "video",
+      "file": "video/logo-2160.mp4",
+      "width": 2160,
+      "height": 1216,
+      "durationSec": 5.042,
+      "fps": 24,
+      "audio": null,
+      "sha256": "207eee0d0a17eafa98850362cc6d6128ea6fa54d692d0404f7f2a990eb276f50",
+      "source": {
+        "path": "media/originals/video/loading-screen-original-4096x2304.mp4",
+        "root": "/home/claude/beauty/video",
+        "quality": "original",
+        "sha256": "f437b048f2b097b12a2380cff642c7679ef2b2ac535a4f65930f1875f8559a24"
+      }
+    }
+  },
+  "sfx": {
+    "remotion__whoosh": {
+      "id": "remotion__whoosh",
+      "file": "sfx/remotion__whoosh.wav",
+      "pcmSha256": "91af3e10a88a0b1fde1d3e70b300f8612cd28ec337ddb3070b3b404ccc60ab28",
+      "fileSha256": "cf85672901c6a485cfb803915bbe6e82a9d61893ff78bf32f45e56cd63bee7c3",
+      "durationMs": 148.1,
+      "transientMs": 72.5,
+      "lufs": -24.1,
+      "peakDb": -3,
+      "license": "CC0",
+      "source": {
+        "id": "remotion",
+        "url": "https://github.com/remotion-dev/remotion.media",
+        "commit": "2f139eb532a349dd89a393248a018f781416df15",
+        "origName": "whoosh.wav"
+      }
+    }
+  },
+  "music": {
+    "file": "music/excerpt.wav",
+    "durationSec": 32.2,
+    "sampleRate": 48000,
+    "channels": 2,
+    "sha256": "44054b6d39f8330be3f11e82fa531909e2f7c972e9aa7b6727bbc3654a992ca3",
+    "excerpt": {
+      "sourceStartSec": 46.7,
+      "durationSec": 32.2
+    },
+    "source": {
+      "path": "/home/claude/beauty/music/track.mp3",
+      "sha256": "d48ad9d402a6fdea7db8491d47f4998f66141dbd1fd5d9dd39ee8a9c098046f5",
+      "durationSec": 240.024,
+      "note": "track.mp3 «Come a Little Closer» (240.02 с), отрезок 46.70–78.90 с; Suno; права на коммерческое использование — у владельца аккаунта"
+    }
+  }
+}

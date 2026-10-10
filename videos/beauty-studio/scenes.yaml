@@ -1,0 +1,168 @@
+# НЕВОССТАНОВИМОЕ (CLAUDE.md, гейт 5): сценарий Reels-презентации beautystudiozp.com, версия 2 — монтаж под музыку.
+# Правит только человек. Предыдущая версия (30 с, без музыки) сохранена рядом: scenes.v1-30s-nomusic.yaml.
+# Композиция BeautyStudioReel читает этот файл при сборке (webpack: yaml как текст, разбор + схема в
+# src/videos/beauty-studio/script.ts). Ошибка схемы или граница сцены не на сильной доле = громкий отказ сборки.
+#
+# Тексты — дословно STYLE_HANDOFF §7. Апостроф только ’ (U+2019). Неразрывный пробел — " "
+# (как &nbsp; на сайте: после коротких предлогов/союзов, в телефоне, адресе).
+# Курсив-акцент (Playfair italic, бронза) — *звёздочками*.
+# Время сцен (from/to) — секунды от начала ролика, ровно на сильных долях music.grid.downbeatsSec
+# (или на половине такта = доля + 2 четверти). Внутри сцен — секунды от начала сцены; кратные
+# beatSec (0.488) значения попадают на доли.
+
+id: beauty-studio
+format: { width: 1080, height: 1920, fps: 30, durationSec: 32, durationInFrames: 960 }
+
+# Музыка — основа ролика. Отрезок вырезает prepare-assets.mjs из BEAUTY_MUSIC_FILE (без фейдов, WAV 48k stereo);
+# фейды и gain — здесь, в композиции. gain подобран под итог ≈ −14 LUFS integrated на готовом MP4.
+music:
+  file: videos/beauty-studio/music/excerpt.wav   # public-путь (staticFile) — пишет prepare-assets.mjs
+  startInFile: 0
+  gain: 1.175          # отрезок с фейдами −15.4 LUFS, TP −3.9 dBTP → +1.4 dB
+  fadeInSec: 0.03
+  fadeOutSec: 1.6
+  excerpt: { sourceStartSec: 46.7, durationSec: 32.2 }   # из timing.json (excerptStartSec)
+  source: "track.mp3 «Come a Little Closer» (240.02 с), отрезок 46.70–78.90 с; Suno; права на коммерческое использование — у владельца аккаунта"
+  # Сетка из timing.json: 122.95 BPM, доля 0.488 с, такт 1.952 с; сильные доли относительно начала отрезка.
+  grid:
+    bpm: 122.95
+    beatSec: 0.488
+    barSec: 1.952
+    downbeatsSec: [0.065, 2.017, 3.969, 5.921, 7.873, 9.825, 11.777, 13.729, 15.681, 17.633, 19.585, 21.537, 23.489, 25.441, 27.393, 29.345, 31.297]
+  # Строки припева (whisper, ±0.3 с) — справочно для монтажа:
+  #  0.10 Come a little closer · 4.18 Let the room turn slow · 8.02 I can feel your answer
+  # 11.82 In the places words don’t go · 15.94 Come a little closer · 18.66 Leave the heavy world outside
+  # 23.86 We don’t need forever · 26.58 Just this moment, side by side (до ~31.6)
+
+# Фон подбирается под ролик (ARCHITECTURE.md, решение 2026-10-10). Бренд-ролик → поверхности сайта.
+# surface: milk-paper | blush-paper | about-paper | dark | hero-video | logo-milk
+background:
+  brandSurface: beauty-studio
+  preset: beauty-studio
+  overrides: {}
+  perScene:
+    hook: hero-video
+    approach: milk-paper
+    works: dark
+    services: dark
+    details: milk-paper
+    studio: about-paper
+    contacts: dark
+    logo: logo-milk
+  # Кандидаты для BackgroundPicker (рендер с текстом хука). Выбор Олега — в perScene.
+  candidates:
+    - { id: milk-paper, why: "основная поверхность сайта: молоко + «бумага» §3.1" }
+    - { id: blush-paper, why: "второй тёплый фон сайта (#eadbd5) — тизер «Навчання», «Засновниця»" }
+    - { id: dark, why: "тёмные секции сайта #171513 — плоско, без шума" }
+    - { id: hero-video, why: "кадр hero-видео со скримом §4.4 — как первый экран сайта" }
+
+# Звук: музыка несёт ролик. Допускаются 2–3 мягких whoosh на крупных шторках, громкость ≤ 0.12;
+# пик звука (transientMs из sfx/manifest.json) ставится ровно на долю начала сцены (anchor scene.<id>).
+sfx:
+  cues:
+    - { sound: remotion__whoosh, anchor: scene.approach, volume: 0.1 }
+    - { sound: remotion__whoosh, anchor: scene.works, volume: 0.1 }
+
+# enter — как сцена входит поверх предыдущей: curtain (шторка снизу вверх, clip-path) | dissolve | cut.
+# Начало входа = граница сцены = сильная доля.
+scenes:
+  # 0.065 «Come a little closer»
+  - id: hook
+    from: 0
+    to: 3.969
+    enter: { type: cut, ms: 0 }
+    # 14.5 с мастера: наезд камеры от лица к глазам (15–18 с), к концу сцены — начало медленного моргания.
+    # pan — keyframes [сек сцены, object-position X %]: кроп 9:16 ведёт правый глаз кадра.
+    video: { asset: hero, startSec: 14.5, objectPositionY: 50, pan: [[0, 55], [1.1, 58.8], [1.9, 64.6], [2.7, 70.5], [3.5, 80.7], [4.3, 83.6]], zoom: [1, 1.06] }
+    kicker: ["Студія вій", "Запоріжжя"]
+    title: ["Погляд, який", "говорить більше"]
+    subtitle: "Студія професійного нарощування вій у Запоріжжі"
+    timing: { kickerSec: 0.065, titleSec: [0.25, 0.73], titleMs: 1100, subtitleSec: 1.2 }
+
+  # 4.18 «Let the room turn slow»
+  - id: approach
+    from: 3.969
+    to: 7.873
+    enter: { type: curtain, ms: 700 }
+    label: ["beautystudio_zp", "01 / Підхід"]
+    title: ["Тонка робота.", "Природний результат.", "Погляд лишається вашим."]
+    coda: "Не змінюємо вас — *підкреслюємо* ваше."
+    image: macro
+    # строки заголовка — каждая на свою долю; макро — на половине такта; кода — доля 5
+    timing: { labelSec: 0.15, titleSec: [0.488, 0.976, 1.464], imageSec: 1.952, codaSec: 2.44 }
+
+  # 8.02 «I can feel your answer» · 11.82 «In the places words don’t go»
+  - id: works
+    from: 7.873
+    to: 12.753
+    enter: { type: curtain, ms: 700 }
+    title: ["Наші", "роботи"]
+    counter: "02 / Одна історія"
+    text: "Деталь і результат рухаються як одна сцена — від першого погляду до цілісного образу."
+    # кадры a–e как на сайте (§8.2, §5.4); появление c/d/e — пороги p (сцена = 10 долей → p = k/10 — доля k)
+    frames: [work-detail-05, work-result-01, work-result-02, work-detail-06, work-result-03]
+    appearAt: [0.2, 0.4, 0.6]
+    timing: { titleSec: [0.1, 0.488], copySec: 0.976 }
+
+  # 15.94 «Come a little closer»
+  - id: services
+    from: 12.753
+    to: 17.633
+    enter: { type: curtain, ms: 700 }
+    label: ["Напрями роботи", "03 / Послуги"]
+    stepSec: 1.22            # 2.5 доли × 4 услуги = 4.88 с = сцена
+    items:
+      - { n: "01", name: "Нарощування вій", text: "Індивідуальний вибір форми, довжини та об’єму.", image: process }
+      - { n: "02", name: "Корекція вій", text: "Оновлення форми та акуратності наявного нарощування.", image: work-detail-02 }
+      - { n: "03", name: "Зняття вій", text: "Дбайливе професійне зняття нарощених вій.", image: work-detail-03 }
+      - { n: "04", name: "Догляд", text: "Базові рекомендації для охайного результату вдома.", image: work-detail-04 }
+    timing: { firstPhotoSec: 0.244 }
+
+  # 18.66 «Leave the heavy world outside»
+  - id: details
+    from: 17.633
+    to: 20.561
+    enter: { type: curtain, ms: 700 }
+    label: ["Форма і пропорції", "04 / Деталі"]
+    title: ["Погляд", "у деталях"]
+    text: "Кожен результат створюємо для конкретного погляду — без повторення готової схеми."
+    faces: [face-01, face-02, face-03, face-04, face-05]
+    # смена лица — каждая доля (0.488), кроссфейд входящего 0.35 с ease-out
+    timing: { titleSec: 0.1, textSec: 0.488, firstChangeSec: 0.488, intervalSec: 0.488, fadeMs: 350 }
+
+  - id: studio
+    from: 20.561
+    to: 23.489
+    enter: { type: curtain, ms: 700 }
+    label: ["Простір для вас", "05 / Студія"]
+    title: ["Тиша, точність", "і увага до вас."]
+    frames:
+      - { image: studio-01, objectPosition: "72% 50%" }
+      - { image: studio-02-detail, objectPosition: "50% 50%" }
+      - { image: studio-03, objectPosition: "78% 50%" }
+    timing: { labelSec: 0.1, titleSec: [0.488, 0.588], changesSec: [0.976, 1.952], fadeMs: 600 }
+
+  # 23.86 «We don’t need forever»
+  - id: contacts
+    from: 23.489
+    to: 27.393
+    enter: { type: curtain, ms: 700 }
+    label: ["beautystudio_zp", "08 / Контакти"]
+    title: ["Місце, де починається", "*ваш новий образ.*"]
+    button: "Записатися"
+    hours: "Щодня, 09:00–20:00"
+    phone: "+380 93 488 76 39"
+    address: "просп. Соборний, 158 · БЦ «Форум»"
+    instagram: "@beautystudio_zp"
+    # заливка кнопки — на сильной доле 25.441 (сцена + 1.952)
+    timing: { titleSec: [0.488, 0.976], buttonSec: 1.464, fillSec: 1.952, infoSec: 2.44 }
+
+  # 26.58 «Just this moment, side by side»
+  - id: logo
+    from: 27.393
+    to: 32
+    enter: { type: dissolve, ms: 700 }
+    # звук ролика логотипа не используется (музыка несёт); к 3.2 с ролика логотип дорисован — финал устойчив
+    video: { asset: logo, startSec: 0.2, widthFrac: 0.92 }
+    caption: "beautystudio_zp · Запоріжжя"
+    timing: { captionLastSec: 1.435 }

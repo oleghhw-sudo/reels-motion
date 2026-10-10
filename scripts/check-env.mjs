@@ -6,7 +6,7 @@
 //   npm run check -- --self-test    — позитивный контроль: подсовывает несуществующий бинарь
 //                                     и шрифт без кириллицы; ОБЯЗАН упасть (exit 1)
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, statSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -86,7 +86,10 @@ let fontkit = null;
 try { fontkit = require('fontkit'); } catch { missing.push('npm: fontkit не установлен — нечем проверить глифы (npm install)'); }
 const fontsDir = join(ROOT, manifest.fonts.dir);
 const glyphs = [...manifest.fonts.required_glyphs];
-for (const rel of manifest.fonts.files) {
+for (const entry of manifest.fonts.files) {
+  // Строка — общий набор глифов; объект {file, required_glyphs, why} — свой набор с обоснованием.
+  const rel = typeof entry === 'string' ? entry : entry.file;
+  const wantGlyphs = typeof entry === 'string' ? glyphs : [...entry.required_glyphs];
   const file = join(fontsDir, rel);
   if (!existsSync(file)) { missing.push(`шрифт ${rel} отсутствует (${manifest.fonts.source})`); continue; }
   const lic = join(dirname(file), manifest.fonts.license_file);
@@ -95,14 +98,14 @@ for (const rel of manifest.fonts.files) {
   if (!fontkit) continue;
   try {
     const f = fontkit.openSync(file);
-    const lack = glyphs.filter((ch) => !f.hasGlyphForCodePoint(ch.codePointAt(0)));
+    const lack = wantGlyphs.filter((ch) => !f.hasGlyphForCodePoint(ch.codePointAt(0)));
     if (lack.length) missing.push(`шрифт ${rel} (${f.familyName}): нет глифов ${lack.join(' ')}`);
-    else ok.push(`шрифт ${f.familyName}: глифы ${manifest.fonts.required_glyphs} есть`);
+    else ok.push(`шрифт ${f.familyName} ${f.subfamilyName}: глифы ${wantGlyphs.join('')} есть${typeof entry === 'string' ? '' : ` (свой набор: ${entry.why})`}`);
   } catch (e) { missing.push(`шрифт ${rel}: не читается (${e.message})`); }
 }
 const registry = readFileSync(join(ROOT, manifest.fonts.registry), 'utf8');
 for (const m of registry.matchAll(/file:\s*'fonts\/([^']+)'/g)) {
-  if (!manifest.fonts.files.includes(m[1])) missing.push(`${manifest.fonts.registry} ссылается на fonts/${m[1]}, которого нет в env.manifest.json`);
+  if (!manifest.fonts.files.some((e) => (typeof e === 'string' ? e : e.file) === m[1])) missing.push(`${manifest.fonts.registry} ссылается на fonts/${m[1]}, которого нет в env.manifest.json`);
 }
 
 // 6. Переменные .env
@@ -113,6 +116,28 @@ for (const v of manifest.env.vars) {
   const m = envText.match(new RegExp(`^${v.name}=(.+)$`, 'm'));
   if (!m || !m[1].trim()) missing.push(`${manifest.env.file}: нет ${v.name} — ${v.hint}`);
   else ok.push(`${v.name} задан`);
+}
+
+// 7. Внешние каталоги данных роликов (BEAUTY_HANDOFF_DIR и т.п.): из окружения процесса или .env.
+for (const v of manifest.data_dirs?.vars ?? []) {
+  if (!need(v.required_for)) { skipped.push(`${v.name} (нужен для ${v.required_for}; проверка: npm run check -- --scope ${v.required_for})`); continue; }
+  const m = envText.match(new RegExp(`^${v.name}=(.+)$`, 'm'));
+  const val = process.env[v.name] ?? m?.[1]?.trim();
+  if (!val) { missing.push(`${v.name} не задан (ни в окружении, ни в ${manifest.env.file}) — ${v.hint}`); continue; }
+  if (v.kind === 'file') {
+    // одиночный файл (трек и т.п.): должен существовать и быть файлом, не каталогом
+    let isFile = false;
+    try { isFile = statSync(val).isFile(); } catch { /* нет */ }
+    if (!isFile) missing.push(`${v.name}: файла ${val} нет (или это не файл) — ${v.hint}`);
+    else ok.push(`${v.name}: файл на месте`);
+    continue;
+  }
+  const roots = val.split(':').filter(Boolean);
+  for (const r of roots) if (!existsSync(r)) missing.push(`${v.name}: каталога ${r} нет`);
+  for (const rel of v.must_contain ?? []) {
+    if (!roots.some((r) => existsSync(join(r, rel)))) missing.push(`${v.name}: ни в одном из [${roots.join(', ')}] нет ${rel}`);
+  }
+  ok.push(`${v.name}: ${roots.length} каталог(а), обязательные файлы на месте`);
 }
 
 // Итог

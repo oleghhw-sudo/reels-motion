@@ -10,7 +10,13 @@ export function loadAllFonts(): void {
   if (started) return;
   started = true;
   for (const def of Object.values(FONTS)) {
-    loadFont({ family: def.family, url: staticFile(def.file), weight: def.weight, format: 'truetype' }).catch(
+    loadFont({
+      family: def.family,
+      url: staticFile(def.file),
+      weight: def.weight,
+      style: def.style ?? 'normal',
+      format: 'truetype',
+    }).catch(
       (e: unknown) => {
         throw new Error(`Шрифт ${def.family} не загрузился: ${String(e)}`);
       },
