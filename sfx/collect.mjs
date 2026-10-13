@@ -199,7 +199,7 @@ async function probeChannels(file) {
 
 async function decodeF32(file, ch) {
   const { stdout } = await run('ffmpeg', ['-hide_banner', '-nostdin', '-v', 'error', '-i', file, '-vn',
-    '-af', `aresample=${SR}:resampler=soxr`, '-ac', String(ch), '-f', 'f32le', '-acodec', 'pcm_f32le', '-']);
+    '-af', `aresample=${SR}:resampler=swr:filter_size=64:phase_shift=10:cutoff=0.97`, '-ac', String(ch), '-f', 'f32le', '-acodec', 'pcm_f32le', '-']);
   return new Float32Array(stdout.buffer, stdout.byteOffset, stdout.byteLength / 4).slice();
 }
 
