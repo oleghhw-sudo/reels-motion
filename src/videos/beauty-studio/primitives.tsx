@@ -5,6 +5,7 @@ import { BEAUTY_COLORS, BEAUTY_EASE, BEAUTY_FONTS, BEAUTY_PAD, BEAUTY_TYPE, s, t
 import { BrandSurface, isLightSurface } from '../../backgrounds/BrandSurface.tsx';
 import { SCRIPT, type BeautyScene } from './script.ts';
 import { SAFE } from '../../labs/SafeZones.tsx';
+import { Readable } from '../../qa/Readable.tsx';
 
 export type EaseFn = (t: number) => number;
 
@@ -58,6 +59,9 @@ export const Rise: React.FC<{ t: number; at: number; ms?: number; style?: React.
   children,
 }) => <div style={{ ...style, ...riseStyle(t, at, ms) }}>{children}</div>;
 
+/** Текст без разметки «*курсив*» — то, что читает зритель (для Readable). */
+export const richPlain = (text: string): string => text.replace(/\*/g, '');
+
 /** «*курсив*» → Playfair italic бронзой (§2.5). Остальной текст — как есть. */
 export const Rich: React.FC<{ text: string; accent?: string }> = ({ text, accent = BEAUTY_COLORS.bronze }) => {
   const parts = text.split(/(\*[^*]+\*)/g).filter(Boolean);
@@ -103,16 +107,26 @@ export const LabelRow: React.FC<{
   right: string;
   dark: boolean;
   ruleMs?: number;
+  /** id для readcheck: метки получают `<qaId>.label` и `<qaId>.section` */
+  qaId: string;
   children?: React.ReactNode;
-}> = ({ t, at, top, left, right, dark, ruleMs = 900, children }) => {
+}> = ({ t, at, top, left, right, dark, ruleMs = 900, qaId, children }) => {
   const color = dark ? BEAUTY_COLORS.white : BEAUTY_COLORS.ink;
   const rule = dark ? BEAUTY_COLORS.ruleDarkStructural : BEAUTY_COLORS.ruleStructural;
   const pr = prog(t, at, ruleMs);
   return (
     <div style={{ position: 'absolute', top, left: TEXT_LEFT, width: TEXT_WIDTH }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: s(14), ...riseStyle(t, at + 0.05) }}>
-        <span style={labelText(color)}>{left}</span>
-        <span style={labelText(color)}>{right}</span>
+        <span style={labelText(color)}>
+          <Readable id={`${qaId}.label`} text={left}>
+            {left}
+          </Readable>
+        </span>
+        <span style={labelText(color)}>
+          <Readable id={`${qaId}.section`} text={right}>
+            {right}
+          </Readable>
+        </span>
       </div>
       <div style={{ height: RULE_PX, background: rule, transform: `scaleX(${pr})`, transformOrigin: 'left center' }} />
       {children}

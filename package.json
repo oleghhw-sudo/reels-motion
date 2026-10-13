@@ -8,6 +8,8 @@
     "check": "node scripts/check-env.mjs",
     "check:self-test": "node scripts/check-env.mjs --self-test",
     "test:contrast": "node --experimental-strip-types src/theme/contrast.test.ts",
+    "test:motion": "node --experimental-strip-types src/motion/motion.test.ts",
+    "readcheck": "node scripts/readcheck.mjs",
     "studio": "remotion studio src/index.ts",
     "still": "node scripts/still.mjs",
     "sfx:collect": "node sfx/collect.mjs",

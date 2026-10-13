@@ -4,7 +4,8 @@ import React from 'react';
 import { AbsoluteFill, Img, OffthreadVideo, interpolate, staticFile, useVideoConfig } from 'remotion';
 import { BEAUTY_COLORS, BEAUTY_EASE, BEAUTY_FONTS, BEAUTY_TYPE, s } from '../../theme/brands/beauty-studio.ts';
 import { SAFE } from '../../labs/SafeZones.tsx';
-import { LabelRow, MaskLine, Rich, Rise, SceneSurface, TEXT_LEFT, TEXT_WIDTH, coverImg, display, labelStyle, prog, riseStyle, sceneIsLight, useT } from './primitives.tsx';
+import { LabelRow, MaskLine, Rich, Rise, SceneSurface, TEXT_LEFT, TEXT_WIDTH, coverImg, display, labelStyle, prog, richPlain, riseStyle, sceneIsLight, useT } from './primitives.tsx';
+import { Readable } from '../../qa/Readable.tsx';
 import { assetPath, scene } from './script.ts';
 
 const H = 1920;
@@ -62,7 +63,9 @@ export const HookText: React.FC<{ t: number; color: string; shadow: boolean; kic
     <>
       <Rise t={t} at={tm.kickerSec} style={{ position: 'absolute', top: kickerTop, left: TEXT_LEFT }}>
         <span style={{ ...labelStyle(color), letterSpacing: BEAUTY_TYPE.kicker.tracking, lineHeight: 'normal', textShadow }}>
-          {sc.kicker[0]} / {sc.kicker[1]}
+          <Readable id="hook.kicker" text={`${sc.kicker[0]} / ${sc.kicker[1]}`}>
+            {sc.kicker[0]} / {sc.kicker[1]}
+          </Readable>
         </span>
       </Rise>
       <div
@@ -77,13 +80,15 @@ export const HookText: React.FC<{ t: number; color: string; shadow: boolean; kic
         }}
       >
         <h1 style={{ ...display(BEAUTY_TYPE.heroH1.size, BEAUTY_TYPE.heroH1.lineHeight, BEAUTY_TYPE.heroH1.tracking, color), textShadow }}>
-          <MaskLine t={t} at={tm.titleSec[0]} ms={tm.titleMs}>
-            {sc.title[0]}
-          </MaskLine>
-          {/* лесенка: 2-я строка с отступом 3vw (моб.) */}
-          <MaskLine t={t} at={tm.titleSec[1]} ms={tm.titleMs} style={{ paddingLeft: vw(3) }}>
-            {sc.title[1]}
-          </MaskLine>
+          <Readable id="hook.title" text={sc.title.join(' ')}>
+            <MaskLine t={t} at={tm.titleSec[0]} ms={tm.titleMs}>
+              {sc.title[0]}
+            </MaskLine>
+            {/* лесенка: 2-я строка с отступом 3vw (моб.) */}
+            <MaskLine t={t} at={tm.titleSec[1]} ms={tm.titleMs} style={{ paddingLeft: vw(3) }}>
+              {sc.title[1]}
+            </MaskLine>
+          </Readable>
         </h1>
         <Rise t={t} at={tm.subtitleSec}>
           <p
@@ -98,7 +103,9 @@ export const HookText: React.FC<{ t: number; color: string; shadow: boolean; kic
               textShadow,
             }}
           >
-            {sc.subtitle}
+            <Readable id="hook.subtitle" text={sc.subtitle}>
+              {sc.subtitle}
+            </Readable>
           </p>
         </Rise>
       </div>
@@ -130,14 +137,16 @@ export const ApproachScene: React.FC = () => {
   return (
     <AbsoluteFill>
       <SceneSurface id="approach" />
-      <LabelRow t={t} at={tm.labelSec} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark={!light} />
+      <LabelRow qaId="approach" t={t} at={tm.labelSec} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark={!light} />
       <h2 style={{ ...display(ty.size, ty.lineHeight, ty.tracking, ink), position: 'absolute', top: 340, left: TEXT_LEFT, width: TEXT_WIDTH }}>
-        {sc.title.map((line, i) => (
-          // каждая строка — на свою долю (scenes.yaml timing.titleSec)
-          <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
-            {line}
-          </MaskLine>
-        ))}
+        <Readable id="approach.title" text={sc.title.join(' ')}>
+          {sc.title.map((line, i) => (
+            // каждая строка — на свою долю (scenes.yaml timing.titleSec)
+            <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
+              {line}
+            </MaskLine>
+          ))}
+        </Readable>
       </h2>
       <div
         style={{
@@ -155,7 +164,9 @@ export const ApproachScene: React.FC = () => {
       <Rise t={t} at={tm.codaSec} style={{ position: 'absolute', top: 1180, left: TEXT_LEFT + s(8), width: TEXT_WIDTH - s(8) }}>
         {/* колонка уже сайтовой (правая safe-зона) → кода в 2 строки, balance — без висячего «ваше.» */}
         <p style={{ ...display(BEAUTY_TYPE.coda.size, BEAUTY_TYPE.coda.lineHeight, BEAUTY_TYPE.coda.tracking, ink), textWrap: 'balance' }}>
-          <Rich text={sc.coda} />
+          <Readable id="approach.coda" text={richPlain(sc.coda)}>
+            <Rich text={sc.coda} />
+          </Readable>
         </p>
       </Rise>
     </AbsoluteFill>
@@ -202,11 +213,13 @@ export const WorksScene: React.FC = () => {
         }}
       >
         <h2 style={{ ...display(ty.size, ty.lineHeight, ty.tracking, BEAUTY_COLORS.textOnDarkTitle), textAlign: 'center', whiteSpace: 'nowrap' }}>
-          {sc.title.map((l, i) => (
-            <MaskLine key={i} t={t} at={sc.timing.titleSec[i] ?? sc.timing.titleSec[sc.timing.titleSec.length - 1]}>
-              {l}
-            </MaskLine>
-          ))}
+          <Readable id="works.title" text={sc.title.join(' ')}>
+            {sc.title.map((l, i) => (
+              <MaskLine key={i} t={t} at={sc.timing.titleSec[i] ?? sc.timing.titleSec[sc.timing.titleSec.length - 1]}>
+                {l}
+              </MaskLine>
+            ))}
+          </Readable>
         </h2>
       </div>
       {FRAMES.map((g, i) => {
@@ -238,7 +251,11 @@ export const WorksScene: React.FC = () => {
         <div style={{ width: '100%', height: '100%', background: BEAUTY_COLORS.bronze, transform: `scaleY(${p})`, transformOrigin: 'top' }} />
       </div>
       <div style={{ position: 'absolute', zIndex: 9, left: TEXT_LEFT, width: TEXT_WIDTH, bottom: SAFE.bottom + 10, ...riseStyle(t, sc.timing.copySec) }}>
-        <div style={{ ...labelStyle(BEAUTY_COLORS.white), marginBottom: s(20) }}>{sc.counter}</div>
+        <div style={{ ...labelStyle(BEAUTY_COLORS.white), marginBottom: s(20) }}>
+          <Readable id="works.counter" text={sc.counter}>
+            {sc.counter}
+          </Readable>
+        </div>
         <p
           style={{
             margin: 0,
@@ -249,7 +266,9 @@ export const WorksScene: React.FC = () => {
             color: BEAUTY_COLORS.textOnDark,
           }}
         >
-          {sc.text}
+          <Readable id="works.text" text={sc.text}>
+            {sc.text}
+          </Readable>
         </p>
       </div>
     </AbsoluteFill>
@@ -282,7 +301,7 @@ export const ServicesScene: React.FC = () => {
       <SceneSurface id="services" />
       {/* §3.2: левая колонка сервиса — тёплый градиент; на вертикали — по всему кадру, слабо */}
       <AbsoluteFill style={{ background: 'linear-gradient(110deg, transparent 65%, rgba(157,104,73,.12))', opacity: 0.2 + (t / (sc.to - sc.from)) * 0.8 }} />
-      <LabelRow t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark>
+      <LabelRow qaId="services" t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark>
         <div style={{ marginTop: s(8), height: 2, background: BEAUTY_COLORS.progressTrack }}>
           <div
             style={{
@@ -309,9 +328,15 @@ export const ServicesScene: React.FC = () => {
       </div>
       <AbsoluteFill style={{ top: PHOTO_TOP, height: PHOTO_BOTTOM - PHOTO_TOP, background: SERVICE_SCRIM }} />
       <div style={{ position: 'absolute', left: TEXT_LEFT, width: TEXT_WIDTH, bottom: 1920 - PHOTO_BOTTOM + 34, opacity: step === 0 ? pt : 0.2 + 0.8 * pt, transform: `translateY(${(1 - pt) * s(14)}px)` }}>
-        <div style={{ ...labelStyle(BEAUTY_COLORS.textOnDark), letterSpacing: '.06em', marginBottom: s(10) }}>{item.n}</div>
+        <div style={{ ...labelStyle(BEAUTY_COLORS.textOnDark), letterSpacing: '.06em', marginBottom: s(10) }}>
+          <Readable id="services.n" text={item.n}>
+            {item.n}
+          </Readable>
+        </div>
         <h3 style={{ ...display(SERVICE_NAME_PX, BEAUTY_TYPE.serviceName.lineHeight, BEAUTY_TYPE.serviceName.tracking, BEAUTY_COLORS.white), whiteSpace: 'nowrap' }}>
-          {item.name}
+          <Readable id="services.name" text={item.name}>
+            {item.name}
+          </Readable>
         </h3>
         <p
           style={{
@@ -322,7 +347,9 @@ export const ServicesScene: React.FC = () => {
             color: BEAUTY_COLORS.textOnDarkService,
           }}
         >
-          {item.text}
+          <Readable id="services.text" text={item.text}>
+            {item.text}
+          </Readable>
         </p>
       </div>
     </AbsoluteFill>

@@ -1,8 +1,9 @@
 // Оверлей safe zones 9:16 (ARCHITECTURE.md): верх 220, низ 380, правый край 140.
 import React from 'react';
 import { AbsoluteFill } from 'remotion';
+import { SAFE } from './safe-zones.ts';
 
-export const SAFE = { top: 220, bottom: 380, right: 140, left: 64 } as const;
+export { SAFE };
 
 export const SafeZones: React.FC<{ color: string; fontFamily: string }> = ({ color, fontFamily }) => {
   const zone: React.CSSProperties = {

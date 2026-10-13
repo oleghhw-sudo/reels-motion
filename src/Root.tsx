@@ -4,6 +4,8 @@ import { BackgroundLab, BackgroundLabGrid, SECONDS_PER_RECIPE, labSchema } from 
 import { RECIPES } from './backgrounds/recipes.ts';
 import { BEAUTY_FPS, BEAUTY_FRAMES, BeautyStudioReel, beautySchema } from './videos/beauty-studio/BeautyStudioReel.tsx';
 import { BackgroundPicker } from './labs/BackgroundPicker.tsx';
+import { FIXTURE_FRAMES, ReadcheckFixture } from './qa/ReadcheckFixture.tsx';
+import { MOTION_LAB_FRAMES, MotionLab } from './labs/MotionLab.tsx';
 
 const FPS = 30;
 
@@ -40,5 +42,9 @@ export const RemotionRoot: React.FC = () => (
       durationInFrames={BEAUTY_FRAMES}
     />
     <Composition id="BackgroundPicker" component={BackgroundPicker} width={1080} height={1920} fps={FPS} durationInFrames={1} />
+    {/* позитивный контроль scripts/readcheck.mjs --self-test */}
+    <Composition id="ReadcheckFixture" component={ReadcheckFixture} width={1080} height={1920} fps={FPS} durationInFrames={FIXTURE_FRAMES} />
+    {/* лаборатория функций src/motion */}
+    <Composition id="MotionLab" component={MotionLab} width={1080} height={1920} fps={FPS} durationInFrames={MOTION_LAB_FRAMES} />
   </>
 );

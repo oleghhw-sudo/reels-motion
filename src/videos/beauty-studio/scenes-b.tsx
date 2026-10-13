@@ -3,7 +3,8 @@ import React from 'react';
 import { AbsoluteFill, Img, OffthreadVideo, staticFile, useVideoConfig } from 'remotion';
 import { BEAUTY_COLORS, BEAUTY_EASE, BEAUTY_FONTS, BEAUTY_TYPE, s } from '../../theme/brands/beauty-studio.ts';
 import { SAFE } from '../../labs/SafeZones.tsx';
-import { LabelRow, MaskLine, Rich, Rise, SceneSurface, TEXT_LEFT, TEXT_WIDTH, coverImg, display, labelStyle, prog, riseStyle, sceneIsLight, useT } from './primitives.tsx';
+import { LabelRow, MaskLine, Rich, Rise, SceneSurface, TEXT_LEFT, TEXT_WIDTH, coverImg, display, labelStyle, prog, richPlain, riseStyle, sceneIsLight, useT } from './primitives.tsx';
+import { Readable } from '../../qa/Readable.tsx';
 import { ASSETS, assetPath, scene } from './script.ts';
 
 // §4.6: нормализация лиц (content.js) — translate после scale, проценты от несмасштабированного кадра
@@ -36,16 +37,22 @@ export const DetailsScene: React.FC = () => {
   return (
     <AbsoluteFill>
       <SceneSurface id="details" />
-      <LabelRow t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark={!light} />
+      <LabelRow qaId="details" t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark={!light} />
       <h2 style={{ ...display(ty.size, ty.lineHeight, ty.tracking, ink), position: 'absolute', top: 350, left: TEXT_LEFT, width: TEXT_WIDTH }}>
-        {sc.title.map((l, i) => (
-          <MaskLine key={i} t={t} at={tm.titleSec + i * 0.1}>
-            {l}
-          </MaskLine>
-        ))}
+        <Readable id="details.title" text={sc.title.join(' ')}>
+          {sc.title.map((l, i) => (
+            <MaskLine key={i} t={t} at={tm.titleSec + i * 0.1}>
+              {l}
+            </MaskLine>
+          ))}
+        </Readable>
       </h2>
       <Rise t={t} at={tm.textSec} style={{ position: 'absolute', top: 668, left: TEXT_LEFT, width: TEXT_WIDTH }}>
-        <p style={bodyText(ink)}>{sc.text}</p>
+        <p style={bodyText(ink)}>
+          <Readable id="details.text" text={sc.text}>
+            {sc.text}
+          </Readable>
+        </p>
       </Rise>
       <div
         style={{
@@ -101,13 +108,15 @@ export const StudioScene: React.FC = () => {
           return <Img key={k} src={staticFile(assetPath(f.image))} style={{ position: 'absolute', inset: 0, ...coverImg(f.objectPosition), opacity: o }} />;
         })}
       </div>
-      <LabelRow t={t} at={tm.labelSec} top={STUDIO_PHOTO_H + 30} left={sc.label[0]} right={sc.label[1]} dark={!light} />
+      <LabelRow qaId="studio" t={t} at={tm.labelSec} top={STUDIO_PHOTO_H + 30} left={sc.label[0]} right={sc.label[1]} dark={!light} />
       <h2 style={{ ...display(ty.size, ty.lineHeight, ty.tracking, ink), position: 'absolute', top: 1282, left: TEXT_LEFT, width: TEXT_WIDTH }}>
-        {sc.title.map((l, i) => (
-          <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
-            {l}
-          </MaskLine>
-        ))}
+        <Readable id="studio.title" text={sc.title.join(' ')}>
+          {sc.title.map((l, i) => (
+            <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
+              {l}
+            </MaskLine>
+          ))}
+        </Readable>
       </h2>
     </AbsoluteFill>
   );
@@ -136,21 +145,23 @@ export const ContactsScene: React.FC = () => {
   const shift = prog(t, tm.fillSec, 520);
   const mix = (a: number[], b: number[], k: number) => `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',')})`;
   const labelColor = mix([255, 255, 255], [23, 21, 19], txt);
-  const rows: { label: string; value: string }[] = [
-    { label: 'Телефон', value: sc.phone },
-    { label: 'Адреса', value: sc.address },
-    { label: 'Instagram', value: sc.instagram },
+  const rows: { label: string; qa: string; value: string }[] = [
+    { label: 'Телефон', qa: 'phone', value: sc.phone },
+    { label: 'Адреса', qa: 'address', value: sc.address },
+    { label: 'Instagram', qa: 'instagram', value: sc.instagram },
   ];
   return (
     <AbsoluteFill>
       <SceneSurface id="contacts" />
-      <LabelRow t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark />
+      <LabelRow qaId="contacts" t={t} at={0.1} top={SAFE.top + 10} left={sc.label[0]} right={sc.label[1]} dark />
       <h2 style={{ ...display(ty.size, ty.lineHeight, ty.tracking, BEAUTY_COLORS.white), position: 'absolute', top: 360, left: TEXT_LEFT, width: TEXT_WIDTH }}>
-        {sc.title.map((l, i) => (
-          <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
-            <Rich text={l} />
-          </MaskLine>
-        ))}
+        <Readable id="contacts.title" text={sc.title.map(richPlain).join(' ')}>
+          {sc.title.map((l, i) => (
+            <MaskLine key={i} t={t} at={tm.titleSec[i] ?? tm.titleSec[tm.titleSec.length - 1]}>
+              <Rich text={l} />
+            </MaskLine>
+          ))}
+        </Readable>
       </h2>
       <Rise t={t} at={tm.buttonSec} style={{ position: 'absolute', top: 955, left: TEXT_LEFT }}>
         <div
@@ -173,17 +184,29 @@ export const ContactsScene: React.FC = () => {
           <div style={{ position: 'absolute', inset: 0, background: BEAUTY_COLORS.white, transform: `scaleX(${fill})`, transformOrigin: 'left' }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: s(12), transform: `translateX(${shift * s(3)}px)`, flex: 1 }}>
             <TelegramIcon size={s(17)} color={labelColor} />
-            <span style={{ fontFamily: BEAUTY_FONTS.body, fontSize: BEAUTY_TYPE.button.size, color: labelColor, whiteSpace: 'nowrap', flex: 1 }}>{sc.button}</span>
+            <span style={{ fontFamily: BEAUTY_FONTS.body, fontSize: BEAUTY_TYPE.button.size, color: labelColor, whiteSpace: 'nowrap', flex: 1 }}>
+              <Readable id="contacts.button" text={sc.button}>
+                {sc.button}
+              </Readable>
+            </span>
             <span style={{ width: s(38), height: 2, background: labelColor, transform: `scaleX(${1 + 0.35 * shift})`, transformOrigin: 'left' }} />
           </div>
         </div>
-        <div style={{ ...bodyText(BEAUTY_COLORS.textOnDark), fontSize: s(13), marginTop: s(14) }}>{sc.hours}</div>
+        <div style={{ ...bodyText(BEAUTY_COLORS.textOnDark), fontSize: s(13), marginTop: s(14) }}>
+          <Readable id="contacts.hours" text={sc.hours}>
+            {sc.hours}
+          </Readable>
+        </div>
       </Rise>
       {/* метки «Телефон/Адреса/Instagram» сайта опущены: с ними нижняя строка уходит ниже 1540 (safe zone) */}
       <div style={{ position: 'absolute', left: TEXT_LEFT, width: TEXT_WIDTH, top: 1190 }}>
         {rows.map((r, i) => (
           <div key={r.label} style={{ borderTop: `2px solid ${BEAUTY_COLORS.ruleDarkSecondary}`, padding: `${s(9)}px 0 ${s(10)}px`, ...riseStyle(t, tm.infoSec + i * 0.1) }}>
-            <div style={{ ...display(BEAUTY_TYPE.contactValue.size, BEAUTY_TYPE.contactValue.lineHeight, '0', BEAUTY_COLORS.white) }}>{r.value}</div>
+            <div style={{ ...display(BEAUTY_TYPE.contactValue.size, BEAUTY_TYPE.contactValue.lineHeight, '0', BEAUTY_COLORS.white) }}>
+              <Readable id={`contacts.${r.qa}`} text={r.value}>
+                {r.value}
+              </Readable>
+            </div>
           </div>
         ))}
       </div>
@@ -224,7 +247,11 @@ export const LogoScene: React.FC = () => {
         <OffthreadVideo src={staticFile(assetPath(sc.video.asset))} trimBefore={Math.round(sc.video.startSec * fps)} muted style={coverImg()} />
       </div>
       <Rise t={t} at={dur - sc.timing.captionLastSec} style={{ position: 'absolute', left: 0, right: 0, top: 960 + h / 2 + 10, textAlign: 'center' }}>
-        <span style={labelStyle(BEAUTY_COLORS.ink)}>{sc.caption}</span>
+        <span style={labelStyle(BEAUTY_COLORS.ink)}>
+          <Readable id="logo.caption" text={sc.caption}>
+            {sc.caption}
+          </Readable>
+        </span>
       </Rise>
     </AbsoluteFill>
   );

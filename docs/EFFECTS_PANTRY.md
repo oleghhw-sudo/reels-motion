@@ -14,12 +14,12 @@
 
 | Что | Источник | Зачем нам |
 |---|---|---|
-| `spring`/`ring`: `exp(-k·Δt)·sin(w·Δt)`, k=6, w=18 | ClaudeAnimationBase `src/core.js:216-217` | «пинок» после события (появление цифры, кнопки) |
-| `take`, `jump` (сплющивание `.22·e^(-8a)·cos(20a)`) | там же `:224-235` | реакция объекта на удар/долю |
-| `pulse`/`beatN`: `exp(-frac(beat)·k)` | там же `:186-190` | пульс на сильную долю — дополнение к нашей сетке долей |
-| `shakeXY` (hash от кадра), `onTwos` `floor(t·12)/12` | там же `:211, :219` | детерминированная тряска; «на двойках» для стоп-моушна |
-| `ribbon`/`through` (Catmull-Rom) | там же `:307-329` | линии-связки между элементами |
-| `readcheck`: ролик проходится с шагом 0.04 с, каждый текст должен быть целиком в кадре ≥ нужного времени; ловит вылеты за край | lemo-opuscar `core/render/readcheck.mjs` | **автопроверка читаемости** — у нас её нет |
+| `spring`/`ring`: `exp(-k·Δt)·sin(w·Δt)`, k=6, w=18 | ClaudeAnimationBase `src/core.js:59-60` | «пинок» после события (появление цифры, кнопки) **Перенесено → src/motion/index.ts (`ring`, `ringEvents`, `kick`)** |
+| `take`, `jump` (сплющивание `.22·e^(-8a)·cos(20a)`) | там же `:67-80` | реакция объекта на удар/долю **Перенесено → src/motion/index.ts (`take`, `jump`, `squashScale`)** |
+| `pulse`/`beatN`: `exp(-frac(beat)·k)` | там же `:31-33` | пульс на сильную долю — дополнение к нашей сетке долей **Перенесено → src/motion/index.ts (`pulse`, `beatN`, `gridFromBeat`)** |
+| `shakeXY` (hash от кадра), `onTwos` `floor(t·12)/12` | там же `:54, :62` | детерминированная тряска; «на двойках» для стоп-моушна **Перенесено → src/motion/index.ts (`shakeXY`, `onTwos`)** |
+| `ribbon`/`through` (Catmull-Rom) | там же `:150-180` | линии-связки между элементами **Перенесено → src/motion/index.ts (`through`, `ribbon`, `svgPath`, `pathUpTo`; плюс `arcPt`)** |
+| `readcheck`: ролик проходится с шагом 0.04 с, каждый текст должен быть целиком в кадре ≥ нужного времени; ловит вылеты за край | lemo-opuscar `core/render/readcheck.mjs` | **автопроверка читаемости** — у нас её нет **Перенесено → scripts/readcheck.mjs + src/qa/Readable.tsx (фикстура src/qa/ReadcheckFixture.tsx)** |
 | ASR-сверка голоса + `words.json` с таймингами слов; сопоставление слов субтитров со словами Whisper по буквам | lemo-opuscar `core/tts/asr_check.py`, `styles/swiss-motion/demo/tools/words.py` | шаг после Fish Audio: тайминги слов на украинском и пословные субтитры |
 | Ducking: полоса «говорят» → `maximum_filter` (опережение ~80 мс) → сглаживание 250 мс → `1 − .68·vad` | lemo-opuscar `styles/swiss-motion/demo/mix.py` | в Remotion — формула в `volume={(f)=>…}` |
 | `snap`/`steps`/`track`: элемент стартует на 1/8 раньше и встаёт точно на долю | lemo-opuscar `styles/swiss-motion/demo/ease.js` | монтаж под сильные доли (Beauty Studio) |
@@ -33,7 +33,7 @@
 - **Стоп-моушн коллаж (gbro):** однотонный фон + зерно, ч/б полутоновые вырезки, цвет только для иерархии, кремовая обводка + мягкая тень; сборка с пустого фона «структура → объект → связки → действие → результат», 3–6 групп, слои через `spring()` со сдвигом 8–12 кадров, «на двойках». Числа обводки/тени в репо нет — подобрать.
 - **Камера-оператор (onetake):** следование с опережением ~0.1 с на sineInOut; рывок — ключ в точку приземления на expoInOut; «рука» из двух синусов, равная нулю в паузах; при зуме >20× ключевать лог-зум.
 - **Motion blur как затвор 180°** — у Remotion есть `@remotion/motion-blur`; нужен при скорости >80 px/кадр.
-- **Кривые по t80** (доля длительности до 80% пути): expoOut .23, quintOut .28, cubicOut .42, smoother .67 — словарь для выбора easing.
+- **Кривые по t80** (доля длительности до 80% пути): expoOut .23, quintOut .28, cubicOut .42, smoother .67 — словарь для выбора easing. **Перенесено (свои формулы) → src/motion/index.ts (`expoOut`, `quintOut`, `cubicOut`, `smoother`, `T80`).**
 - **Против ряби на тёмных градиентах после кодирования:** фиксированный шум 256², альфа ≤ 7/255.
 - **Луки = 8 токенов** (ground, deep, card, line, mute, ink, accent, accent2), ink ≥4.5:1, mute ≥3:1 — сверить с нашей схемой пресетов.
 - **Стили lemo, близкие к editorial:** `swiss-motion` (12 колонок, 2 кривые `(.7,0,.2,1)` и линейная, без overshoot, удаление «ножом»), `halftone-dossier` (штамп 0.09 с с 2.6×→1×, посимвольный drop со сдвигом 0.05–0.08 с), `risograph` (сдвиг совмещения ±1–3 px на шот, kick 8–14 px ~0.25 с на акценте).
@@ -65,6 +65,6 @@
 ## Красные флаги (не запускать их скрипты как есть)
 - lemo `plugin/.../setup.sh`: на каждом запуске `git fetch` + `reset --hard` upstream — подмена кода без ревью; Python-зависимости без пинов.
 - gbro `upload_file.py:70-79`: вызывает отсутствующий `prep_video.py` через subprocess; `allow_implicit_invocation: true`; ключ через `--api-key` виден в процессах.
-- ClaudeAnimationBase: `eval` для CLI-флага `--crop-at`, Chrome с `--no-sandbox`.
+- ClaudeAnimationBase: `eval` для CLI-флага `--crop-at` (`src/core.js:307`), Chrome с `--no-sandbox`.
 - onetake: функция камеры `OM.rig` описана, но вырезана (в Pro); пороги откалиброваны на нескольких роликах одного заказчика.
 - README ≠ код: lemo обещает 98 стилей, в репо 43; дефолт у всех — 1920×1080 при 24 fps, не 9:16/30.

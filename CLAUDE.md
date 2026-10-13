@@ -19,3 +19,11 @@
 - `npm run sfx:collect` — собрать библиотеку звуков
 - `npm run sfx:lab` — прослушка на http://localhost:5174
 - `npm run still -- <Composition> <frame>` — кадр в PNG для QA
+- `node scripts/readcheck.mjs <Composition> [--props JSON] [--step N] [--cps N] [--min-hold S]` — проверка читаемости текстов (`<Readable>`), stills не рендерит; отчёт `out/qa/readcheck-<Comp>.json`, exit 1 при нарушениях
+- `node scripts/readcheck.mjs --self-test` — позитивный контроль readcheck на `ReadcheckFixture` (обязан найти ровно SHORT, OUT_OF_FRAME, UNSAFE)
+- `npm run test:motion` — тесты `src/motion` (`-- --negative` — позитивный контроль, обязан упасть)
+
+## Читаемость (readcheck)
+
+- Новый ролик — readcheck обязателен до финального рендера. Каждый значимый текст (заголовки, подписи, метки, кнопка, контакты) обёрнут в `<Readable id text>` (`src/qa/Readable.tsx`, визуально прозрачен).
+- Пороги cps/minHold — гипотеза (по умолчанию cps=12, minHold=1.0 с, +0.5 с), калибруются на эталоне, а не принимаются как истина.
