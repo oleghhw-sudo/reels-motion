@@ -27,3 +27,10 @@
 
 - Новый ролик — readcheck обязателен до финального рендера. Каждый значимый текст (заголовки, подписи, метки, кнопка, контакты) обёрнут в `<Readable id text>` (`src/qa/Readable.tsx`, визуально прозрачен).
 - Пороги cps/minHold — гипотеза (по умолчанию cps=12, minHold=1.0 с, +0.5 с), калибруются на эталоне, а не принимаются как истина.
+
+## motion-prompt (каталог именованных движений, vendor/motion-prompt, MIT, коммит 770eefb)
+
+- Скилл `.claude/skills/motion-prompt`. Каталог только локальный: `MOTION_PROMPT_BASE=vendor/motion-prompt/api/v1 node vendor/motion-prompt/skills/motion-prompt/scripts/motion-prompt.mjs <command>`; выбор глазами — `pick --local`.
+- Олег называет движения номерами (#005, #043). Переносить ровно выбранные, ничего не добавлять и не менять.
+- Текстовые элементы — спецификацией в DOM + `<Readable>`; canvas-код — только для графики без текста. Строку лицензии `// Motion Prompt #ID · MIT …` сохранять.
+- Обновление каталога — только сменой закреплённого коммита (vendor/motion-prompt/VENDORED.md), не живой сетью.
