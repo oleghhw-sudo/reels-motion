@@ -9,7 +9,8 @@
 // (поле voices). Этот файл создаёт человек; скрипт его НЕ пишет (гейт 5).
 //   node --env-file=.env voice/calibrate.mjs --run
 //     → часть Б: голоса из voice/calibration.json × 6 фраз, только s2.1-pro-free (voice/run.mjs):
-//       out/voice/<slug>/<n>.wav + <n>.words.json, out/voice/metrics.json, report.md, listen.html.
+//       out/voice/<slug>/<n>.wav + <n>.words.json, out/voice/metrics.json (+ копия docs/tasks/data/002-metrics.json),
+//       report.md, listen.html. Неудавшаяся фраза — строка с ok:false и ошибкой; exit 1, если хоть один прогон не OK.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,7 +74,11 @@ async function list(mode) {
 const args = process.argv.slice(2);
 try {
   if (args.includes('--list')) await list(args.includes('--only-uk') ? MODES.onlyUk : MODES.all);
-  else if (args.includes('--run')) await run({ root: ROOT, outDir: OUT_DIR });
+  else if (args.includes('--run')) {
+    // копия metrics.json для архитектора (в git, ревью 002 «Дополнение к части Б»)
+    const { failed } = await run({ root: ROOT, outDir: OUT_DIR, dashboardCopy: join(ROOT, 'docs', 'tasks', 'data', '002-metrics.json') });
+    if (failed) process.exitCode = 1;
+  }
   else {
     console.error('Использование: node --env-file=.env voice/calibrate.mjs --list [--only-uk] | --run');
     process.exit(1);

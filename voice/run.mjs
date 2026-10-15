@@ -7,9 +7,9 @@
 // Модель — константа MODEL, единственная в файле; каждый запрос пишет её в <n>.words.json (проверка «нет платных»).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { FishError, tts } from './fish.mjs';
-import { phraseMetrics } from './metrics.mjs';
+import { END_GAP_MAX_MS, END_GAP_MIN_MS, PAUSE_MS, charsNoSpace, phraseMetrics, tokenize } from './metrics.mjs';
 import { writeListenPage } from './listen.mjs';
 
 export const MODEL = 's2.1-pro-free';
@@ -62,59 +62,120 @@ async function ttsWithRetry(args, label) {
   }
 }
 
-/** Названия голосов из производных списков --list (если есть); иначе — только id. */
-function voiceTitles(outDir) {
-  const titles = {};
+/** Название, автор и теги голосов из производных списков --list (если есть); иначе — только id. */
+function voiceInfo(outDir) {
+  const info = {};
   for (const f of ['candidates.json', 'candidates-uk.json']) {
     const p = join(outDir, f);
-    if (existsSync(p)) for (const v of JSON.parse(readFileSync(p, 'utf8')).voices ?? []) titles[v.id] = v.title;
+    if (existsSync(p)) for (const v of JSON.parse(readFileSync(p, 'utf8')).voices ?? []) info[v.id] = { title: v.title, author: v.author, tags: v.tags };
   }
-  return titles;
+  return info;
 }
 
-export async function run({ root, outDir }) {
+async function synthPhrase({ dir, slug, voiceId, ph }) {
+  const r = await ttsWithRetry({ text: ph.text, voiceId, model: MODEL, ...REQUEST }, `${slug} #${ph.n}`);
+  const raw = join(dir, `${ph.n}.raw44k.wav`);
+  const wav = join(dir, `${ph.n}.wav`);
+  writeFileSync(raw, r.audio);
+  ff('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-af', `aresample=${OUT_SR}:resampler=swr:filter_size=64:phase_shift=10:cutoff=0.97`, '-c:a', 'pcm_s16le', wav]);
+  rmSync(raw);
+  const wavDurationSec = probeDuration(wav);
+  const metrics = phraseMetrics({ text: ph.text, words: r.words, wavDurationSec, loudness: loudness(wav) });
+  const meta = { model: MODEL, request: REQUEST, outSampleRate: OUT_SR, events: r.events, chunks: r.chunks, pcmDurationSec: r.durationSec, reportedDurationSec: r.reportedDurationSec };
+  writeFileSync(join(dir, `${ph.n}.words.json`), `${JSON.stringify({ voiceId, phrase: ph, meta, words: r.words }, null, 2)}\n`);
+  return { wav: `${slug}/${ph.n}.wav`, words: r.words, meta, metrics, wavDurationSec };
+}
+
+export async function run({ root, outDir, dashboardCopy }) {
   const calib = readJson(join(root, 'voice', 'calibration.json'), 'voice/calibration.json (создаёт Олег)');
   const { phrases } = readJson(join(root, 'voice', 'phrases.uk.json'), 'voice/phrases.uk.json');
   if (!Array.isArray(calib.voices) || calib.voices.length === 0) throw new Error('voice/calibration.json: поле voices — непустой массив id');
-  const titles = voiceTitles(outDir);
+  const info = voiceInfo(outDir);
   console.log(`FISH_API_KEY ${process.env.FISH_API_KEY ? 'задан' : 'НЕ задан'}; модель ${MODEL}; формат ${REQUEST.format} ${REQUEST.sampleRate} → WAV ${OUT_SR}`);
   console.log(`Голосов: ${calib.voices.length}, фраз: ${phrases.length}, запросов: ${calib.voices.length * phrases.length}\n`);
 
   const results = [];
+  let stopped = null; // 402: дальше не запрашиваем (не ретраить), строки остальных — с ошибкой
   for (const voiceId of calib.voices) {
     const slug = voiceId.slice(0, 8);
     const dir = join(outDir, slug);
     mkdirSync(dir, { recursive: true });
-    const voice = { id: voiceId, slug, title: titles[voiceId] ?? voiceId, url: `https://fish.audio/m/${voiceId}/`, phrases: [] };
+    const vi = info[voiceId] ?? {};
+    const voice = { id: voiceId, slug, title: vi.title ?? voiceId, author: vi.author ?? null, tags: vi.tags ?? [], url: `https://fish.audio/m/${voiceId}/`, phrases: [] };
     for (const ph of phrases) {
       const label = `${slug} #${ph.n}`;
-      const r = await ttsWithRetry({ text: ph.text, voiceId, model: MODEL, ...REQUEST }, label);
-      const raw = join(dir, `${ph.n}.raw44k.wav`);
-      const wav = join(dir, `${ph.n}.wav`);
-      writeFileSync(raw, r.audio);
-      ff('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-i', raw, '-af', `aresample=${OUT_SR}:resampler=swr:filter_size=64:phase_shift=10:cutoff=0.97`, '-c:a', 'pcm_s16le', wav]);
-      rmSync(raw);
-      const wavDurationSec = probeDuration(wav);
-      const m = phraseMetrics({ text: ph.text, words: r.words, wavDurationSec, loudness: loudness(wav) });
-      const meta = { model: MODEL, request: REQUEST, outSampleRate: OUT_SR, events: r.events, chunks: r.chunks, pcmDurationSec: r.durationSec, reportedDurationSec: r.reportedDurationSec };
-      writeFileSync(join(dir, `${ph.n}.words.json`), `${JSON.stringify({ voiceId, phrase: ph, meta, words: r.words }, null, 2)}\n`);
-      voice.phrases.push({ ...ph, wav: `${slug}/${ph.n}.wav`, words: r.words, meta, metrics: m });
-      const miss = [...m.coverage.missing.map((x) => `−${x.word}`), ...m.coverage.extra.map((x) => `+${x.word}`)].join(' ');
-      console.log(
-        `${label}  ${m.ok ? 'OK  ' : 'FAIL'}  слова ${m.coverage.matched}/${m.coverage.textWords}${miss ? ` [${miss}]` : ''}  монот ${m.monotonic.ok ? 'да' : 'НЕТ'}  конец ${m.end.gapMs} мс  пауз>400 ${m.pauses.length}  ${m.tempo.wpm} сл/мин  ${m.tempo.cps} симв/с  ${m.loudness.lufs} LUFS  ${m.loudness.truePeakDb} dBTP  (${wavDurationSec.toFixed(2)} с, чанков ${r.chunks})`,
-      );
+      if (stopped) {
+        voice.phrases.push({ ...ph, error: `не запрошено: ${stopped}` });
+        continue;
+      }
+      try {
+        const r = await synthPhrase({ dir, slug, voiceId, ph });
+        voice.phrases.push({ ...ph, ...r, error: null });
+        const m = r.metrics;
+        const miss = [...m.coverage.missing.map((x) => `−${x.word}`), ...m.coverage.extra.map((x) => `+${x.word}`)].join(' ');
+        console.log(
+          `${label}  ${m.ok ? 'OK  ' : 'FAIL'}  слова ${m.coverage.matched}/${m.coverage.textWords}${miss ? ` [${miss}]` : ''}  монот ${m.monotonic.ok ? 'да' : 'НЕТ'}  конец ${m.end.gapMs} мс  пауз>400 ${m.pauses.length}  ${m.tempo.wpm} сл/мин  ${m.tempo.cps} симв/с  ${m.loudness.lufs} LUFS  ${m.loudness.truePeakDb} dBTP  (${r.wavDurationSec.toFixed(2)} с, чанков ${r.meta.chunks})`,
+        );
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        voice.phrases.push({ ...ph, error: msg });
+        console.log(`${label}  ОШИБКА  ${msg}`);
+        if (e instanceof FishError && e.status === 402) stopped = '402 на предыдущем запросе';
+      }
     }
     results.push(voice);
   }
 
-  const models = new Set(results.flatMap((v) => v.phrases.map((p) => p.meta.model)));
-  const summary = { generatedAt: new Date().toISOString(), model: MODEL, modelsUsed: [...models], request: REQUEST, outSampleRate: OUT_SR, voices: results.map(({ phrases: ps, ...v }) => ({ ...v, phrases: ps.map(({ words, ...p }) => p) })) };
-  writeFileSync(join(outDir, 'metrics.json'), `${JSON.stringify(summary, null, 2)}\n`);
+  const models = new Set(results.flatMap((v) => v.phrases.filter((p) => p.meta).map((p) => p.meta.model)));
+  const doc = dashboardDoc(results, phrases);
+  const json = `${JSON.stringify(doc, null, 2)}\n`;
+  writeFileSync(join(outDir, 'metrics.json'), json);
+  mkdirSync(dirname(dashboardCopy), { recursive: true });
+  writeFileSync(dashboardCopy, json);
   writeFileSync(join(outDir, 'report.md'), reportMd(results));
   const listen = writeListenPage({ outDir, voices: results, scale: SCALE });
-  console.log(`\nМодели в запросах: ${[...models].join(', ')}`);
-  console.log(`${join(outDir, 'report.md')}\n${join(outDir, 'metrics.json')}\n${listen}`);
-  return results;
+  const failed = doc.runs.filter((r) => !r.ok).length;
+  console.log(`\nМодели в запросах: ${[...models].join(', ') || '—'}; прогонов ${doc.runs.length}, не OK ${failed}`);
+  console.log(`${join(outDir, 'report.md')}\n${join(outDir, 'metrics.json')}\n${dashboardCopy}\n${listen}`);
+  return { results, failed };
+}
+
+/** metrics.json для дашборда архитектора (схема — 002-voice-calibration.review.md, «Дополнение к части Б»). */
+function dashboardDoc(voices, phrases) {
+  return {
+    generatedAt: new Date().toISOString(),
+    model: MODEL,
+    format: REQUEST.format,
+    request: { ...REQUEST, outSampleRate: OUT_SR },
+    voices: voices.map((v) => ({ id: v.id, slug: v.slug, title: v.title, author: v.author, tags: v.tags })),
+    // chars — формула readcheck: символы без пробелов (metrics.mjs charsNoSpace); words — tokenize (без пунктуации)
+    phrases: phrases.map((p) => ({ n: p.n, id: p.id, text: p.text, chars: charsNoSpace(p.text), words: tokenize(p.text).length })),
+    runs: voices.flatMap((v) =>
+      v.phrases.map((p) => {
+        const m = p.metrics;
+        if (!m) return { voiceId: v.id, n: p.n, ok: false, error: p.error, durationSec: null, coverage: null, monotonic: null, endGapSec: null, pauses: [], wpm: null, cps: null, lufs: null, truePeakDb: null, checks: null };
+        const pf = (x) => (x ? 'pass' : 'fail');
+        return {
+          voiceId: v.id,
+          n: p.n,
+          ok: m.ok,
+          error: null,
+          durationSec: +p.wavDurationSec.toFixed(3),
+          coverage: m.coverage.textWords ? +(m.coverage.matched / m.coverage.textWords).toFixed(3) : 0,
+          monotonic: m.monotonic.ok,
+          endGapSec: m.end.gapMs / 1000,
+          pauses: m.pauses.map((x) => ({ afterWord: x.after, sec: x.ms / 1000 })),
+          wpm: m.tempo.wpm,
+          cps: m.tempo.cps,
+          lufs: m.loudness?.lufs ?? null,
+          truePeakDb: m.loudness?.truePeakDb ?? null,
+          checks: { coverage: pf(m.coverage.ok), monotonic: pf(m.monotonic.ok), endGap: pf(m.end.ok) },
+        };
+      }),
+    ),
+    // coverageMin 1.0 = все слова текста найдены и ничего лишнего; endGap — окно [min, max]
+    thresholds: { coverageMin: 1.0, endGapMinSec: END_GAP_MIN_MS / 1000, endGapMaxSec: END_GAP_MAX_MS / 1000, pauseMs: PAUSE_MS },
+  };
 }
 
 const fmt = (x, d = 1) => (x === null || x === undefined ? '—' : Number(x).toFixed(d));
@@ -132,11 +193,15 @@ function reportMd(voices) {
     L.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
     for (const p of v.phrases) {
       const m = p.metrics;
+      if (!m) {
+        L.push(`| ${p.n} | ${p.checks} | ОШИБКА: ${p.error.replace(/\|/g, '/')} |  |  |  |  |  |  |  |  |  |  |  |  |`);
+        continue;
+      }
       const diff = [...m.coverage.missing.map((x) => `−${x.word}`), ...m.coverage.extra.map((x) => `+${x.word}`)].join(' ');
       const pauses = m.pauses.map((x) => `${x.after}→${x.before} ${x.ms}`).join('; ') || '—';
       L.push(`| ${p.n} | ${p.checks} | ${m.ok ? 'OK' : 'FAIL'} | ${m.coverage.matched}/${m.coverage.textWords}${diff ? ` ${diff}` : ''} | ${m.monotonic.ok ? 'да' : 'НЕТ'} | ${m.end.gapMs} | ${pauses} | ${fmt(m.tempo.wpm)} | ${fmt(m.tempo.cps, 2)} | ${fmt(m.loudness?.lufs)} | ${fmt(m.loudness?.truePeakDb)} |  |  |  |  |`);
     }
-    const main = v.phrases.filter((p) => p.n <= 5 && p.metrics.tempo.cps !== null);
+    const main = v.phrases.filter((p) => p.n <= 5 && p.metrics && p.metrics.tempo.cps !== null);
     const avg = (f) => (main.length ? main.reduce((sum, p) => sum + f(p), 0) / main.length : null);
     L.push('', `Среднее по фразам 1–5: ${fmt(avg((p) => p.metrics.tempo.wpm))} сл/мин, ${fmt(avg((p) => p.metrics.tempo.cps), 2)} cps.`, '');
   }

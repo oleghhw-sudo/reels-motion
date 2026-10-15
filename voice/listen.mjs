@@ -13,7 +13,7 @@ export function writeListenPage({ outDir, voices, scale }) {
     id: v.id,
     title: v.title,
     url: v.url,
-    phrases: v.phrases.map((p) => ({ n: p.n, text: p.text, checks: p.checks, wav: p.wav, words: p.words, ok: p.metrics.ok, gapMs: p.metrics.end.gapMs, cps: p.metrics.tempo.cps })),
+    phrases: v.phrases.filter((p) => p.metrics).map((p) => ({ n: p.n, text: p.text, checks: p.checks, wav: p.wav, words: p.words, ok: p.metrics.ok, gapMs: p.metrics.end.gapMs, cps: p.metrics.tempo.cps })),
   }));
   const html = `<!doctype html>
 <html lang="ru">
