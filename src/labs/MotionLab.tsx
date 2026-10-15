@@ -1,4 +1,5 @@
 // Лаборатория функций движения src/motion: по плитке на функцию, всё — функция кадра (5 с, 30 fps).
+// Плитки 10–11 — элемент CountUp (#007), один проход без цикла: счёт 0.45–2.9 с от начала композиции.
 // События повторяются каждые 1.25 с (4 цикла), чтобы на любом кадре было видно действие.
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig } from 'remotion';
@@ -23,6 +24,7 @@ import {
   through,
   type Pt,
 } from '../motion/index.ts';
+import { CountUp, type CountUpTheme } from '../elements/CountUp.tsx';
 
 loadAllFonts();
 
@@ -33,7 +35,9 @@ const INK = '#efeae0';
 const ACC = '#d9a05b';
 const MUTE = '#6f6a63';
 const TILE_W = 540;
-const TILE_H = 1920 / 5;
+// CountUp (#007): цвета спецификации для полосы и чипа, текст/акцент — лаборатории
+const COUNTUP_THEME: CountUpTheme = { text: INK, accent: ACC, bar: ['#3B7BFF', '#2EDBA8'], track: MUTE, chip: '#2EDBA8', chipInk: BG };
+const TILE_H = 1920 / 6;
 
 const Tile: React.FC<{ i: number; title: string; note: string; children: React.ReactNode }> = ({ i, title, note, children }) => (
   <div
@@ -180,6 +184,16 @@ export const MotionLab: React.FC = () => {
       <Tile i={9} title="таймкод" note="цикл событий 1.25 с">
         <div style={{ position: 'absolute', left: 24, top: cy - 40, fontFamily: fontStack('JetBrainsMono'), fontSize: 56, color: INK }}>
           {t.toFixed(2)} с · f{frame}
+        </div>
+      </Tile>
+      <Tile i={10} title="CountUp #007" note="0.45–2.9 с, приземление 2.9 с">
+        <div style={{ position: 'absolute', left: 0, top: 64 }}>
+          <CountUp id="lab-countup-2480" target={2480} theme={COUNTUP_THEME} fontFamily={fontStack('Onest')} fontSize={104} />
+        </div>
+      </Tile>
+      <Tile i={11} title="CountUp #007 · %" note="target 97, suffix %">
+        <div style={{ position: 'absolute', left: 0, top: 64 }}>
+          <CountUp id="lab-countup-97" target={97} suffix="%" theme={COUNTUP_THEME} fontFamily={fontStack('Onest')} fontSize={104} />
         </div>
       </Tile>
     </AbsoluteFill>
