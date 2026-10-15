@@ -65,37 +65,33 @@ export async function listVoices({ language, pageSize, page, sortBy = 'task_coun
   };
 }
 
-/** Слова из снимка alignment: массив или объект с words/segments/alignment. */
-function alignmentItems(al) {
-  if (!al) return [];
-  if (Array.isArray(al)) return al;
-  for (const key of ['words', 'segments', 'alignment', 'items']) if (Array.isArray(al[key])) return al[key];
-  return [];
-}
-
 /**
- * Склейка SSE-событий with-timestamp (чистая функция — тестируема без сети).
- * - audio_base64 склеиваются по порядку прихода;
- * - alignment хранится по chunk_seq: новое событие того же chunk_seq ЗАМЕНЯЕТ снимок (не дописывает);
+ * Склейка SSE-событий with-timestamp (чистая функция — тестируема без сети). Формат (docs.fish.audio, проверен
+ * на живом ответе 2026-10-16): { audio_base64, content, chunk_seq, chunk_audio_offset_sec,
+ * alignment: null | { audio_duration, segments: [{ text, start, end }] } }.
+ * - audio_base64 склеиваются ВСЕ по порядку прихода, в том числе из событий с alignment = null;
+ * - alignment хранится по chunk_seq: новый снимок того же chunk_seq ЗАМЕНЯЕТ старый (не дописывает);
+ *   alignment = null снимок не трогает;
  * - глобальное время слова = start/end + chunk_audio_offset_sec.
  */
 export function assembleTimestampEvents(events) {
   const audio = [];
-  const chunks = new Map(); // chunk_seq → { offset, items }
-  let order = 0;
+  const chunks = new Map(); // chunk_seq → { offset, segments, audioDuration }
   for (const ev of events) {
     if (ev.audio_base64) audio.push(Buffer.from(ev.audio_base64, 'base64'));
-    if (ev.alignment !== undefined) {
-      const seq = ev.chunk_seq ?? ev.alignment?.chunk_seq ?? 0;
-      const offset = Number(ev.chunk_audio_offset_sec ?? ev.alignment?.chunk_audio_offset_sec ?? 0);
-      const prev = chunks.get(seq);
-      chunks.set(seq, { offset, items: alignmentItems(ev.alignment), order: prev ? prev.order : order++ });
+    if (ev.alignment) {
+      chunks.set(Number(ev.chunk_seq ?? 0), {
+        offset: Number(ev.chunk_audio_offset_sec ?? 0),
+        segments: ev.alignment.segments ?? [],
+        audioDuration: ev.alignment.audio_duration ?? null,
+      });
     }
   }
-  const words = [...chunks.entries()]
-    .sort((a, b) => (Number(a[0]) - Number(b[0])) || a[1].order - b[1].order)
-    .flatMap(([, c]) => c.items.map((w) => ({ text: w.text ?? w.word, start: Number(w.start) + c.offset, end: Number(w.end) + c.offset })));
-  return { audio: Buffer.concat(audio), words };
+  const ordered = [...chunks.entries()].sort((a, b) => a[0] - b[0]);
+  const words = ordered.flatMap(([, c]) => c.segments.map((w) => ({ text: w.text, start: w.start + c.offset, end: w.end + c.offset })));
+  const last = ordered.at(-1)?.[1];
+  const reportedDurationSec = last && last.audioDuration !== null ? last.offset + last.audioDuration : null;
+  return { audio: Buffer.concat(audio), words, chunks: ordered.length, reportedDurationSec };
 }
 
 /** Разбор потока SSE: блоки, разделённые пустой строкой, строки `data: …` с JSON. */
@@ -123,28 +119,35 @@ async function* sseEvents(body) {
   }
 }
 
-/** Длительность WAV из заголовка (PCM): байты data / byteRate. */
-export function wavDurationSec(buf) {
-  if (buf.length < 44 || buf.toString('ascii', 0, 4) !== 'RIFF') return null;
-  let p = 12;
-  let byteRate = null;
-  while (p + 8 <= buf.length) {
-    const id = buf.toString('ascii', p, p + 4);
-    const size = buf.readUInt32LE(p + 4);
-    if (id === 'fmt ') byteRate = buf.readUInt32LE(p + 16);
-    if (id === 'data') return byteRate ? Math.min(size, buf.length - p - 8) / byteRate : null;
-    p += 8 + size + (size % 2);
-  }
-  return null;
+/** WAV (RIFF) с одним заголовком вокруг сырого PCM s16le. */
+export function pcmToWav(pcm, sampleRate, channels) {
+  const h = Buffer.alloc(44);
+  h.write('RIFF', 0, 'ascii');
+  h.writeUInt32LE(36 + pcm.length, 4);
+  h.write('WAVE', 8, 'ascii');
+  h.write('fmt ', 12, 'ascii');
+  h.writeUInt32LE(16, 16);
+  h.writeUInt16LE(1, 20); // PCM
+  h.writeUInt16LE(channels, 22);
+  h.writeUInt32LE(sampleRate, 24);
+  h.writeUInt32LE(sampleRate * channels * 2, 28);
+  h.writeUInt16LE(channels * 2, 32);
+  h.writeUInt16LE(16, 34);
+  h.write('data', 36, 'ascii');
+  h.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([h, pcm]);
 }
 
 /**
  * TTS с таймингами слов. model — обязателен (в калибровке только 's2.1-pro-free').
- * @returns {{ audio: Buffer, words: {text,start,end}[], durationSec: number|null }}
+ * format: 'pcm' (сырой s16le моно; максимум 44100 Гц — 48000 сервер отклоняет 400) → собираем WAV одним заголовком;
+ * 'opus' → ogg как пришёл. 'wav' не принимается: каждый кусок потока несёт свой заголовок (ревью 002-A).
+ * @returns {{ audio: Buffer, audioFormat: 'wav'|'ogg', words: {text,start,end}[], durationSec: number|null, reportedDurationSec: number|null, chunks: number }}
  */
 export async function tts({ text, voiceId, model, format, sampleRate, normalize, prosody }) {
   if (!model) throw new Error('tts: model обязателен (без значения по умолчанию)');
   if (!text || !voiceId) throw new Error('tts: text и voiceId обязательны');
+  if (format !== 'pcm' && format !== 'opus') throw new Error(`tts: format ${format} не поддержан — только 'pcm' или 'opus'`);
   const body = { text, reference_id: voiceId, format, sample_rate: sampleRate, normalize };
   if (prosody) body.prosody = prosody;
   const res = await fetch(`${BASE}/v1/tts/stream/with-timestamp`, {
@@ -158,6 +161,9 @@ export async function tts({ text, voiceId, model, format, sampleRate, normalize,
     if (ev.error || ev.status === 'error') throw new FishError(ev.status ?? 0, `with-timestamp: ошибка в потоке — ${JSON.stringify(ev).slice(0, 300)}`);
     events.push(ev);
   }
-  const { audio, words } = assembleTimestampEvents(events);
-  return { audio, words, durationSec: format === 'wav' ? wavDurationSec(audio) : null };
+  const { audio, words, chunks, reportedDurationSec } = assembleTimestampEvents(events);
+  if (format === 'pcm') {
+    return { audio: pcmToWav(audio, sampleRate, 1), audioFormat: 'wav', words, durationSec: audio.length / (sampleRate * 2), reportedDurationSec, chunks, events: events.length };
+  }
+  return { audio, audioFormat: 'ogg', words, durationSec: null, reportedDurationSec, chunks, events: events.length };
 }

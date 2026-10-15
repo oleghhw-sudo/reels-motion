@@ -7,12 +7,15 @@
 // В обоих режимах голоса политиков исключаются (CLAUDE.md «Голос», voice/politicians.mjs) и печатаются отдельно.
 // Только GET /model — бесплатно. Дальше Олег слушает на сайте и вписывает 3 id в voice/calibration.json
 // (поле voices). Этот файл создаёт человек; скрипт его НЕ пишет (гейт 5).
-// Часть Б (--run: озвучка × фразы, метрики, listen.html) — после выбора голосов, в этом файле ещё нет.
+//   node --env-file=.env voice/calibrate.mjs --run
+//     → часть Б: голоса из voice/calibration.json × 6 фраз, только s2.1-pro-free (voice/run.mjs):
+//       out/voice/<slug>/<n>.wav + <n>.words.json, out/voice/metrics.json, report.md, listen.html.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FishError, listVoices } from './fish.mjs';
 import { excludePoliticians } from './politicians.mjs';
+import { run } from './run.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'out', 'voice');
@@ -70,8 +73,9 @@ async function list(mode) {
 const args = process.argv.slice(2);
 try {
   if (args.includes('--list')) await list(args.includes('--only-uk') ? MODES.onlyUk : MODES.all);
+  else if (args.includes('--run')) await run({ root: ROOT, outDir: OUT_DIR });
   else {
-    console.error('Использование: node --env-file=.env voice/calibrate.mjs --list [--only-uk]   (--run — часть Б задачи 002, ещё не реализован)');
+    console.error('Использование: node --env-file=.env voice/calibrate.mjs --list [--only-uk] | --run');
     process.exit(1);
   }
 } catch (e) {
