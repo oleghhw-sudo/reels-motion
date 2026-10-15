@@ -1,45 +1,77 @@
 #!/usr/bin/env node
 // Калибровка украинского голоса Fish Audio (задача 002).
 //   node --env-file=.env voice/calibrate.mjs --list
-//     → до 12 украинских голосов (GET /model, бесплатно), сохраняет out/voice/candidates.json.
-//     Дальше Олег слушает на сайте и вписывает 3 id в voice/calibration.json (поле voices).
-//     Этот файл создаёт человек; скрипт его НЕ пишет (гейт 5).
+//     → до 12 голосов с language=uk (по task_count) → out/voice/candidates.json.
+//   node --env-file=.env voice/calibrate.mjs --list --only-uk
+//     → 15 голосов ТОЛЬКО с languages == ["uk"], sort_by=score → out/voice/candidates-uk.json (ревью 002-A).
+// В обоих режимах голоса политиков исключаются (CLAUDE.md «Голос», voice/politicians.mjs) и печатаются отдельно.
+// Только GET /model — бесплатно. Дальше Олег слушает на сайте и вписывает 3 id в voice/calibration.json
+// (поле voices). Этот файл создаёт человек; скрипт его НЕ пишет (гейт 5).
 // Часть Б (--run: озвучка × фразы, метрики, listen.html) — после выбора голосов, в этом файле ещё нет.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FishError, listVoices } from './fish.mjs';
+import { excludePoliticians } from './politicians.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'out', 'voice');
-const LIST_LIMIT = 12;
 const LANGUAGE = 'uk';
 
-async function list() {
+const MODES = {
+  all: { limit: 12, sortBy: 'task_count', pageSize: 12, maxPages: 1, file: 'candidates.json', keep: () => true, label: `language=${LANGUAGE}` },
+  onlyUk: {
+    limit: 15,
+    sortBy: 'score',
+    pageSize: 100,
+    maxPages: 20,
+    file: 'candidates-uk.json',
+    keep: (v) => v.languages.length === 1 && v.languages[0] === LANGUAGE,
+    label: `languages == ["${LANGUAGE}"]`,
+  },
+};
+
+async function list(mode) {
   console.log(`FISH_API_KEY ${process.env.FISH_API_KEY ? 'задан' : 'НЕ задан'}`);
-  const { total, items } = await listVoices({ language: LANGUAGE, pageSize: LIST_LIMIT, page: 1, sortBy: 'task_count' });
-  const voices = items.slice(0, LIST_LIMIT);
+  const kept = [];
+  const excluded = [];
+  let total = 0;
+  let scanned = 0;
+  let pages = 0;
+  for (let page = 1; page <= mode.maxPages && kept.length < mode.limit; page++) {
+    const r = await listVoices({ language: LANGUAGE, pageSize: mode.pageSize, page, sortBy: mode.sortBy });
+    total = r.total;
+    pages = page;
+    scanned += r.items.length;
+    const split = excludePoliticians(r.items.filter(mode.keep));
+    excluded.push(...split.excluded);
+    for (const v of split.kept) if (kept.length < mode.limit) kept.push(v);
+    if (r.items.length < mode.pageSize) break;
+  }
   mkdirSync(OUT_DIR, { recursive: true });
-  const file = join(OUT_DIR, 'candidates.json');
+  const file = join(OUT_DIR, mode.file);
+  const query = { language: LANGUAGE, sort_by: mode.sortBy, page_size: mode.pageSize, pages, filter: mode.label };
   writeFileSync(
     file,
-    `${JSON.stringify({ generatedAt: new Date().toISOString(), source: 'GET https://api.fish.audio/model', query: { language: LANGUAGE, page_size: LIST_LIMIT, page_number: 1, sort_by: 'task_count' }, total, voices }, null, 2)}\n`,
+    `${JSON.stringify({ generatedAt: new Date().toISOString(), source: 'GET https://api.fish.audio/model', query, total, scanned, voices: kept, excludedPoliticians: excluded }, null, 2)}\n`,
   );
-  console.log(`Голосов с language=${LANGUAGE} в каталоге: ${total}; показано: ${voices.length} (по task_count)\n`);
-  voices.forEach((v, i) => {
+  console.log(`Каталог language=${LANGUAGE}: ${total}; просмотрено ${scanned} (${pages} стр., sort_by=${mode.sortBy}); фильтр ${mode.label}; показано ${kept.length}\n`);
+  kept.forEach((v, i) => {
     console.log(`${String(i + 1).padStart(2)}. ${v.title}  ·  автор ${v.author ?? '—'}  ·  задач ${v.taskCount}  ·  языки ${v.languages.join(',') || '—'}`);
     console.log(`    id ${v.id}  ·  ${v.url}`);
     if (v.tags.length) console.log(`    теги: ${v.tags.join(', ')}`);
   });
+  console.log(`\nИсключено как голоса политиков: ${excluded.length}`);
+  for (const v of excluded) console.log(`  ✗ ${v.title}  ·  автор ${v.author ?? '—'}  ·  ${v.url}  ·  совпало: ${v.excludedBy.join(', ')}`);
   console.log(`\n${file}`);
   console.log('СТОП: выберите 3 голоса на сайте и впишите их id в voice/calibration.json → { "voices": ["…", "…", "…"] }');
 }
 
 const args = process.argv.slice(2);
 try {
-  if (args.includes('--list')) await list();
+  if (args.includes('--list')) await list(args.includes('--only-uk') ? MODES.onlyUk : MODES.all);
   else {
-    console.error('Использование: node --env-file=.env voice/calibrate.mjs --list   (--run — часть Б задачи 002, ещё не реализован)');
+    console.error('Использование: node --env-file=.env voice/calibrate.mjs --list [--only-uk]   (--run — часть Б задачи 002, ещё не реализован)');
     process.exit(1);
   }
 } catch (e) {

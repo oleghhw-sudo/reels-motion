@@ -53,6 +53,7 @@ export async function listVoices({ language, pageSize, page, sortBy = 'task_coun
     items: (json.items ?? []).map((m) => ({
       id: m._id,
       title: m.title,
+      description: m.description ?? '',
       author: m.author?.nickname ?? null,
       authorId: m.author?._id ?? null,
       tags: m.tags ?? [],

@@ -1,6 +1,6 @@
 # Отчёт: 002-voice-calibration
-Статус: частично, ждёт выбора голосов (часть А готова, часть Б не начата)
-Время: ~20 мин
+Статус: частично, ждёт выбора голосов (часть А + доработка А+ по ревью готовы, часть Б не начата)
+Время: ~20 мин (А) + ~15 мин (А+)
 
 ## Сделано (часть А: шаги 1–3 до `--list` включительно)
 - `voice/fish.mjs` — клиент без SDK:
@@ -49,6 +49,54 @@
 ## Предложения (вне рамок задачи, не сделано)
 - Сделать второй `--list`: только голоса с `languages == ["uk"]` или с `sort_by=score`. В топе по task_count много мультиязычных голосов с русским основным.
 - Исключать из кандидатов голоса реальных людей и персонажей (по тегам или вручную).
+
+## Доработка А+ (по `002-voice-calibration.review.md` и CLAUDE.md «Голос»)
+### Сделано
+- `node --env-file=.env voice/calibrate.mjs --list --only-uk` — `sort_by=score`, оставляются только голоса с `languages == ["uk"]`, 15 штук. Каталог обходится страницами по 100 (не больше 20 страниц), пока не наберётся 15. Результат — `out/voice/candidates-uk.json`; в нём же поле `excludedPoliticians`.
+- `voice/politicians.mjs` — исключаются **только голоса политиков**. Поиск без регистра по названию, описанию и тегам голоса, шаблон ищется с начала слова. В список входят фамилии украинских, российских, белорусских и мировых политиков в укр., рус. и лат. написании, а также должности: президент, депутат, міністр, премʼєр, сенатор, політик. Известные люди не из политики и персонажи не исключаются.
+- Фильтр работает в обоих режимах, и в `--list`, и в `--list --only-uk`. Каждое исключение печатается с шаблоном, который совпал.
+- В `listVoices` добавлено поле `description` — его читает фильтр.
+- Тест `voice/politicians.test.mjs` проверяет примеры из настоящего `--list`, а также ложные совпадения «Распутин» (≠ путин) и «кличка» (≠ Кличко).
+
+### Проверки (команда → результат)
+- `node voice/politicians.test.mjs` → 9 ✓, `OK: politicians`, exit 0.
+- `node voice/politicians.test.mjs --negative` → `ПРОВАЛ: 2`, exit 1 (позитивный контроль красный).
+- `node --env-file=.env voice/calibrate.mjs --list --only-uk` → `Каталог language=uk: 1000; просмотрено 100 (1 стр., sort_by=score); фильтр languages == ["uk"]; показано 15`; `Исключено как голоса политиков: 4`; exit 0.
+- `node --env-file=.env voice/calibrate.mjs --list` (старый режим) → показано 10 из 12, исключено 2 (№1 и №5 из таблицы выше).
+- Платных вызовов нет: только `GET /model`.
+
+### Исключены как голоса политиков (`--only-uk`, первые 100 по score)
+| Голос | Автор | Совпало | Ссылка |
+|---|---|---|---|
+| Volodomyr Zelensky | oni | zelensk | https://fish.audio/m/6be22288f35f4e9b964bdbeb099baee1/ |
+| Зеленський | children's world | зеленськ | https://fish.audio/m/a46b54294a73455b95d614037277bf46/ |
+| Зеленский | artemksksks | зеленск | https://fish.audio/m/b1f9fd46d1cc492a96b603d4143251dc/ |
+| Зеленский | ЛукашенкоТоп | зеленск | https://fish.audio/m/59a70a465ef34b7ebb3c9dd01d5b8ea7/ |
+
+### Кандидаты `--list --only-uk` (sort_by=score, languages == ["uk"])
+| # | Голос | Автор | Задач | Теги (начало) | Ссылка |
+|---|---|---|---|---|---|
+| 1 | German S2 | Popghip67890 | 1889 | male, old, character-voice, deep, raspy | https://fish.audio/m/187d4119dce34a7bbec3196b75bff447/ |
+| 2 | Український Диктор | DDP | 2056 | male, middle-aged, narration, announcer | https://fish.audio/m/e8f78487bf5a44b6a9bf2a0369e603aa/ |
+| 3 | Konder S2 | Popghip67890 | 1420 | male, old, character-voice, deep, raspy | https://fish.audio/m/f9cbb45877b84a14963d571c14fb7484/ |
+| 4 | Sultan S2 | popghip67890 | 677 | male, middle-aged, character-voice, conversational | https://fish.audio/m/639c8a6500934a449322b8fca58a6341/ |
+| 5 | Офіційний диктор | Михайло Михайло | 658 | male, middle-aged, narration, advertisement | https://fish.audio/m/0e602bef976a4321b2923c44caffaa74/ |
+| 6 | Ясна Українська | Аліна Книшова | 1025 | female, young, narration, friendly | https://fish.audio/m/e1cab03f89eb4b7194ae41ed1ef1c9df/ |
+| 7 | Гоуст (укр.голос) | alinka | 253 | male, middle-aged, conversational, character-voice | https://fish.audio/m/13a53bfd58244073b8449d87da1fa44d/ |
+| 8 | Голос транспортних оголошень | Кruk Syrnyk34 | 441 | male, old, narration, neutral-tone | https://fish.audio/m/76ead97fa5f648f99dc1096eb202a67a/ |
+| 9 | Диктор метро Києва | varicalic | 589 | male, middle-aged, announcer | https://fish.audio/m/d8e745f6985a46189cdc7c7da07854ae/ |
+| 10 | Kokos nikita | arditaparrish52 | 299 | male, middle-aged, conversational, social-media | https://fish.audio/m/42254c6d80d548779a9cffe94cfc335c/ |
+| 11 | Борундуков 2016 | Микола Строна | 742 | male, young, narration, energetic | https://fish.audio/m/47fa339b9a8b42c6b7b912eeabca1da2/ |
+| 12 | Real Koko | benjaminemoni18 | 224 | male, middle-aged, narration, Ukrainian Accent | https://fish.audio/m/7c284efb2c094296a8c5e031ca374651/ |
+| 13 | Пятно | Полина | 208 | male/female (оба тега), young, social-media | https://fish.audio/m/f7ea954d341048b1a0035323c5cbfe21/ |
+| 14 | Припой | Popghip67890 | 238 | male, old, character-voice, dynamic | https://fish.audio/m/991757dbcbc64e17953f7b28069c3211/ |
+| 15 | Молодий жіночий голос | SHOOTER TheHitta | 993 | female, young, conversational, social-media | https://fish.audio/m/8221c35c1b524ff5815fa4b9dc65faf8/ |
+
+Женских голосов в списке два: №6 и №15. У №13 стоят оба тега, male и female.
+
+### Ограничения
+- Фильтр работает по словарю. Политика, которого нет в списке шаблонов и у которого нет слова-должности в названии или тегах, фильтр пропустит. Поэтому каждое исключение видно в выводе, а Олег при выборе всё равно смотрит название.
+- Фамилии «Данилов» и «Медведев» — частые, по ним возможны ложные исключения. Каждое такое исключение будет видно в выводе с совпавшим шаблоном.
 
 ## Дальше (часть Б, после Олега)
 Олег создаёт `voice/calibration.json` → `{ "voices": ["<id>", "<id>", "<id>"] }`, затем: `--run`, метрики с позитивным контролем, `out/voice/report.md`, `listen.html`.
