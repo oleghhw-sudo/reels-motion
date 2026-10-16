@@ -12,7 +12,7 @@ Claude генерирует данные и редкие уникальные с
 ## Конвейер
 
 ```
-scenes.yaml ──► [voice] Fish TTS + тайминги ──► voice.wav + words.json
+scenes.yaml ──► [voice] TTS (Gemini) ──► voice.wav ──► [align] Whisper + сценарий ──► words.json
                                                      │
                                           [align] ──► timeline.json (сцены, слова → кадры)
                                                      │
