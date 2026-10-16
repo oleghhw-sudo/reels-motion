@@ -9,3 +9,4 @@ sfx/manifest.json
 sfx/approved.backup.json
 videos/*/assets/
 public/videos/
+.venv-asr/

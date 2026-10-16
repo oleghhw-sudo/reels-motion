@@ -11,10 +11,17 @@
 //     → часть Б: голоса из voice/calibration.json × 6 фраз, только s2.1-pro-free (voice/run.mjs):
 //       out/voice/<slug>/<n>.wav + <n>.words.json, out/voice/metrics.json (+ копия docs/tasks/data/002-metrics.json),
 //       report.md, listen.html. Неудавшаяся фраза — строка с ok:false и ошибкой; exit 1, если хоть один прогон не OK.
+// Gemini (задача 007):
+//   node --env-file=.env voice/calibrate.mjs --provider gemini --list [--search <строка>]
+//     → голоса GET /v1beta/voices (бесплатно) → out/voice/gemini-voices.json; сверка с voice/calibration-gemini.json
+//       (файл Олега, только чтение): какие голоса найдены. Голоса нет → exit 1 (СТОП задачи 007, шаг 2).
+//   --provider gemini --run — часть Б задачи 007, ещё не реализован.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
 import { FishError, listVoices } from './fish.mjs';
+import { GeminiError, listVoices as geminiListVoices } from './gemini.mjs';
 import { excludePoliticians } from './politicians.mjs';
 import { run } from './run.mjs';
 
@@ -71,9 +78,46 @@ async function list(mode) {
   console.log('СТОП: выберите 3 голоса на сайте и впишите их id в voice/calibration.json → { "voices": ["…", "…", "…"] }');
 }
 
+async function geminiList(search) {
+  console.log(`GEMINI_API_KEY ${process.env.GEMINI_API_KEY ? 'задан' : 'НЕ задан'}`);
+  const voices = await geminiListVoices({ search, pageSize: 1000 });
+  mkdirSync(OUT_DIR, { recursive: true });
+  const file = join(OUT_DIR, search ? `gemini-voices-${search.replace(/[^\p{L}\p{N}_-]+/gu, '_')}.json` : 'gemini-voices.json');
+  writeFileSync(file, `${JSON.stringify({ generatedAt: new Date().toISOString(), source: 'GET https://generativelanguage.googleapis.com/v1beta/voices', query: { search: search ?? null, page_size: 1000 }, count: voices.length, voices }, null, 2)}\n`);
+  console.log(`Голосов${search ? ` по поиску «${search}»` : ''}: ${voices.length}`);
+  for (const v of voices.slice(0, 40)) console.log(`  ${v.name}  ·  ${v.gender ?? '—'}  ·  ${v.languageCode ?? '—'}  ·  ${v.type ?? '—'}  ·  ${(v.description ?? '').slice(0, 70)}`);
+  if (voices.length > 40) console.log(`  … ещё ${voices.length - 40} (полный список — в файле)`);
+  console.log(`\n${file}`);
+  const calibFile = join(ROOT, 'voice', 'calibration-gemini.json');
+  if (!existsSync(calibFile)) {
+    console.log('voice/calibration-gemini.json нет — сверку голосов пропускаю (файл создаёт Олег)');
+    return true;
+  }
+  const wanted = JSON.parse(readFileSync(calibFile, 'utf8')).voices ?? [];
+  let all = true;
+  console.log(`\nСверка с voice/calibration-gemini.json (${wanted.join(', ')}):`);
+  for (const w of wanted) {
+    const hit = voices.filter((v) => [v.name, v.id].some((x) => String(x ?? '').toLowerCase() === w.toLowerCase()));
+    if (!hit.length) all = false;
+    console.log(`  ${hit.length ? '✓' : '✗'} ${w}${hit.length ? `  →  ${hit.map((h) => `${h.id ?? h.name} (${h.type ?? '—'})`).join(', ')}` : '  — НЕ найден в этом списке'}`);
+  }
+  return all;
+}
+
 const args = process.argv.slice(2);
+const opt = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
 try {
-  if (args.includes('--list')) await list(args.includes('--only-uk') ? MODES.onlyUk : MODES.all);
+  if (opt('--provider') === 'gemini') {
+    if (args.includes('--list')) {
+      if (!(await geminiList(opt('--search')))) process.exitCode = 1;
+    } else {
+      console.error('Использование: node --env-file=.env voice/calibrate.mjs --provider gemini --list [--search <строка>]   (--run — часть Б задачи 007)');
+      process.exit(1);
+    }
+  } else if (opt('--provider') !== undefined && opt('--provider') !== 'fish') {
+    console.error(`Неизвестный --provider ${opt('--provider')}: fish | gemini`);
+    process.exit(1);
+  } else if (args.includes('--list')) await list(args.includes('--only-uk') ? MODES.onlyUk : MODES.all);
   else if (args.includes('--run')) {
     // копия metrics.json для архитектора (в git, ревью 002 «Дополнение к части Б»)
     const { failed } = await run({ root: ROOT, outDir: OUT_DIR, dashboardCopy: join(ROOT, 'docs', 'tasks', 'data', '002-metrics.json') });
@@ -84,6 +128,6 @@ try {
     process.exit(1);
   }
 } catch (e) {
-  console.error(e instanceof FishError ? `ОШИБКА Fish: ${e.message}` : e);
+  console.error(e instanceof FishError ? `ОШИБКА Fish: ${e.message}` : e instanceof GeminiError ? `ОШИБКА Gemini: ${e.message}` : e);
   process.exit(1);
 }
