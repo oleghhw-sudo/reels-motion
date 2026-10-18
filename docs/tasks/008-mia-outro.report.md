@@ -369,3 +369,54 @@ ffmpeg ebur128 по обоим черновикам: I -14.0 LUFS, LRA 2.1 LU, P
 - Сменить внешние SFX на CC0 перед публикацией (`licenseWarning`).
 - Вырезка ROOK выше разрешением — тем же методом с исходника `DARK_new2.jpg`.
 - Олегу: кропы погони по листу `MiaOutroVertical-crops-chase.png` → `outro.yaml vertical.crops`.
+
+## Финальный рендер (ep01, 2026-10-19 00:15 локального времени, Mac)
+
+Одобрение Олега: динамика v2 = коммит `2f3856c`. Код аутро, тайминги и `src/motion` не менялись. Замечания 1–3 из `008-mia-outro.review-2.md` **не делались** — следующая итерация.
+
+**Что пришло с `git pull` поверх 2f3856c** (`git diff --stat 2f3856c HEAD`): 3 файла, ничего в `src/motion`, `src/elements`, `.claude/skills`:
+- `CLAUDE.md` — новый раздел «Где запускать билдера (облако или Mac)»;
+- `docs/tasks/008-mia-outro.review-2.md` — ревью черновика v2 (принято, 4 замечания);
+- `videos/mia-outro/outro.yaml` — только `vertical.crops`: V3 B → **A** (V7 B, V1 B без изменений).
+Рендер = код аутро из 2f3856c + кроп из outro.yaml (HEAD `aba7647`).
+
+**Среда:** `npm run check -- --scope mia-outro` → `MIA_SHORT_DIR` и `SFX_EXTERNAL_DIR` заданы в `.env`, «обязательные файлы на месте», exit 0. (Первый запуск был красным — переменных не было в `.env`; Олег добавил, см. выше по чату.) Скрипты запускались через `node --env-file=.env …`, так как их собственный парсер `.env` берёт строку как есть, с кавычками.
+
+**Команды → вывод:**
+```
+node --env-file=.env --experimental-strip-types --no-warnings videos/mia-outro/prepare-assets.mjs
+  ✓ ep01: 14 пунктов, 470 кадров; зоны чисты
+  ✓ микс ep01: музыка 42.379–60.72 с + тишина 1.25 с + 24 SFX; до нормализации I -14.53 / TP 0.15 → I -14 LUFS / TP -1.5 dBTP (dynamic)
+  OK: 87 файлов → videos/mia-outro/assets; манифест videos/mia-outro/assets.manifest.json; лицензии out/mia-outro/license-report.md
+
+node --env-file=.env --experimental-strip-types --no-warnings videos/mia-outro/check-zones.mjs
+  OK: ни один кадр не задевает запретные зоны                                               → exit 0
+node --env-file=.env … check-zones.mjs --inject V3:9.8-10.0   (позитивный контроль)
+  ✗ timeline[2] live V3 f228–260 задевает зона V3 9.8–10 с «ПОДЛОЖЕНО»: кадры 236–239 (4 шт.)  → exit 1
+
+npx remotion render src/index.ts MiaOutro         out/mia-outro/final/MiaOutro-ep01.mp4         --codec=h264 --crf=18 --audio-codec=aac --audio-bitrate=320K --props='{"episode":"ep01"}'
+npx remotion render src/index.ts MiaOutroVertical out/mia-outro/final/MiaOutroVertical-ep01.mp4 --codec=h264 --crf=18 --audio-codec=aac --audio-bitrate=320K --props='{"episode":"ep01"}'
+  оба: Encoded 470/470, exit 0 (≈2 мин 16:9, ≈3 мин 9:16, параллельно)
+```
+
+**Проверки готовых файлов (ffprobe / ffmpeg ebur128=peak=true):**
+| Файл | Размер | Видео | Кадры | Аудио | I | LRA | True peak |
+|---|---|---|---|---|---|---|---|
+| `out/mia-outro/final/MiaOutro-ep01.mp4` | 18 160 827 B (18.2 MB) | h264 **High**, yuv420p, 1920×1080, 24/1, ~7.09 Mb/s | **470** (nb_frames и счёт пакетов), 19.584 с | AAC-LC 48 kHz stereo **317 kb/s** | **−14.0 LUFS** | 2.1 LU | **−1.4 dBTP** |
+| `out/mia-outro/final/MiaOutroVertical-ep01.mp4` | 15 977 097 B (16.0 MB) | h264 **High**, yuv420p, 1080×1920, 24/1, ~6.20 Mb/s | **470**, 19.584 с | AAC-LC 48 kHz stereo 317 kb/s | **−14.0 LUFS** | 2.1 LU | **−1.4 dBTP** |
+
+Цели: −14 LUFS ±1 — да; true peak ≤ −1 dBTP — да (−1.4; цель loudnorm −1.5, запас на AAC сохранился). Профиль High — ffprobe `profile=High` в обоих. Длительность 19.584 с = 470 кадров @ 24 fps (контейнер округляет 19.591).
+
+**Стиллы из готовых mp4** (`ffmpeg -vf "select=eq(n\,N)" -vsync 0 -frames:v 1`), `out/mia-outro/final/stills/`:
+- удар h2 (карточка MIA): `f66` (кадр удара/вспышка), `f68` (импакт-кадр: красный фон, чёрные лучи, фигура-постер с белым контуром), `f82` (середина карточки: #1 MIA / THE INVENTOR, растр+лучи, обводка) — обе ориентации;
+- финал: `f387` (MIA + строка), `f439` (последний кадр музыки: + TO BE CONTINUED), `f469` (конец holdAfter) — обе ориентации;
+- `MiaOutroVertical-f55-V3-cropA.png` — погоня V3 в 9:16 идёт с новым кропом **A** (машина левее, больше города), как в outro.yaml.
+Смотрел глазами: совпадает с листами черновика v2; текст финала в 9:16 в две строки, в safe zones.
+
+**Лицензии:** `out/mia-outro/final/license-report.md` — копия отчёта prepare рядом с роликами: 13 внешних SFX `unknown` ⚠ licenseWarning (только некоммерческий черновик, перед Instagram заменить на CC0), музыка Suno ⚠ тариф не подтверждён, щелчок CC0, шрифты OFL, видео и вырезки — материалы Олега. Жёсткого запрета нет (решение 2026-10-18), предупреждение — здесь.
+
+**Файлы:** `out/mia-outro/final/` — 44 MB, не в git (`out` в .gitignore): `MiaOutro-ep01.mp4`, `MiaOutroVertical-ep01.mp4`, `license-report.md`, `stills/` (13 PNG).
+
+**В git:** `videos/mia-outro/assets.manifest.json` перегенерирован prepare: изменились `generatedAt`, `outroSha256` (кроп V3) и sha256 у 52 производных PNG (`cards/*`, `bg/*.dots.png`, `grain/*`) — кодирование этих PNG недетерминировано между запусками; живые кадры, вырезки-источники и `mix.ep01.wav` по sha совпали с предыдущим прогоном. Этот отчёт.
+
+**Не проверялось:** на слух (как и в черновике); readcheck повторно не гонял — код и тайминги те же, что в 2f3856c (3 SHORT подписей — калиброванное исключение).

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-18T20:48:31.019Z",
+  "generatedAt": "2026-10-18T21:15:25.241Z",
   "script": "videos/mia-outro/prepare-assets.mjs 2.0.0",
-  "outroSha256": "0f103f97f2db5104db7ee2779ce4450e4b9c4cf918415f91db13bc6182783703",
+  "outroSha256": "73f74c719fd83ca310facd0ed596f3b042408a5e7cd0567daccc5309d1194d46",
   "shots": {
     "sha256": "3ad81192a7c70775ab365ad6a6490d76724b56e55655617799601d9c05399fd6",
     "excludedZones": [
@@ -1050,211 +1050,211 @@
     },
     {
       "file": "cards/MIA.land.figure.png",
-      "sha256": "9c054e153082d4cbe99fda9b4e0a52107b3181ded9c79d3628f426de51ed3450"
+      "sha256": "0796c548fc63f4c185902d26632f166a3e620a612bcacf667a7e474e3d2555c0"
     },
     {
       "file": "cards/MIA.land.black.png",
-      "sha256": "c92ba441bbd1e30ca9473e7deed171f80f638b4ebe6d764b5a3af98aebc3155c"
+      "sha256": "0b4bd0d2e931035043dfad3f3bcca421c3867431b2941c96d16db830a46584b4"
     },
     {
       "file": "cards/MIA.land.white.png",
-      "sha256": "7dd0f190b6af5ea47c797be9c6ffd53a9b76a6834f81344f8b09b6b28b064749"
+      "sha256": "c5591b065c1f781253b44008c2c24b13839b752aa517d6606ab0a6f6b1e203b6"
     },
     {
       "file": "cards/MIA.land.poster.png",
-      "sha256": "2b864d73d213646f1dce830d4ce5dae8b2d66c765a20a7fb7e2b0bc42b7f35d2"
+      "sha256": "1442f4e106cb226a077f819f5d60434c0ee6fe0a62f1ef3028a5802f4db21981"
     },
     {
       "file": "cards/MIA.land.ring.png",
-      "sha256": "62c950acc2b17dcbbfad81d766c8e8312ed93490b71ba50351e46e142b0ff201"
+      "sha256": "c056396a7d5da0e41ee6e0dd6063d800e109db1c1f201583286e2bd14938b093"
     },
     {
       "file": "cards/MIA.port.figure.png",
-      "sha256": "4b59bf37bc6e6de4c8d0700ec1d33601e776240648fb2bbe3332e86d957cae3e"
+      "sha256": "b78e25e5c17a726d7052a84614a3efcdc1f2dc2ddf93a0bd26d93aa99ed51f25"
     },
     {
       "file": "cards/MIA.port.black.png",
-      "sha256": "6f958d1a86e22cd223a0cfce0825d269dfddfbb4c9760cb0931558e5cf26e355"
+      "sha256": "247195a8926f9f62295541ebfeb58c382a4086d9cab27e5999878e4182d67297"
     },
     {
       "file": "cards/MIA.port.white.png",
-      "sha256": "16980e0afbbad0a6a779233eee75426daec9077f120d2099ab35f4206d735e1a"
+      "sha256": "e353ceab944ede9a01e5f3ea8be7e607c91dfe70e741b3bbf0f12a7b45a19f88"
     },
     {
       "file": "cards/MIA.port.poster.png",
-      "sha256": "ba1f38e57352c45b428d3c230353c5dbf44bde988fa728285833e542fcc4c2b3"
+      "sha256": "8a2e38626f09238b7b4c0458fbe6c3f72f9b85fb01622d16e7d8182f998b90b4"
     },
     {
       "file": "cards/MIA.port.ring.png",
-      "sha256": "b6783f73a8e49206b955931a45e7d50be60e4a82c8a15c96001223a489061869"
+      "sha256": "ff0e093d26bbb77b76ddef6813aa82e3f11520cbb9195c1123a7eec5f8d55509"
     },
     {
       "file": "bg/MIA.land.dots.png",
-      "sha256": "8d35d385245b079df5f198b1d28b175bff08e21360fadbaeeaf6cdbeceddcae5"
+      "sha256": "a2262e6444c399629c5943466c40bf1dc49fd1fbd652677cbdc60a8b704b2527"
     },
     {
       "file": "bg/MIA.port.dots.png",
-      "sha256": "af69736f6fc86ec55043c02cb0958759016abb3a32fa6c912f6fb998e95b3d5c"
+      "sha256": "70267721935a59a1400f701c35e0e4e673b397d4485c81dc4822cfcb99047b1f"
     },
     {
       "file": "cards/DARK.land.figure.png",
-      "sha256": "33e292ef481ff5659497c46301d0ffb3934805e920a218fab932f2f503a8a45d"
+      "sha256": "f563ed6993e70defe7a6258ad597a3a888fdd2186e39e0c5a98e2c6f296fc59e"
     },
     {
       "file": "cards/DARK.land.black.png",
-      "sha256": "316aa441752d321da259cd9177e1181346bb52129e21319b0eb227ba9addd310"
+      "sha256": "925c14ff035d6bd622b61c660f3fc2d398cbbc1228f995bafda9090c7f03a080"
     },
     {
       "file": "cards/DARK.land.white.png",
-      "sha256": "d9448873c2082a3a2c0cb11e50be0dc07f793eeffca1230335033beb573763fb"
+      "sha256": "4222ff96b94b63c78b9177dc97d3be0c05c1bd4308d5021c1663f506946a208d"
     },
     {
       "file": "cards/DARK.land.poster.png",
-      "sha256": "f8a6163741287c847f730931aacb457bd58f70efe6fd9eab082faf8d8f741d74"
+      "sha256": "d983c15c91487c40fecc6cdd583b15556221a65611d37cc6454a71a7ef6fa5c6"
     },
     {
       "file": "cards/DARK.land.ring.png",
-      "sha256": "6b40c873d65ab599f91d2241f4816dbb91c7890d335559aacaf483e4e47b61d3"
+      "sha256": "d571d84b5fdfcf29a2181f583c51e1a3b37ad9c6a8f7d186d11ba4cafc44cec0"
     },
     {
       "file": "cards/DARK.port.figure.png",
-      "sha256": "790ba7cec6badfe375ec0118759b1e48e4045ac61836900b88838b2613b8cfbf"
+      "sha256": "79cbf603f56711943ff68b4b66a913a0f07eb065df77168d2ca56f28003367c0"
     },
     {
       "file": "cards/DARK.port.black.png",
-      "sha256": "4202099a1bb940f1c9b0cba9afd77037696bbe1c1dc2793eac9ea90177325fdf"
+      "sha256": "9eb4dd71820b880617698182df8d9d1991c3d3e785bb21db742e2726e23a1b77"
     },
     {
       "file": "cards/DARK.port.white.png",
-      "sha256": "647d9d2309f73c4ab11f36ea917a61d16bc5dedef7cec2dcb518294301af7aa8"
+      "sha256": "f79002d88b86d8234f2ef0fd2d87350ac8e6d68a999afef0781284162598fe2a"
     },
     {
       "file": "cards/DARK.port.poster.png",
-      "sha256": "98c1e27904665bbf6228f81a691113887a12a1f89c2ef6ad2bc6c51348c9f2b6"
+      "sha256": "9033983833f576a81ee4c583e2d1516e0c7ca4dcafcc83dd1e9d01afe9ec4336"
     },
     {
       "file": "cards/DARK.port.ring.png",
-      "sha256": "273861fea88cff08c58443486abd885894e42a2654b9540e1826c9a8b6cfe438"
+      "sha256": "c70fb0cf1e3bd550c838e26e86125ac7965d67012bf35526383683ba5c33c774"
     },
     {
       "file": "bg/DARK.land.dots.png",
-      "sha256": "7963a17f03db647cebe89336245cebf644d657e0c1f445fdfdefd0ba140ffab1"
+      "sha256": "78c6dd7796dbd4cff279e73376052e5e825dabf1640d7a4be16db60820d7e0ed"
     },
     {
       "file": "bg/DARK.port.dots.png",
-      "sha256": "751591ef13950ffa50d110c7e3fb3e613c4ca69f1a0851a515e60935dad47cc4"
+      "sha256": "99cd528de0725777a116a18c629fa95023ab7076542968dc7116d21d93b45c3a"
     },
     {
       "file": "cards/BLOND.land.figure.png",
-      "sha256": "d19e57a9835585dc383d7bfef1a626d49c54bbb986bd9708d395e081ef90a828"
+      "sha256": "702334a282778aac4337df310d46424ddb932370798d5cb3fb6c74758b350f31"
     },
     {
       "file": "cards/BLOND.land.black.png",
-      "sha256": "eaac820d00321b2ed993a412e68036262477fb78b85fe5e748ebf0a7cf2e6df6"
+      "sha256": "bf696e998e04b7fd5193007066a2ed2c7abd30efb662b58c73e4848cc0a82bb7"
     },
     {
       "file": "cards/BLOND.land.white.png",
-      "sha256": "52c116f16193d78b1468758b59579067bcb7bf6f131ffc95b4cbe3474b37c1f9"
+      "sha256": "f0fc8eeecb4f08088c4e2613f923c9b55d0c48d7bb7e2464f28a1e597a55cb1d"
     },
     {
       "file": "cards/BLOND.land.poster.png",
-      "sha256": "154e57505be32df25258573b97d0db1c5d95489d25553f22a774f1f43bbe77c1"
+      "sha256": "1352909e34ffb7a5dffba3aa49342bba1424f89dc53993bab63ddef89892e43b"
     },
     {
       "file": "cards/BLOND.land.ring.png",
-      "sha256": "a3cc73f766905dbff1ab6875233e17882eae0a1f54de7041dbc92ec0a43a4c4d"
+      "sha256": "1ba750269e52c3419e2602e5697dca8e217f3ed8bf2e64cd27cfa18e144dd7ea"
     },
     {
       "file": "cards/BLOND.port.figure.png",
-      "sha256": "1a6ee1268f4f40f88751882084c8b4c03789544611c6c862e9b6aad8ecea57fa"
+      "sha256": "034671624f7c828fc1fccd1a0954634dfd908369667bcf2ab8d65ebbd56f1c52"
     },
     {
       "file": "cards/BLOND.port.black.png",
-      "sha256": "1df27e3aa87481f93d4f947b19c0911ea72b21ed3d81b0ee2d15e95c9036b35e"
+      "sha256": "3415fa94ea83de2dd01a101b9ba801d4529d700e9b6d834f48186c6181b82276"
     },
     {
       "file": "cards/BLOND.port.white.png",
-      "sha256": "7eb9584354f6102abe4a34e66037d39faac57253fed3fa3f0cd3a8a8fe31a067"
+      "sha256": "39e51e3d8c5ede8a92165f4e02fb038ef73f8779480f41efd144b88897a06e64"
     },
     {
       "file": "cards/BLOND.port.poster.png",
-      "sha256": "b8f5b1467e5950c13bd7be8e32c81cd00a1426171d977398409ced51a6097bf6"
+      "sha256": "c6c8ed6f8319feee43813487a81c34856fef9d9fc51ed649229a984c50a477f6"
     },
     {
       "file": "cards/BLOND.port.ring.png",
-      "sha256": "4b6bb2f99dab2ee7e20b10c0f1fdb2dc23cae37c7d43de04bd56f187ec9f5087"
+      "sha256": "2eaf33b25bd7aee9e132a331dce699b06fb940a41eda26a82176725d92a68340"
     },
     {
       "file": "bg/BLOND.land.dots.png",
-      "sha256": "d8c102cadd362e139113ef0d2921de7d026b03e8ffa4cf43fe9ea97463298d14"
+      "sha256": "7b7731fa461502540b696e99cf064f27bdc79cc41e67c99bda477f37b15eed6a"
     },
     {
       "file": "bg/BLOND.port.dots.png",
-      "sha256": "bdbc307dd517de257fd34093712242b33b9588bb3425b9b8c21f86f393503874"
+      "sha256": "4ec850d7c7fde9285a07cbc87005cad5903657a1bee93da092042bc6b5959ee7"
     },
     {
       "file": "cards/OFFICER.land.figure.png",
-      "sha256": "6224e0fdd1c77cbafd0da7832d92db9d9406c4d20e1d255bde7a99a02d5639d9"
+      "sha256": "40a2a32ec154c7c044fd78395f367c357a0e541e291226446f0d169f2a2ed0a3"
     },
     {
       "file": "cards/OFFICER.land.black.png",
-      "sha256": "9f85ecb911abbb9255c5732caf7285214221567ba5f52878b796cfcf7ded7d63"
+      "sha256": "053cfbdd0c278fac28fd05e665b36f588b8230ba6241a2611fe3adc28919d7fb"
     },
     {
       "file": "cards/OFFICER.land.white.png",
-      "sha256": "384cb5743ff58ad8526f872fb45f05117a9de639a549d57f6e749c3e32a87a5a"
+      "sha256": "24c64a5b244c83c2354e39d025cd0a96006e43629a797f8e9892bb972e5a718f"
     },
     {
       "file": "cards/OFFICER.land.poster.png",
-      "sha256": "49643c95207546ece3d1820d1bde019e24f554eab708b33c79fa848fc2e71c93"
+      "sha256": "ec156688a2b696dc56594ab836de3974a1f910c1a1f42f672343ead9e58fcb19"
     },
     {
       "file": "cards/OFFICER.land.ring.png",
-      "sha256": "e7de48b34f045995fa2a42e866d36412715ad3d2886422cb91727eba4ad2fd7b"
+      "sha256": "23b0a925d3167ab01be8593f936172ea0421a8f5e53c7bde99a435a05da509a4"
     },
     {
       "file": "cards/OFFICER.port.figure.png",
-      "sha256": "5fa513617907afe26debe43afb004c09be92c8ae9ea2f9bc4fddeeaf88303f57"
+      "sha256": "3430a0bdad046f34d87fa7fef13d9a86d9eabe57b7c691376c2a9cd2540a90b8"
     },
     {
       "file": "cards/OFFICER.port.black.png",
-      "sha256": "d5130d7f0d130eeddc34abab8242b868bc18c36a9389d086dfd400d65609f6ff"
+      "sha256": "2634cf0cb5d00cd18f81e8b09b305b9a21678dee109294685f0a9fa9a18b5e92"
     },
     {
       "file": "cards/OFFICER.port.white.png",
-      "sha256": "39c46e290ddd9cba593a7a2cf70dbc708d6b963d0c41e97d54e7a8eb688f6002"
+      "sha256": "841544ed0d7f33fd77582beef0640b8c80830084eeb3697c0e8326dc130c9411"
     },
     {
       "file": "cards/OFFICER.port.poster.png",
-      "sha256": "1d5e7074ba390326ebb6fcfe665ba595c728351200b6ed29f62dda7200bf1e6e"
+      "sha256": "01181696c013bd13e4b9037265ea12f918a504ee417221d49297b022e0f1e21f"
     },
     {
       "file": "cards/OFFICER.port.ring.png",
-      "sha256": "3fc2c4b9b3bf19a71be8bc619788b51a7f3a94ae783c86fce547c8b19f8655bc"
+      "sha256": "d6142a1ba458c1be93a1f162df2ba2506cec197d60717fe025b3a0c0e7b09ac1"
     },
     {
       "file": "bg/OFFICER.land.dots.png",
-      "sha256": "5d831af602bbb785f83ca8befe42081d03cb093370aef21cd9a24aa74abe2cf7"
+      "sha256": "d1f304700fcceabcdfd9522a040a80009d82e1d996ab2079f024fa03f870044d"
     },
     {
       "file": "bg/OFFICER.port.dots.png",
-      "sha256": "d5bfc933ee86de57a4256d6c3acb8ee20a1df7489b056caec2a64aff66fb90fe"
+      "sha256": "f55736228a8424f5f42497f8020ae5829bfc0617b26c16fd5337bb8157fbc0a2"
     },
     {
       "file": "grain/grain-0.png",
-      "sha256": "635cc494de69d74a95d41b914b723adc73f82102d04b00d1e401d6a83a75f1bb"
+      "sha256": "a9f3209734ebc0cc7bc1b161865216078f189f39bccfbb132048d789c3c2ac38"
     },
     {
       "file": "grain/grain-1.png",
-      "sha256": "92e8229cbb74d1f36078cb6a71b685a2ce1419f7da7f4f6daffb9b79a2530599"
+      "sha256": "16dd4e1884c3912655331b1ef38c124a656839418b8802debbb78197392dbd20"
     },
     {
       "file": "grain/grain-2.png",
-      "sha256": "384552b4211588a38294da67f9d5e024a1f925328e33535f21d19c12d7bee058"
+      "sha256": "0e258f990275bd53923c7c0f7f46cfb7e8227f07b5034855249ec4e997e80bc9"
     },
     {
       "file": "grain/grain-3.png",
-      "sha256": "65eb89ec698340af13fd201a23e8e51e4e2ed6673696e3bc80fdd6ac9de97cc7"
+      "sha256": "9799dda003d2695e992ea9d05145fa95e833671efb59563145d6019a87d74f20"
     },
     {
       "file": "music.raw.wav",
