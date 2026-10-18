@@ -14,6 +14,8 @@
 4. `videos/beauty-studio/prepare-assets.mjs` (и общий код сборки ролика, если есть): вместо `die` при отсутствии лицензии — строка предупреждения в отчёт сборки `out/<ролик>/license-report.md` со всеми звуками/музыкой не-`free`. Ролик собирается.
 5. Музыка роликов (scenes.yaml `music`): поле `license` (свободный текст) + тот же класс; без поля → `unknown` с предупреждением.
 
+6. Типы по имени (без Sonniss типы impact/reveal/glitch/swipe пустые, 473 звука в `other`): правило «имя → тип» в collector для существующих источников — `impact-*` → `impact`, `*whoosh*|*whip*|*swoosh*` → `whoosh`, `*glitch*` → `glitch`, `*page-turn*|*swipe*` → `swipe`, `*shutter*` → `click` (или новый `shutter`, если проще). `typeConfidence: "name"`. Отчёт: счётчики по типам до/после. `sfx/approved.json` не трогать.
+
 ## Проверки
 - `npm run sfx:collect` → те же 568 звуков (556 + 12 Sonniss), все `free`, предупреждений 0.
 - Позитивный контроль: временно звук с `license: "CC-BY-NC-4.0"` и звук без лицензии → оба в library, оба в списке предупреждений с классами `noncommercial` / `unknown`; без предупреждения проверка считается проваленной (`--negative` → exit 1).
