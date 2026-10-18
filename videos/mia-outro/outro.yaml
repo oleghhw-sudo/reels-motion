@@ -50,7 +50,7 @@ episodes:
       - {kind: lull, src: V5,  from: 239, on: h8, beats: 4, push: 0.04, note: "закрытая железная дверь ангара; к концу — лёгкая вибрация кадра (предчувствие взрыва)"}
       - {kind: final, src: V5, on: h9, flash: true, title: MIA, line: "She built the future. They came to take it.", tail: "To be continued", note: "удар = взрыв: 3 белых кадра, сильная тряска, MIA влетает как имя на карточке; строка и tail крупнее; после обрыва музыки — holdAfter"}
     vertical:
-      crops: {V7: B, V1: B, V3: B, V10_look: A, V10_gun: B, V9: A, V12_profile: A, V12_charge: C, V5_lull: C, V5_final: C}   # по листу MiaOutroVertical-crops.png (рекомендация архитектора, «всё да» Олега); для V7/V1/V3 вариантов ещё нет — билдер делает 3 варианта, по умолчанию B (центр действия), выбор Олега по листу
+      crops: {V7: B, V1: B, V3: A, V10_look: A, V10_gun: B, V9: A, V12_profile: A, V12_charge: C, V5_lull: C, V5_final: C}   # по листу MiaOutroVertical-crops.png (рекомендация архитектора, «всё да» Олега); для V7/V1/V3 вариантов ещё нет — билдер делает 3 варианта, по умолчанию B (центр действия), выбор Олега по листу
       cards: "фигура снизу, имя сверху; растворение верха фигуры 120 px"
     sfx:                       # v2 — с внешними звуками (sfx/raw/external, лицензия unknown → licenseWarning, гейт 6); замена на CC0 перед публикацией в Instagram
       whip: {dir: "sfx/raw/external/whoosh", pick: [need-02, hook-03, epic3-03], note: "на каждой смаз-склейке, пик = склейка"}
