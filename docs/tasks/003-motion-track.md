@@ -1,6 +1,6 @@
 # 003 — Порт M.track / M.ctrack / M.vis (Barty-Bart, MIT) в src/motion
 
-Статус: open · Ориентир: 30 мин · Полный рендер: НЕ нужен · Зависит: нет (можно параллельно с 002)
+Статус: ПОГЛОЩЕНА задачей 011 (2026-10-18) — не выполнять отдельно · Ориентир: 30 мин · Полный рендер: НЕ нужен · Зависит: нет (можно параллельно с 002)
 Источник: https://github.com/Barty-Bart/motion-graphics коммит 3d83d98, файл `skills/motion-broll/engine/motion.js` (MIT). Разбор: docs/EFFECTS_PANTRY.md раздел F.
 
 ## Цель
