@@ -55,7 +55,7 @@ episodes:
       title: MIA
       line: "She built the future. They came to take it."
       tail: "To be continued"
-    sfx: {}                    # заполнить после _outro-analysis/sfx.md
+    sfx: {}                    # v1 БЕЗ эффектов (бандла Sonniss нет на Mac, 2026-10-18); удары даёт музыка. Заполнить после sfx.md
 
 forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
   - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}
