@@ -5,11 +5,12 @@
 
 music:
   file: "Midnight Pursuit.wav"     # относительно MIA_SHORT_DIR
-  from: 44.203                     # 8 тактов: предразгон 2 доли + 7 ударов + финал (решение Олега 2026-10-18 «да»; прежний отрезок A 49.739 — на 2 героя короче)
-  to: 60.720                       # естественный обрыв трека, без fade
+  from: 42.379                     # 9 ударов: предразгон 2 доли + погоня + 4 героя + заряд + затишье + финал («всё да» Олега 2026-10-18)
+  to: 60.720                       # естественный обрыв трека, без fade; после него держим финальный кадр holdAfter
+  holdAfter: 1.25                  # тишина с финальным текстом после обрыва (readcheck финальной строки)
   bpm: 130.81                      # доля 0.4587 с = 11 кадров
-  hits: [0.928, 2.773, 4.608, 6.453, 8.288, 10.122, 11.957, 13.792]   # от начала отрезка; сетка = такты варианта A, продлённая назад; ПРОВЕРИТЬ НА СЛУХ: _outro-analysis/music/C_preroll_8bars_CLICKS.wav
-  listen: "_outro-analysis/music/C_preroll_8bars_44.203-60.720.wav"
+  hits: [0.917, 2.752, 4.597, 6.432, 8.277, 10.112, 11.946, 13.781, 15.616]   # от начала отрезка; ПРОВЕРИТЬ НА СЛУХ: _outro-analysis/music/D_preroll_9hits_CLICKS.wav
+  listen: "_outro-analysis/music/D_preroll_9hits_42.379-60.720.wav"
   license: "Suno — тариф уточнить (некоммерческое использование ок; предупреждение по гейту 6)"
 
 format:
@@ -33,26 +34,33 @@ episodes:
   ep01:
     # Каждый пункт начинается на доле; `on: hN` — на ударе N из music.hits; `beats` — длительность в долях.
     timeline:
-      - {kind: live, src: V5,  from: 2,   to: 24,  on: start, beats: 2, note: "MIA портрет, кадры до стоп-кадра"}
-      - {kind: card, hero: MIA,   cutout: MIA_V5_f24_cut.png,    title: MIA,  tagline: "The Inventor",     bg: "#D62828", side: left,  on: h1, beats: 3}
-      - {kind: live, src: V10, from: 97,  to: 108, beats: 1, note: "ROOK смотрит на MIA (V10-02)"}
-      - {kind: live, src: V10, from: 150, to: 193, on: h2, beats: 4, note: "ROOK встаёт и наводит пистолет на MIA; склейка ровно на удар"}
-      - {kind: card, hero: DARK,  cutout: DARK_new2_cut.png, title: ROOK, tagline: "The Hunter",       bg: "#F7C600", side: left,  on: h3, beats: 3, note: "кадр 2 Олега (прямой взгляд в камеру, src: cards/src/DARK_new2.jpg — отдельная картинка, не из видео); f221 отклонён 2026-10-18 — читается как удивление, удивление только у JAX. Подчистить: кусок руки MIA у правого края вырезки"}
-      - {kind: live, src: V9,  from: 157, to: 168, beats: 1}
-      - {kind: card, hero: BLOND, cutout: BLOND_V9_f168_cut.png, title: JAX,  tagline: "Friend or enemy?", bg: "#00AAC8", side: right, on: h4, beats: 3, note: "readcheck: держится 1.38 с — проверить на черновике"}
-      - {kind: live, src: V12, from: 1,   to: 12,  beats: 1, note: "HALE профиль с гарнитурой"}
-      - {kind: card, hero: OFFICER, cutout: OFF_V12_f12_cut.png, title: HALE, tagline: "The Law",          bg: "#1E1E1E", tagColor: "#F7C600", side: right, on: h5, beats: 4}
-      - {kind: live, src: V12, from: 317, to: 360, on: h6, beats: 4, note: "заряд на двери, мигает красный огонёк"}
-      - {kind: lull, src: V5,  from: 239, on: h7, beats: 4, push: 0.04, note: "закрытая железная дверь ангара (не «выбитый проём» — поправка 2026-10-18)"}
-      - {kind: final, src: V5, on: h8, flash: true, title: MIA, line: "She built the future. They came to take it.", tail: "To be continued", note: "удар = взрыв: вспышка, затем название; звук — только музыка"}
-    sfx:                       # v1 — из нашей библиотеки (sfx/manifest.json, CC0/MIT)
-      card: remotion__shutter-modern          # на каждой карточке, по transientMs
-      preCard: {id: remotion__whoosh, reverse: true, lead: 0.25}
-      hitLayer: [soundcn__impact-metal-heavy-000, soundcn__impact-metal-heavy-001, soundcn__impact-metal-heavy-002, soundcn__impact-metal-heavy-000]   # по одному на карточку, тише музыки
-      lull: null
-      final: null
-      gainVsMusic: 0.35
-    vertical: "кадрирование 9:16 для живых планов — выбрать по стиллам (билдер делает варианты, Олег выбирает); карточки 9:16 — своя раскладка: фигура снизу, имя сверху"
+      # Каждый пункт начинается на доле; `on: hN` — удар N из music.hits; `beats` — длительность в долях; `in` — приём входа (см. fx).
+      - {kind: live, src: V7,  from: 24,  to: 45,  on: start, beats: 2, note: "погоня: Subaru и BMW на трассе"}
+      - {kind: live, src: V1,  from: 180, to: 201, on: h1, beats: 2, in: whip, note: "капот Subaru, MIA за стеклом, BMW сзади"}
+      - {kind: live, src: V3,  from: 228, to: 260, beats: 2, in: whip, ramp: true, note: "машина переворачивается в воздухе; 33 исх. кадра в 22 вых. — speed ramp в замедление к удару"}
+      - {kind: card, hero: MIA,   cutout: MIA_V5_f24_cut.png,    title: MIA,  tagline: "The Inventor",     bg: "#D62828", side: left,  on: h2, beats: 3}
+      - {kind: live, src: V10, from: 97,  to: 108, beats: 1, in: whip, note: "ROOK смотрит на MIA (V10-02)"}
+      - {kind: live, src: V10, from: 150, to: 193, on: h3, beats: 4, in: whip, ramp: true, note: "ROOK наводит пистолет на MIA; склейка ровно на удар; ramp + наезд к удару (как в прототипе)"}
+      - {kind: card, hero: DARK,  cutout: DARK_new2_cut.png, title: ROOK, tagline: "The Hunter",       bg: "#F7C600", side: left,  on: h4, beats: 3, note: "кадр 2 Олега (прямой взгляд в камеру, src: cards/src/DARK_new2.jpg — отдельная картинка, не из видео); f221 отклонён 2026-10-18 — читается как удивление, удивление только у JAX. Подчистить: кусок руки MIA у правого края вырезки"}
+      - {kind: live, src: V9,  from: 157, to: 168, beats: 1, in: whip, ramp: true}
+      - {kind: card, hero: BLOND, cutout: BLOND_V9_f168_cut.png, title: JAX,  tagline: "Friend or enemy?", bg: "#00AAC8", side: right, on: h5, beats: 3}
+      - {kind: live, src: V12, from: 1,   to: 12,  beats: 1, in: whip, ramp: true, note: "HALE профиль с гарнитурой"}
+      - {kind: card, hero: OFFICER, cutout: OFF_V12_f12_cut.png, title: HALE, tagline: "The Law",          bg: "#1E1E1E", tagColor: "#F7C600", side: right, on: h6, beats: 4}
+      - {kind: live, src: V12, from: 317, to: 360, on: h7, beats: 4, in: whip, note: "заряд на двери, мигает красный огонёк; медленный наезд на огонёк"}
+      - {kind: lull, src: V5,  from: 239, on: h8, beats: 4, push: 0.04, note: "закрытая железная дверь ангара; к концу — лёгкая вибрация кадра (предчувствие взрыва)"}
+      - {kind: final, src: V5, on: h9, flash: true, title: MIA, line: "She built the future. They came to take it.", tail: "To be continued", note: "удар = взрыв: 3 белых кадра, сильная тряска, MIA влетает как имя на карточке; строка и tail крупнее; после обрыва музыки — holdAfter"}
+    vertical:
+      crops: {V7: B, V1: B, V3: B, V10_look: A, V10_gun: B, V9: A, V12_profile: A, V12_charge: C, V5_lull: C, V5_final: C}   # по листу MiaOutroVertical-crops.png (рекомендация архитектора, «всё да» Олега); для V7/V1/V3 вариантов ещё нет — билдер делает 3 варианта, по умолчанию B (центр действия), выбор Олега по листу
+      cards: "фигура снизу, имя сверху; растворение верха фигуры 120 px"
+    sfx:                       # v2 — с внешними звуками (sfx/raw/external, лицензия unknown → licenseWarning, гейт 6); замена на CC0 перед публикацией в Instagram
+      whip: {dir: "sfx/raw/external/whoosh", pick: [need-02, hook-03, epic3-03], note: "на каждой смаз-склейке, пик = склейка"}
+      riser: {dir: "sfx/raw/external/riser", pick: [epic4-04, epic4-06, epic3-08], note: "конец = удар карточки"}
+      impact: {dir: "sfx/raw/external/boom", pick: [epic3-04, epic3-05, epic4-03], note: "на ударе карточки, пик по transientMs"}
+      slam: {dir: "sfx/raw/external/impact", pick: [need-10, need-06], note: "на посадке имени (удар +3 кадра)"}
+      card: remotion__shutter-modern      # щелчок затвора на стоп-кадре (CC0, наша библиотека)
+      final: {dir: "sfx/raw/external/boom", pick: [epic4-08], note: "взрыв на финальном ударе поверх музыки"}
+      gainVsMusic: 0.5
+      note: "конкретный файл из pick — по слуху/замерам билдера, разные на разных героев; ничего из sfx/raw в git"
 
 forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
   - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}
