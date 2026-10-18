@@ -34,6 +34,12 @@ description: Словарь выразительных приёмов After Effe
 | Субтитры по словам с подсветкой | тихие (цвет/вес), без pop | только если есть диктор; стиль «trailer» | «hormozi»-стиль (§3 D4) |
 | Шлейф/эхо (#014, `<Trail>`) | 0 | слэм (2 копии, 2 кадра), пролёт объекта | пролёт объекта/эмодзи ≤ 2 |
 | Частицы, пыль, искры | 0 | «пыль удара» из #024 (6 линий + 6 пятен, 0.55 с) ≤ удар L | 0 |
+| Искажения (wave, barrel-импульс, pixelate, tear, noise-displacement — §3 H) | 0 | импульс на ударе/переходе ≤ 2, VHS/CRT — только как look по брифу | ≤ 2 (пиксельный ввод, импульс на дропе) |
+| Свет и объём (god rays, neon, long shadow, bloom порог — §3 J) | long shadow только в флэт-постере бренда | god rays ≤ 1, bloom по порогу в look | neon/bloom на акцентном слове ≤ 1/сцену |
+| Композитинг (track matte, double exposure, split screen, flip, chroma key — §3 K) | split/PiP по UI продукта | double exposure ≤ 1, text-matte финал ≤ 1 | flip/split на смене блока ≤ 2 |
+| Аудиореактивность (§3 L) | 0 | 0 | 1 элемент (масштаб/свечение на басах), не текст |
+| Строб / заикание / flicker cut (§3 G) | 0 | только внутри удара L (≤ 3 кадра) | дроп ≤ 0.5 с, ≤ 3 вспышки/с |
+| Плёночные луки (projector, 8 mm, VHS, CRT — §3 M) | 0 | как look по брифу, один на ролик | как look по брифу |
 
 Счётчики пишутся в бит-лист/карту ударов (reel-director чекпоинт 1) и проверяются motion-review. Превышение — не ошибка сборки, а вопрос Олегу.
 
@@ -120,8 +126,74 @@ description: Словарь выразительных приёмов After Effe
 - **Сплющивание** (#011, living-motion §4): по скорости, якорь у кромки.
 - **Линии скорости**: 18–40 треугольников из центра, чёрные/белые, ≤ 3 кадра (impact) или α 0.1 фоном (карточка).
 
+### G. Время — расширение
+- **Эхо / Echo (AE Echo)**: 4–8 копий объекта с отставанием 1–2 кадра, непрозрачность 0.5 → 0 (`<Trail layers lagInFrames trailOpacity>`, MIT); для светлых объектов на тёмном — `lightTrail({direction, distance: 80–200, decay: 0.9, threshold: 0.6})`. Пролёт, бросок, курсор; на тексте для чтения — нет.
+- **Строб (AE Strobe Light)**: показ кадра через N с чёрным/белым между; только punch на дропе, ≤ 0.5 с, ≤ 3 вспышки/с (гейт energycheck FLASH_RATE). Реализация — `frame % n` на `AbsoluteFill`.
+- **Заикание / stutter**: один и тот же кадр повторяется 2–3 кадра × 3 подряд перед ударом (`<Freeze>` по сетке восьмых) — подвод к удару L вместо ramp, когда исходник короткий; звук — тик на каждом повторе.
+- **Flicker cut**: чередование двух планов покадрово 4–6 кадров на кадре удара M (контраст «до/после»); ≤ 1 на ролик.
+- **Bullet time**: стоп-кадр + орбита камеры 2.5D (вырезка + фон, `cornerPin` по синусу ±4°, наезд 1.06) 0.8–1.2 с; только по брифу (нужна вырезка rembg).
+- **Реверс**: `OffthreadVideo` реверс не умеет → prep: ffmpeg `reverse` в отдельный файл через манифест; реверс-whoosh к нему в звуке.
+- **Посекундные «кадры-дубли» (posterizeTime 8–12)**: `interpolate({posterize})` для рисованной графики/коллажа, камера остаётся на единицах (risograph lemo: «персонажи на двойках, камера на единицах»).
+
+### H. Искажение и стилизация (`@remotion/effects`, параметры проверены по типам 4.0.534)
+- **Wave warp**: `wave({amplitude, wavelength, phase: f(t), direction})` — VHS-дрожь amplitude 2 px wavelength 60; «жидкий» переход amplitude 0→30→0 за 8 кадров поверх смены сцены; «тепловая дымка» — `noiseDisplacement({center, radius, strength: 6–12, seed: onTwos, grainSize: 8})` локально над источником жара/взрыва.
+- **Импульс линзы на ударе**: `barrelDistortion({amount: 0 → 0.25 → 0})` за 6 кадров от кадра удара (удар по стеклу/басовый дроп); `fisheye({fieldOfView: 2.5, zoom})` — FPV/объектив-рыбий глаз (#110) на один план; «lens distortion zoom» = barrel + `zoomBlur({amount: 60–120, center})` на переходе 8–10 кадров.
+- **Зеркало / калейдоскоп**: `mirror({direction, position: 0.5, invert})`, `tile` — симметричный кадр для хука/обложки; ≤ 1.
+- **Мозаика / пиксельный ввод**: `pixelate({blockSize})` 40 → 1 за 10 кадров `E.out` — «загрузка» объекта; `linearProgressivePixelate`/`radialProgressivePixelate` — частичная цензура или ввод из угла; `pixelDissolve({progress, columns, rows, seed, feather})` — переход «рассыпание» 10–14 кадров.
+- **Порог / постер**: `grayscale(1)` + `levels({blackPoint: 0.45, whitePoint: 0.55})` (жёсткий ч/б) или `duotone({darkColor, lightColor, threshold})` — impact-кадр, обложка, стоп-кадр под удар; `invert({amount})` 1 кадр — альтернативный impact-кадр.
+- **Контур / стикер**: `outline` (обводка по альфе) + `dropShadow({radius: 0, offsetX: 18, offsetY: 18, opacity: 1})` — поп-арт карточка ROOK без prep-слоёв (проверить качество по тонким прядям; если хуже prep — оставить prep).
+- **Растр**: `halftone({dotSize, dotSpacing: 20–26, rotation, shape: circle|square|line})` — растр карточки нативно; `halftoneLinearGradient` — растр, растущий слева направо (ROOK: 0.25→1); riso — сдвиг совмещения `xyTranslate({x, y})` ±1–3 px **на шот** (не на кадр) для одного из цветовых слоёв.
+- **Фактуры поверхностей**: `paper({amount, roughness, fiber})`, `burlap`, `flannel`, `shrinkwrap({displacement, highlightIntensity})` — только как часть look бренда/стиля (halftone-dossier, papercut), не поверх видео.
+- **Рваная бумага**: `tear({progress, angle, rotation: 20, jaggedness: 20})` — переход 8–10 кадров `E.in` + звук рывка; `roughenEdges({border: 26, scale: 0.07, seed})` — края вырезки «из бумаги».
+- **Топография/жидкие контуры**: `contourLines`, `liquidContours` — анимированный фон (phase/seed от кадра на двойках) под editorial-инфографику; тихо, ≤ 0.1 контраста к тексту.
+- **Skew-удар текста**: `skew({x: ±8°})` 3 кадра на посадке слэма (псевдо-италик от удара) — только display-слово.
+- **Перспектива**: `cornerPin({topLeft, topRight, bottomRight, bottomLeft})` — экран/плакат/карточка в перспективе, «3D-фото» орбита; `scale`, `uvTranslate` — сдвиги внутри canvas без reflow DOM.
+- **Термальный / tvSignalOff**: `thermalVision`, `tvSignalOff({amount: 0→1 за 6 кадров})` — только смысловые (камера наблюдения, выключение экрана в финале), по брифу.
+
+### I. Цвет и экспозиция (Lumetri-словарь → effects)
+- **Базовая коррекция**: `colorCorrection({exposure: stops −5…5, contrast, pivot: 0.5, shadows, highlights, whites, blacks, temperature, tint})` — один эффект = панель Lumetri Basic; `levels({blackPoint, whitePoint, gamma})` — кривые «S»; `vibrance` (бережёт кожу) вместо `saturation` для punch; `whiteBalance({temperature, tint})`; `hue({degrees})`; `tint({color, amount})`.
+- **Луки одной строкой** (гипотезы): bleach bypass — saturation 0.5 + contrast 1.3 + shadows −0.2; cross-process — hue +8 + `linearGradientTint` (тени в циан, света в жёлтый, amount 0.25); day-for-night — exposure −2, temperature −0.5, vignette 0.6; teal-orange — `lut` (.cube в репо через env.manifest) или shadows → teal / highlights → amber через `linearGradientTint` по яркости; faded film — blacks +0.15, contrast 0.92, saturation 0.85.
+- **Вспышка экспозицией**: `exposure({stops: 3 → 0})` за 4 кадра `E.out` вместо белой заливки — «фотографичнее», картинка не исчезает; удар M на светлых планах.
+- **Мерцание плёнки**: brightness ±0.02 по `rand(кадр на двойках)` — только в look `projector`/`8mm`.
+- **Chroma key**: `colorKey({keyColor: '#00ff00', similarity: 0.18, smoothness: 0.08, spillSuppression: 0.25})` — генерации на зелёном фоне → вырезка в рантайме (альтернатива rembg для видео); проверять края на листе.
+
+### J. Свет и объём
+- **God rays / объёмный свет**: копия слоя → `levels({blackPoint: 0.75})` (порог ярких) → `zoomBlur({amount: 100–200, center: [u, v] источника, samples: 32})` → `mix-blend-mode: screen` 30–60 %; появляется за 8–12 кадров, живёт с медленным дрейфом источника; ≤ 1 на ролик (окно, лампа, взрыв, вспышка карточки).
+- **Bloom по порогу**: `glow({radius: 20–40, intensity: 0.6–1, threshold: 0.75})` — светятся только света (фары, огонёк заряда, неон), не весь кадр; **neon** — `glow({radius: 20, intensity: 2, threshold: 0.6, color})` + контур; только акцент.
+- **Light sweep**: `shine({progress: 0→1 за 1.05 с, angle: 30, haloSigma: 200, coreSigma: 65, haloIntensity: 0.3, coreIntensity: 0.4})` — #022 нативно, по логотипу/кнопке/карточке, ≤ 1.
+- **Лучи фона**: `starburst({rays: 18, colors, rotation: 0.23°·кадр, edgeSmoothness})` — лучи карточки ROOK нативно (вращение 0.004 рад/кадр).
+- **Длинная тень** (флэт-постер): 16–24 копии с шагом 2 px по диагонали 45°, цвет тени = фон −20 % L; статична, появляется вместе с объектом.
+- **Rack focus / tilt-shift**: `regionBlur({topLeft, bottomRight, blurRadius: 0→20, feather: 80, roundness})` — перевод фокуса за 10–15 кадров (#033); `linearProgressiveBlur({start, end, startBlur: 0, endBlur: 30})` — tilt-shift «игрушечный город» (#106); `radialProgressiveBlur({center, width, height, startBlur: 0, endBlur: 24})` — виньетка резкости на герое.
+- **Lens dirt / bokeh overlay**: PNG-оверлей `screen` 20–35 %, только на кадрах с ярким источником; bokeh-размытие — после апгрейда (`lensBlur`, 4.0.537).
+- **Drop shadow**: `dropShadow({radius: 12, offsetX: 8, offsetY: 8, opacity: 0.5})` — вставка-крупняк, PiP, карточка; жёсткая тень (radius 0) — поп-арт.
+
+### K. Композитинг
+- **Track matte / текст-окно**: видео или картинка внутри букв (`background-clip: text` или inline-SVG `<mask>`), финальное название/локап; текст ≥ 220 px, 1–2 слова; буквы медленно наезжают 1.0→1.04.
+- **Double exposure** (#120): силуэт героя + пейзаж/город `mix-blend-mode: screen` (или `multiply` на светлом), 2 слоя с дрейфом 0.3× / 1×, 2–3 с; затишье/воспоминание; ≤ 1.
+- **Split screen**: 2–3 панели `clip-path: inset()`, панели въезжают на удар с разных сторон (stagger 3 кадра), разделитель 6–8 px; сравнение «до/после», два героя.
+- **PiP / вставка-крупняк**: окно 35–45 % ширины с `dropShadow` и рамкой 4 px, вход `SPR.firm` + магнитная посадка; тот же рендер, другой кроп.
+- **Flip / перспективная карточка** (#021): `rotateY 0→180°` с `perspective 1200px` за 10–12 кадров `E.inOut`, содержимое меняется на 90°; смена блока в punch.
+- **Blend-удар**: `mix-blend-mode: difference` на 1 кадр = импакт-негатив; `multiply` для штампов/печатей на бумаге; `screen` для света.
+- **Device frame**: рамка телефона PNG + видео внутри с `cornerPin`/масштабом; крупный план интеракции 2–4× по living-motion §8.
+- **Эхо-слои** (копии со сдвигом времени) — `<Trail>`; **орбита 2.5D** — `cornerPin` по синусу ±3–5 % на стоп-кадре с вырезкой.
+
+### L. Данные и аудиореактивность (детерминизм через данные в манифесте)
+- **Аудиореактивный масштаб/свечение**: prep — ffmpeg `astats`/`ebur128` по кадрам → `videos/<id>/loudness.json` {fps, rms[]} (sha256 в манифест); в кадре `scale = 1 + 0.04·rms_norm` на басах (полоса 40–120 Гц, prep `lowpass`), `glow.intensity` по rms; только punch, 1 элемент (логотип, круг, цифра), не текст для чтения. Вместе с hitPulse — `max`, не сумма.
+- **Спектр / волна**: prep `showspectrum`/`showwaves` в числовой json (полосы по кадрам) → SVG bars от кадра; stroke на `evolvePath`; только как UI продукта/музыкальный ролик.
+- **Графики**: `evolvePath` + данные (линия рисуется за 0.6–1.2 с `E.out`, точка-маркер со штампом); числа — #007.
+- **Прогресс-бар**: признак шаблона (motionmaxxing), только если это UI продукта.
+
+### M. Плёнка и аналог — как пресеты look (один на ролик, по брифу)
+- **projector**: gate weave ±1.5 px (`xyTranslate` по `rand(кадр на двойках)`), flicker brightness ±2 %, `vignette({amount: 0.5, feather: 0.45})`, `noise({amount: 0.10, seed: двойки})`, dust-оверлей (PNG тайлы, 3–5 % кадров), `filmBurn` на склейках.
+- **8mm / Super 8**: `noise 0.14`, `saturation 0.8`, `whiteBalance({temperature: 0.2})`, `roughenEdges` рамка кадра, скачок кадра ±4 px на склейках, 18 fps-ощущение через `posterize` 3 (при 60) / 1.33 (при 24 — не делать).
+- **VHS**: `scanlines({amount: 0.15, spacing: 4})`, `chromaticAberration({amount: 3, angle: 0})`, `wave({amplitude: 2, wavelength: 60, phase: f(t)})`, `whiteNoise({amount: 0.05, seed})`, `saturation 0.8`, помехи-полосы 2–3 кадра по seed, `tvSignalOff` на выключении; текст — шрифт пресета, не «VCR OSD» без брифа.
+- **CRT**: `barrelDistortion({amount: 0.12})` + scanlines + `vignette 0.6` + CA 2 px + `glow threshold 0.8`.
+- **old-photo**: `tint({color: '#c8a070', amount: 0.5})` + `paper` + `roughenEdges` + `vignette 0.45` + `levels({blackPoint: 0.08})`.
+- **riso / halftone-print**: `halftone` 2–3 слоя-краски с углами ≥ 15° + registration offset на шот + `paper` + ≤ 3 краски; **cel / comic**: `levels` порог + `outline` + `halftone` в тенях + линии скорости.
+- **dip to black / white**: 6–8 кадров `E.smooth`, только смысловой разрыв (время/место); не «через каждую сцену».
+
 ## 4. Реализация в Remotion 4.0.534 (проверено по npm 2026-10-18; задача 012, `src/fx`)
-**Что уже есть в закреплённой версии** (ставится через env.manifest + package.json, версии ровно 4.0.534):
+**Что уже есть в закреплённой версии** (ставится через env.manifest + package.json, версии ровно 4.0.534; имена и значения по умолчанию параметров ниже и в §3 H–M сверены с `.d.ts` пакета `@remotion/effects@4.0.534`, 2026-10-18):
 - **`@remotion/effects`** (лицензия Remotion License — не MIT; для личного некоммерческого проекта допустима, записать в THIRD-PARTY) — ≈80 WebGL2-эффектов как чистые функции параметров: `chromaticAberration({amount, angle})`, `glow({radius, intensity, threshold})`, `vignette({amount, radius, feather})`, `noise({amount, seed})` (зерно: `seed` = f(кадр на двойках)), `scanlines`, `zoomBlur({amount, center, samples})` (смаз zoom-punch), `blur({radius, horizontal, vertical})` (направленный смаз хлёста = только horizontal), `lightTrail({direction, distance, decay})` (шлейф/линии скорости), `lightLeak({seed, hueShift, progress})` (#119), `evolve`/`pixelDissolve` (раскрытия), `noiseDisplacement` (чернила/дрожание), `duotone`, `lut({content})` (3D .cube — грейд teal-orange), `halftone` (растр карточки), `tear`, `tvSignalOff`, `starburst`, `invert`, `levels`, `colorCorrection`… Применяются массивом `effects={[...]}` на canvas-компонентах: `<Img>`, `<Video>` из `@remotion/media`, фигуры `@remotion/shapes`, `<Solid>` и **`<HtmlInCanvas>`** — DOM (в т. ч. текст с `<Readable>`, DOM сохраняется → readcheck видит) рисуется в canvas и получает эффекты. Своё — `createEffect({backend:'webgl2'|'2d', apply})` (постер impact-кадра, halation). Рендер требует `--gl=angle` (у нас уже в `remotion.config.ts`), предпросмотр HtmlInCanvas в Studio — Chrome ≥ 149 с флагом `canvas-draw-element`; в headless-рендере с 4.0.534 всё работает без настроек.
 - **`@remotion/transitions`** (Remotion License): `pushCut({flashOpacity, flashTailFrames})` — склейка с punch-in 1.04/1.07 и вспышкой (= удар M); shader-презентации `zoomBlur`, `crossZoom`, `filmBurn({seed})`, `blurSlide`, `linearBlur`, `dissolve`, `ripple` (порты gl-transitions, MIT) через `makeHtmlInCanvasPresentation`; `<TransitionSeries.Overlay>` — light leak поверх склейки без сдвига таймлайна.
 - **`@remotion/motion-blur`** (MIT): `<HtmlInCanvasMotionBlur samples shutterAngle>` — честный затвор 180°/360° по субкадрам (норма для хлёста/спина/пролётов); `<CameraMotionBlur samples≤8>` — без GPU (plus-lighter, цвета искажает); `<Trail layers lagInFrames trailOpacity>` — эхо/шлейф (#014, слэм).

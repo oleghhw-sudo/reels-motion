@@ -1,6 +1,6 @@
 # 012 — Набор эффектов `src/fx`: словарь AE на Remotion 4.0.534 (`@remotion/effects`, HtmlInCanvas, motion-blur, pushCut)
 
-Статус: open (ждёт «да» Олега по docs/ANALYSIS-expressiveness.md §6) · Ориентир: 2 сессии по ~90 мин (012-А ядро + FxLab, 012-Б компоненты удара) · Полный рендер: НЕ нужен · Блокирует: 008 v2
+Статус: open (ждёт «да» Олега по docs/ANALYSIS-expressiveness.md §6) · Ориентир: 3 сессии по ~90 мин (012-А ядро + FxLab, 012-Б удар и склейка как данные, 012-В расширенный каталог G–M) · Полный рендер: НЕ нужен · Блокирует: 008 v2 (А/Б)
 Правила, которым служит код: `.claude/skills/cinematic-fx/SKILL.md` (§2 анатомия удара, §3 каталог, §4 реализация), living-motion §−1/§5/§9. Эталон движения: `docs/tasks/data/008-proto-rook-card.py` (ROOK).
 
 ## Зависимости (гейт 2: сначала env.manifest.json, потом package.json, версии ровно 4.0.534)
@@ -31,6 +31,17 @@
 ## 012-Б — удар и склейка как данные
 - Схема `scenes.yaml`/`outro.yaml` (расширение, гейт 3 — поле + читатель вместе): `look: film`, в пунктах `hit: S|M|L`, `in: whip|cut|flash`, `ramp: true`, `slam: {title, tag}`; `model.ts` аутро принимает v2-поля (`in`, `ramp`, `music.holdAfter`, `sfx` v2 с `pick`) — это пересекается с 008 v2: делать здесь только схему и валидацию, сборку аутро — в 008 v2.
 - `<TransitionSeries>` с `pushCut({flashOpacity, flashTailFrames})` для удара M между сценами презентации; `<TransitionSeries.Overlay>` + `lightLeak({seed, progress})` — для перехода `in: leak` (≤ 1 на ролик, cinematic-fx §1).
+
+## 012-В — расширенный каталог (после 012-А/Б; cinematic-fx §3 G–M; по отдаче)
+1. **Нативные замены prep-слоёв ROOK**: `starburst` (лучи), `halftone`/`halftoneLinearGradient` (растр), `outline` + `dropShadow` (обводка/тень вырезки) — сравнить стиллом с prep-версией; если тонкие пряди хуже — оставить prep, записать.
+2. **Переходы-эффекты** как презентации/оверлеи: `tear`, `evolve`, `venetianBlinds`, `pixelDissolve`, `pixelate` 40→1 (ввод), `barrelDistortion` импульс 0→0.25→0 (6 кадров), `wave` «жидкий» 0→30→0 (8 кадров) — каждый с номером motion-prompt, если есть (#017/#018/#019/#045).
+3. **Свет**: god rays (копия → `levels` порог → `zoomBlur` → screen), bloom по порогу (`glow threshold 0.75`), `shine` (#022), rack focus (`regionBlur`), tilt-shift (`linearProgressiveBlur`).
+4. **Цвет**: `LOOK` на `colorCorrection`/`levels`/`vibrance`/`whiteBalance`/`linearGradientTint`; `lut` — один .cube (teal-orange) в `public/luts` через env.manifest; луки bleach/cross/day-for-night/faded как пресеты; «вспышка экспозицией» (`exposure` 3→0).
+5. **Плёночные луки**: `LOOK.projector`, `vhs`, `crt`, `mm8`, `oldPhoto`, `riso` по §3 M (gate weave и flicker — по `rand` на двойках).
+6. **Композитинг**: text-matte (видео в буквах), double exposure, split screen, perspective flip (#021), PiP с тенью, `colorKey` для генераций на зелёном (лист краёв).
+7. **Время**: `<Trail>` эхо, строб/заикание/flicker cut по сетке восьмых (energycheck FLASH_RATE обязан ловить превышение > 3/с — позитивный контроль), реверс — prep в манифест.
+8. **Аудиореактивность**: prep `loudness.json` (ffmpeg `astats` по кадрам, полоса 40–120 Гц) + `audioScale(frame)`; тест на синтетическом WAV с ударом на 1.0 с (пик rms в кадре 24 ±1 при 24 fps); позитивный контроль — сдвинутый файл.
+9. FxLab: плитки на каждую группу G–M; стиллы; лист перехода (−4…+8).
 
 ## Проверки (в отчёт — команды и вывод)
 - `npm run test:motion` (+ `-- --negative` красный), `npx tsc --noEmit`.
