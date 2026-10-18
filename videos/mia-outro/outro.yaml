@@ -55,7 +55,13 @@ episodes:
       title: MIA
       line: "She built the future. They came to take it."
       tail: "To be continued"
-    sfx: {}                    # v1 БЕЗ эффектов (бандла Sonniss нет на Mac, 2026-10-18); удары даёт музыка. Заполнить после sfx.md
+    sfx:                       # v1 — из нашей библиотеки (sfx/manifest.json, CC0/MIT), без Sonniss (решение Олега 2026-10-18)
+      freeze: remotion__shutter-modern        # на каждом стоп-кадре, по transientMs
+      preFreeze: {id: remotion__whoosh, reverse: true, lead: 0.25}   # реверс-свист, пик за 0.25 с до удара
+      hitLayer: [soundcn__impact-metal-heavy-000, soundcn__impact-metal-heavy-001, soundcn__impact-metal-heavy-002]  # по одному на героя, тише музыки
+      lull: soundcn__impact-metal-medium-000  # тихий призвук на проёме (по желанию, решить по черновику)
+      final: null                             # финальный удар — только музыка; вариант: soundcn__impact-plate-heavy-000
+      gainVsMusic: 0.35
 
 forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
   - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}
