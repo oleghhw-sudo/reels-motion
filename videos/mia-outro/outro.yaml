@@ -1,14 +1,15 @@
 # Аутро MIA — данные по сериям. НЕВОССТАНОВИМОЕ (гейт 5): правят Олег / архитектор, скрипты НЕ перезаписывают.
-# Источники: MIA_SHORT_DIR (env.manifest) → _outro-analysis/src/V1..V10 (ссылки на исходники), shots.json (запретные зоны).
+# Источники: MIA_SHORT_DIR (env.manifest) → _outro-analysis/src/V1..V12 (ссылки на исходники; V11/V12 — офицер, добавлены 2026-10-18), shots.json (запретные зоны).
 # Кадры (frame) — номера кадров исходника при его fps (24). Время — секунды.
 # Решения Олега: 2026-10-17/18 (задача 008). Кандидаты: отчёт Claude Code сессии MIA, 2026-10-18.
 
 music:
   file: "Midnight Pursuit.wav"     # относительно MIA_SHORT_DIR
-  from: 49.739                     # предразгон 2 доли до удара 1 (утверждено на слух)
-  to: 60.720                       # естественный хвост, без fade
-  bpm: 130.81
-  hits: [0.917, 2.752, 4.586, 8.256]   # от начала отрезка: MIA, DARK, BLOND, финал; затишье ≈6.42
+  from: 44.203                     # 8 тактов: предразгон 2 доли + 7 ударов + финал (решение Олега 2026-10-18 «да»; прежний отрезок A 49.739 — на 2 героя короче)
+  to: 60.720                       # естественный обрыв трека, без fade
+  bpm: 130.81                      # доля 0.4587 с = 11 кадров
+  hits: [0.928, 2.773, 4.608, 6.453, 8.288, 10.122, 11.957, 13.792]   # от начала отрезка; сетка = такты варианта A, продлённая назад; ПРОВЕРИТЬ НА СЛУХ: _outro-analysis/music/C_preroll_8bars_CLICKS.wav
+  listen: "_outro-analysis/music/C_preroll_8bars_44.203-60.720.wav"
   license: "Suno — тариф уточнить (некоммерческое использование ок; предупреждение по гейту 6)"
 
 format:
@@ -16,52 +17,42 @@ format:
   portrait:  {w: 1080, h: 1920}
   fps: 24
 
+names:          # рабочие DARK/BLOND/OFFICER → имена в кадре (решение Олега 2026-10-18)
+  DARK: ROOK
+  BLOND: JAX
+  OFFICER: HALE
+
+card:           # карточка героя: стоп-кадр → вырезанная фигура на поп-арт фоне (решение Олега 2026-10-18 «да»)
+  cutouts: "_outro-analysis/cards/"      # PNG с альфой, сделаны архитектором (rembg isnet), относительно MIA_SHORT_DIR
+  concept: "_outro-analysis/cards/MIA_cards_concept_v2.jpg"   # эталон вида; скрипт наброска card_concept.py
+  outline: {white: 14, black: 22, shadow: [18, 18]}   # px при 1080p; обводка по сглаженному силуэту (тонкие пряди поверх, без обводки)
+  bg: {halftone: true, rays: 18}
+  font: {name: Anton, tagline: Oswald}   # оба — в public/fonts с проверкой глифов (CLAUDE.md «Шрифты»)
+
 episodes:
   ep01:
-    roster:
-      - hero: MIA
-        src: V3
-        liveFrom: 182          # 22 кадра живого плана до удара
-        freeze: 204            # 8.50 с
-        crop: {landscape: null, portrait: "выбрать по стиллам (4K, место под титр слева)"}
-        title: MIA
-        tagline: The Inventor
-        titleSide: left
-      - hero: DARK
-        src: V10
-        liveFrom: 199
-        freeze: 221            # 9.208 с — за 6 кадров до пистолета (f227); f225 = референс, но вплотную
-        crop:
-          landscape: "crop=2376:1336:0:253"     # ×1.72, BLOND вне кадра (проверено f199/f212/f225)
-          portrait: "кандидаты: crop=1296:2304:908:0 (V10-03a, очень крупно) | V10-02 f84 без MIA — выбрать по стиллам"
-        title: DARK
-        tagline: The Hunter
-        titleSide: left        # небо слева
-        note: "V10 — каждый кадр продублирован (фактически 12 к/с); 4K мягкий (апскейл)"
-      - hero: BLOND
-        src: V9
-        liveFrom: 146
-        freeze: 168            # 7.00 с
-        crop: {landscape: null, portrait: "выбрать по стиллам"}
-        title: BLOND
-        tagline: "Friend or enemy?"
-        titleSide: bottom
-    lull:
-      src: V5
-      from: 9.96               # пустой выбитый проём (пролог, сцена 8)
-      push: 0.04               # наезд 4 % за затишье, dolly
-    final:
-      src: V5                  # проём остаётся фоном
-      title: MIA
-      line: "She built the future. They came to take it."
-      tail: "To be continued"
-    sfx:                       # v1 — из нашей библиотеки (sfx/manifest.json, CC0/MIT), без Sonniss (решение Олега 2026-10-18)
-      freeze: remotion__shutter-modern        # на каждом стоп-кадре, по transientMs
-      preFreeze: {id: remotion__whoosh, reverse: true, lead: 0.25}   # реверс-свист, пик за 0.25 с до удара
-      hitLayer: [soundcn__impact-metal-heavy-000, soundcn__impact-metal-heavy-001, soundcn__impact-metal-heavy-002]  # по одному на героя, тише музыки
-      lull: soundcn__impact-metal-medium-000  # тихий призвук на проёме (по желанию, решить по черновику)
-      final: null                             # финальный удар — только музыка; вариант: soundcn__impact-plate-heavy-000
+    # Каждый пункт начинается на доле; `on: hN` — на ударе N из music.hits; `beats` — длительность в долях.
+    timeline:
+      - {kind: live, src: V5,  from: 2,   to: 24,  on: start, beats: 2, note: "MIA портрет, кадры до стоп-кадра"}
+      - {kind: card, hero: MIA,   cutout: MIA_V5_f24_cut.png,    title: MIA,  tagline: "The Inventor",     bg: "#D62828", side: left,  on: h1, beats: 3}
+      - {kind: live, src: V10, from: 97,  to: 108, beats: 1, note: "ROOK смотрит на MIA (V10-02)"}
+      - {kind: live, src: V10, from: 150, to: 193, on: h2, beats: 4, note: "ROOK встаёт и наводит пистолет на MIA; склейка ровно на удар"}
+      - {kind: card, hero: DARK,  cutout: DARK_V10_f221_cut.png, title: ROOK, tagline: "The Hunter",       bg: "#F7C600", side: left,  on: h3, beats: 3, note: "фигура из f221 (=референс); юный BLOND удалён вместе с фоном — кроп ×1.72 больше не нужен"}
+      - {kind: live, src: V9,  from: 157, to: 168, beats: 1}
+      - {kind: card, hero: BLOND, cutout: BLOND_V9_f168_cut.png, title: JAX,  tagline: "Friend or enemy?", bg: "#00AAC8", side: right, on: h4, beats: 3, note: "readcheck: держится 1.38 с — проверить на черновике"}
+      - {kind: live, src: V12, from: 1,   to: 12,  beats: 1, note: "HALE профиль с гарнитурой"}
+      - {kind: card, hero: OFFICER, cutout: OFF_V12_f12_cut.png, title: HALE, tagline: "The Law",          bg: "#1E1E1E", tagColor: "#F7C600", side: right, on: h5, beats: 4}
+      - {kind: live, src: V12, from: 317, to: 360, on: h6, beats: 4, note: "заряд на двери, мигает красный огонёк"}
+      - {kind: lull, src: V5,  from: 239, on: h7, beats: 4, push: 0.04, note: "закрытая железная дверь ангара (не «выбитый проём» — поправка 2026-10-18)"}
+      - {kind: final, src: V5, on: h8, flash: true, title: MIA, line: "She built the future. They came to take it.", tail: "To be continued", note: "удар = взрыв: вспышка, затем название; звук — только музыка"}
+    sfx:                       # v1 — из нашей библиотеки (sfx/manifest.json, CC0/MIT)
+      card: remotion__shutter-modern          # на каждой карточке, по transientMs
+      preCard: {id: remotion__whoosh, reverse: true, lead: 0.25}
+      hitLayer: [soundcn__impact-metal-heavy-000, soundcn__impact-metal-heavy-001, soundcn__impact-metal-heavy-002, soundcn__impact-metal-heavy-000]   # по одному на карточку, тише музыки
+      lull: null
+      final: null
       gainVsMusic: 0.35
+    vertical: "кадрирование 9:16 для живых планов — выбрать по стиллам (билдер делает варианты, Олег выбирает); карточки 9:16 — своя раскладка: фигура снизу, имя сверху"
 
 forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
   - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}
@@ -69,3 +60,4 @@ forbidden:   # дублирует shots.json для проверки сборк�
   - {src: V10, from: 0,     to: 2.33,   reason: "morph + spoiler-flashback"}
   - {src: V10, from: 8.13,  to: 9.458,  reason: "spoiler-flashback — только кроп без BLOND"}
   - {src: V10, from: 9.458, to: end,    reason: spoiler}
+  - {src: V12, from: 3.0,   to: 8.5,    reason: "вшитый титр MIA'S STORY — a short film"}
