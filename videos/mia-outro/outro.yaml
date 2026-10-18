@@ -37,7 +37,7 @@ episodes:
       - {kind: card, hero: MIA,   cutout: MIA_V5_f24_cut.png,    title: MIA,  tagline: "The Inventor",     bg: "#D62828", side: left,  on: h1, beats: 3}
       - {kind: live, src: V10, from: 97,  to: 108, beats: 1, note: "ROOK смотрит на MIA (V10-02)"}
       - {kind: live, src: V10, from: 150, to: 193, on: h2, beats: 4, note: "ROOK встаёт и наводит пистолет на MIA; склейка ровно на удар"}
-      - {kind: card, hero: DARK,  cutout: DARK_V10_f221_cut.png, title: ROOK, tagline: "The Hunter",       bg: "#F7C600", side: left,  on: h3, beats: 3, note: "фигура из f221 (=референс); юный BLOND удалён вместе с фоном — кроп ×1.72 больше не нужен"}
+      - {kind: card, hero: DARK,  cutout: DARK_new2_cut.png, title: ROOK, tagline: "The Hunter",       bg: "#F7C600", side: left,  on: h3, beats: 3, note: "кадр 2 Олега (прямой взгляд в камеру, src: cards/src/DARK_new2.jpg — отдельная картинка, не из видео); f221 отклонён 2026-10-18 — читается как удивление, удивление только у JAX. Подчистить: кусок руки MIA у правого края вырезки"}
       - {kind: live, src: V9,  from: 157, to: 168, beats: 1}
       - {kind: card, hero: BLOND, cutout: BLOND_V9_f168_cut.png, title: JAX,  tagline: "Friend or enemy?", bg: "#00AAC8", side: right, on: h4, beats: 3, note: "readcheck: держится 1.38 с — проверить на черновике"}
       - {kind: live, src: V12, from: 1,   to: 12,  beats: 1, note: "HALE профиль с гарнитурой"}
