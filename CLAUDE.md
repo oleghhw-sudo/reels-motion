@@ -62,7 +62,7 @@
 - `reel-cinematic` — история из видео (аутро, трейлер, герои); `reel-presentation` — графика, UI, текст, голос.
 - `living-motion` — обязательные правила «живой» анимации (пружины, вес, паузы, камера, морф, запреты).
 - `beat-sync` — музыка, доли, SFX по пикам; `motion-review` — проверка до финального рендера.
-- `cinematic-fx` (2026-10-18) — словарь AE/CapCut: анатомия удара, ramp, смаз, хроматика, вспышки, impact-кадры, слэм, субтитры по словам, финишная обработка `look`; доза по **режиму** ролика (`mode: editorial | cinematic | punch` в брифе, living-motion §−1). Эталон cinematic — прототип ROOK (`docs/tasks/data/008-proto-rook-card.py`). Разбор и дорожная карта — `docs/ANALYSIS-expressiveness.md`.
+- `cinematic-fx` (2026-10-18) — словарь AE/CapCut: анатомия удара, ramp, смаз, хроматика, вспышки, impact-кадры, слэм, субтитры по словам, финишная обработка `look`; доза по **режиму** ролика (`mode: editorial | cinematic | punch` в брифе, living-motion §−1). Эталон cinematic — прототип ROOK (`docs/tasks/data/008-proto-rook-card.py`, Opus 5.5 свободной рукой); визуальные задачи билдера — на Opus 5.5, на чекпоинте 2 — прототип удара до спецификации (reel-director §4 п. 2а). Разбор и дорожная карта — `docs/ANALYSIS-expressiveness.md`.
 - Нормы взяты из cinetic (MIT, @ecfa660) и product-film-skill (MIT, @fe11efc) — числа это гипотезы, калибруются на эталоне. Гейты этого файла главнее скиллов; выбранные номера motion-prompt главнее токенов living-motion; readcheck главнее норм времени на текст.
 
 ## motion-prompt (каталог именованных движений, vendor/motion-prompt, MIT, коммит 770eefb)
