@@ -7,11 +7,12 @@ import { z } from 'zod';
 const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const on = z.union([z.literal('start'), z.string().regex(/^h\d+$/)]);
 const src = z.string().regex(/^V\d+$/);
-const live = z.object({ kind: z.literal('live'), src, from: z.number().int().min(0), to: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), note: z.string().optional() });
+const inFx = z.enum(['whip']);
+const live = z.object({ kind: z.literal('live'), src, from: z.number().int().min(0), to: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), in: inFx.optional(), ramp: z.boolean().optional(), note: z.string().optional() });
 const card = z.object({
   kind: z.literal('card'),
   hero: z.string(),
-  cutout: z.string().regex(/^[A-Z]+_V\d+_f\d+_cut\.png$/),
+  cutout: z.string().regex(/^[A-Za-z0-9_]+_cut\.png$/), // из видео: HERO_V5_f24_cut.png; отдельная картинка: DARK_new2_cut.png
   title: z.string(),
   tagline: z.string(),
   bg: hex,
@@ -21,20 +22,25 @@ const card = z.object({
   beats: z.number().positive(),
   note: z.string().optional(),
 });
-const lull = z.object({ kind: z.literal('lull'), src, from: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), push: z.number().min(0).max(0.2), note: z.string().optional() });
+const lull = z.object({ kind: z.literal('lull'), src, from: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), push: z.number().min(0).max(0.2), in: inFx.optional(), note: z.string().optional() });
 const final = z.object({ kind: z.literal('final'), src, on: on.optional(), flash: z.boolean(), title: z.string(), line: z.string(), tail: z.string(), note: z.string().optional() });
 const item = z.discriminatedUnion('kind', [live, card, lull, final]);
+// sfx v2: внешние звуки (папка + список имён на выбор) и наш CC0-щелчок; путь папки — относительно SFX_EXTERNAL_DIR (env.manifest)
+const pick = z.object({ dir: z.string(), pick: z.array(z.string()).min(1), note: z.string().optional() });
 const sfx = z.object({
+  whip: pick,
+  riser: pick,
+  impact: pick,
+  slam: pick,
   card: z.string(),
-  preCard: z.object({ id: z.string(), reverse: z.boolean(), lead: z.number().min(0) }),
-  hitLayer: z.array(z.string()),
-  lull: z.string().nullable(),
-  final: z.string().nullable(),
+  final: pick,
   gainVsMusic: z.number().min(0).max(1),
+  note: z.string().optional(),
 });
+const vertical = z.object({ crops: z.record(z.string(), z.enum(['A', 'B', 'C'])), cards: z.string().optional() });
 const forbidden = z.object({ src, from: z.number().min(0), to: z.union([z.number(), z.literal('end')]), reason: z.string() });
 export const outroSchema = z.object({
-  music: z.object({ file: z.string(), from: z.number().min(0), to: z.number(), bpm: z.number().positive(), hits: z.array(z.number().min(0)).min(1), license: z.string() }),
+  music: z.object({ file: z.string(), from: z.number().min(0), to: z.number(), holdAfter: z.number().min(0).default(0), bpm: z.number().positive(), hits: z.array(z.number().min(0)).min(1), license: z.string() }),
   format: z.object({ landscape: z.object({ w: z.number(), h: z.number() }), portrait: z.object({ w: z.number(), h: z.number() }), fps: z.number().int().positive() }),
   names: z.record(z.string(), z.string()),
   card: z.object({
@@ -44,7 +50,7 @@ export const outroSchema = z.object({
     bg: z.object({ halftone: z.boolean(), rays: z.number().int().positive() }),
     font: z.object({ name: z.string(), tagline: z.string() }),
   }),
-  episodes: z.record(z.string(), z.object({ timeline: z.array(item).min(1), sfx, vertical: z.string().optional() })),
+  episodes: z.record(z.string(), z.object({ timeline: z.array(item).min(1), sfx, vertical })),
   forbidden: z.array(forbidden),
 });
 export type Outro = z.infer<typeof outroSchema>;
@@ -68,7 +74,8 @@ export type Placed = Item & {
   /** Кадры исходника, которые реально попадают в кадр (для проверки зон). Карточка — кадр вырезки. */
   srcFrames: { src: string; from: number; to: number } | null;
 };
-export type Timeline = { fps: number; beat: number; durationSec: number; durationInFrames: number; items: Placed[]; hits: number[] };
+/** durationSec / durationInFrames — с holdAfter (тишина после обрыва трека); musicEndFrame — кадр конца музыки. */
+export type Timeline = { fps: number; beat: number; durationSec: number; durationInFrames: number; musicSec: number; musicEndFrame: number; items: Placed[]; hits: number[] };
 
 /** Допуск между «конец предыдущего по долям» и ударом `on` — 1 кадр. */
 const frameTol = (fps: number) => 1 / fps + 1e-9;
@@ -79,7 +86,8 @@ export function buildTimeline(outro: Outro, episode: string): Timeline {
   const fps = outro.format.fps;
   const beat = 60 / outro.music.bpm;
   const hits = outro.music.hits;
-  const durationSec = outro.music.to - outro.music.from;
+  const musicSec = outro.music.to - outro.music.from;
+  const durationSec = musicSec + outro.music.holdAfter;
   const placed: Placed[] = [];
   let prevEnd = 0;
   const lastFrameOf = new Map<string, number>(); // src → последний показанный кадр (для final без from)
@@ -94,13 +102,14 @@ export function buildTimeline(outro: Outro, episode: string): Timeline {
       if (index > 0 && Math.abs(start - prevEnd) > frameTol(fps))
         throw new Error(`outro.yaml ${episode}.timeline[${index}] (${it.kind}): на ${it.on} = ${start.toFixed(3)} с, а предыдущий пункт по долям кончается в ${prevEnd.toFixed(3)} с — разрыв ${((start - prevEnd) * 1000).toFixed(0)} мс > 1 кадра`);
     } else start = prevEnd;
-    const end = it.kind === 'final' ? durationSec : start + it.beats * beat;
+    const end = it.kind === 'final' ? musicSec : start + it.beats * beat;
     const startFrame = Math.round(start * fps);
     placed.push({ ...it, index, startSec: start, endSec: end, startFrame, endFrame: 0, hit, srcFrames: null } as Placed);
     prevEnd = end;
   });
   // конец пункта = начало следующего (без щелей); последний — до конца музыки
   const total = Math.round(durationSec * fps);
+  const musicEndFrame = Math.round(musicSec * fps);
   placed.forEach((p, i) => {
     p.endFrame = i + 1 < placed.length ? placed[i + 1].startFrame : total;
     if (p.endFrame <= p.startFrame) throw new Error(`outro.yaml ${episode}.timeline[${i}]: пустой пункт (${p.startFrame}…${p.endFrame})`);
@@ -113,14 +122,16 @@ export function buildTimeline(outro: Outro, episode: string): Timeline {
       p.srcFrames = { src: p.src, from: p.from, to: p.from + n - 1 };
       lastFrameOf.set(p.src, p.from + n - 1);
     } else if (p.kind === 'final') {
-      const from = (lastFrameOf.get(p.src) ?? -1) + 1; // продолжает тот же исходник после затишья
-      p.srcFrames = { src: p.src, from, to: from + n - 1 };
+      // продолжает тот же исходник после затишья; в holdAfter (после обрыва музыки) держится последний кадр
+      const from = (lastFrameOf.get(p.src) ?? -1) + 1;
+      p.srcFrames = { src: p.src, from, to: from + Math.max(1, musicEndFrame - p.startFrame) - 1 };
     } else {
-      const m = p.cutout.match(/_(V\d+)_f(\d+)_cut\.png$/)!;
-      p.srcFrames = { src: m[1], from: Number(m[2]), to: Number(m[2]) };
+      // вырезка из видео — её кадр проверяется по зонам; отдельная картинка (не из видео) — кадров исходника нет
+      const m = p.cutout.match(/_(V\d+)_f(\d+)_cut\.png$/);
+      p.srcFrames = m ? { src: m[1], from: Number(m[2]), to: Number(m[2]) } : null;
     }
   });
-  return { fps, beat, durationSec, durationInFrames: total, items: placed, hits };
+  return { fps, beat, durationSec, durationInFrames: total, musicSec, musicEndFrame, items: placed, hits };
 }
 
 // ---------------------------------------------------------------- запретные зоны
@@ -187,4 +198,24 @@ export function parseInjected(spec: string): Zone {
   const m = spec.match(/^(V\d+):([\d.]+)-([\d.]+|end)$/);
   if (!m) throw new Error(`--inject: ожидался формат V10:6.5-7.0, получено «${spec}»`);
   return { src: m[1], from: Number(m[2]), to: m[3] === 'end' ? Infinity : Number(m[3]), reason: 'ПОДЛОЖЕНО (позитивный контроль)', origin: '--inject' };
+}
+
+// ---------------------------------------------------------------- speed ramp живого плана (#038, прототип 008-proto-rook-card.py)
+export const RAMP_SLOW = 0.55; // скорость в замедлении (доля исходной)
+export const RAMP_FRAMES = 9; // последних кадров плана в замедлении
+
+/**
+ * Позиция в кадрах исходника (0 = from, дробная → межкадровое смешивание) для i-го кадра плана длиной n кадров,
+ * если в исходнике L кадров. Без ramp — 1:1 с удержанием последнего. С ramp — последние RAMP_FRAMES кадров идут
+ * на ×0.55, остальное — равномерно с той скоростью, чтобы план кончился ровно на последнем кадре исходника
+ * (кадр, из которого сделан стоп-кадр/вырезка). Короткий план (быстрый участок < 3 кадров) целиком в замедлении и
+ * начинается позже from — это подмножество проверенного интервала, зоны не задеваются.
+ */
+export function livePos(i: number, n: number, L: number, ramp: boolean): number {
+  if (!ramp) return Math.min(i, L - 1);
+  const last = L - 1;
+  const fastN = n - 1 - RAMP_FRAMES;
+  if (fastN < 3) return Math.max(0, last - RAMP_SLOW * (n - 1 - i)); // быстрый участок < 3 кадров читался бы рывком
+  const v = Math.max(0, (last - RAMP_SLOW * RAMP_FRAMES) / fastN);
+  return i <= fastN ? v * i : v * fastN + RAMP_SLOW * (i - fastN);
 }

@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { buildTimeline, checkZones, parseOutro, zonesFrom, zonesFromShots } from '../../src/videos/mia-outro/model.ts';
 
-const SCRIPT_VERSION = '1.0.0';
+const SCRIPT_VERSION = '2.0.0'; // 2.0 — динамика v2: погоня, impact-слои, звук v2 из SFX_EXTERNAL_DIR
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 const OUT = join(HERE, 'assets');
@@ -102,7 +102,12 @@ for (const [ep, tl] of Object.entries(episodes)) {
 // ---------------------------------------------------------------- карточки: фигура по альфе готовой вырезки + слои обводки
 // Раскладка 16:9 — как в эталоне (card_concept.py): фигура у края напротив имени, низ уходит за кадр на 40 px.
 // 9:16 — своя (задача 008): фигура снизу по центру, имя сверху (ниже safe zone 220 px).
-const HERO_H = { MIA: 1150, DARK: 1250, BLOND: 1250, OFFICER: 1250 }; // высота фигуры в кадре 16:9, px (эталон)
+const HERO_H = { MIA: 1150, DARK: 1240, BLOND: 1250, OFFICER: 1250 }; // высота фигуры в кадре 16:9, px (эталон; DARK — как в прототипе 008)
+// Подчистка готовых вырезок (решение Олега): у DARK_new2_cut.png у правого края — кусок руки MIA. Маска: «кожа»
+// (R > 0.55, R−G > 0.10, R−B > 0.14) только в окне у правого края + эллипс по контуру руки; исходный PNG не меняется.
+const CLEANUP = {
+  'DARK_new2_cut.png': { skin: { x0: 596, y0: 350, y1: 470 }, ellipse: [642, 412, 20, 26], why: 'кусок руки MIA у правого края' },
+};
 const PAD = 60;
 const { white: OW, black: OB, shadow: OS } = outro.card.outline;
 const cards = {};
@@ -116,8 +121,22 @@ mkdirSync(tmp, { recursive: true });
 for (const tl of Object.values(episodes)) {
   for (const p of tl.items) {
     if (p.kind !== 'card' || cards[p.hero]) continue;
-    const cutPath = join(cutDir, p.cutout);
-    if (!existsSync(cutPath)) die(`нет вырезки ${cutPath}`);
+    const origCut = join(cutDir, p.cutout);
+    if (!existsSync(origCut)) die(`нет вырезки ${origCut}`);
+    let cutPath = origCut;
+    const cl = CLEANUP[p.cutout];
+    if (cl) {
+      const a = join(tmp, `${p.hero}.a.png`);
+      const m = join(tmp, `${p.hero}.m.png`);
+      const a2 = join(tmp, `${p.hero}.a2.png`);
+      cutPath = join(tmp, `${p.hero}.clean.png`);
+      run('magick', [origCut, '-alpha', 'extract', a]);
+      run('magick', [origCut, '-alpha', 'off', '-fx', `(i>=${cl.skin.x0} && j>=${cl.skin.y0} && j<=${cl.skin.y1} && u.r>0.55 && (u.r-u.g)>0.10 && (u.r-u.b)>0.14) ? 1 : 0`, '-morphology', 'Dilate', 'Disk:4', '-fill', 'white', '-draw', `ellipse ${cl.ellipse.join(',').replace(/^(\d+),(\d+),/, '$1,$2 ')} 0,360`, m]);
+      run('magick', [a, '(', m, '-negate', ')', '-compose', 'Multiply', '-composite', a2]);
+      run('magick', [origCut, '-alpha', 'off', a2, '-compose', 'CopyOpacity', '-composite', cutPath]);
+      const n = Number(run('magick', [m, '-format', '%[fx:mean*w*h]', 'info:']).trim());
+      console.log(`  · подчистка ${p.cutout}: ${cl.why} — убрано ${Math.round(n)} px`);
+    }
     const trimmed = join(tmp, `${p.hero}.trim.png`);
     run('magick', [cutPath, '-trim', '+repage', trimmed]);
     const [bw, bh] = run('magick', ['identify', '-format', '%w %h', trimmed]).trim().split(' ').map(Number);
@@ -125,7 +144,7 @@ for (const tl of Object.values(episodes)) {
     const edgeAlpha = (geom) => Number(run('magick', [cutPath, '-alpha', 'extract', '-crop', geom, '+repage', '-format', '%[fx:maxima]', 'info:']).trim());
     const [cw0, ch0] = run('magick', ['identify', '-format', '%w %h', cutPath]).trim().split(' ').map(Number);
     const touches = { top: edgeAlpha(`${cw0}x1+0+0`) > 0.5, bottom: edgeAlpha(`${cw0}x1+0+${ch0 - 1}`) > 0.5, left: edgeAlpha(`1x${ch0}+0+0`) > 0.5, right: edgeAlpha(`1x${ch0}+${cw0 - 1}+0`) > 0.5 };
-    const entry = { hero: p.hero, cutout: p.cutout, cutoutSha256: sha256(cutPath), bbox: { w: bw, h: bh }, touches, layout: {} };
+    const entry = { hero: p.hero, cutout: p.cutout, cutoutSha256: sha256(origCut), cleanup: cl ? cl.why : null, bbox: { w: bw, h: bh }, touches, layout: {} };
     for (const [orient, F] of [['land', L], ['port', P]]) {
       let h = orient === 'land' ? HERO_H[p.hero] ?? 1200 : 1380;
       // 9:16: крупный план шире кадра допустим до 1.9× (бока уходят за край, лицо по центру); иначе фигура мелкая
@@ -144,8 +163,16 @@ for (const tl of Object.values(episodes)) {
         run('magick', [solid, '-morphology', 'Dilate', `Disk:${px}`, '-blur', '0x1.2', mask]);
         run('magick', ['-size', `${run('magick', ['identify', '-format', '%wx%h', fig]).trim()}`, `xc:${col}`, mask, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', join(OUT, `${base}.${name}.png`)]);
       }
+      // impact-кадр (#аниме): фигура жёстким ч/б-постером (порог яркости) + белый контур по силуэту
+      run('magick', [fig, '-alpha', 'off', '-colorspace', 'Gray', '-blur', '0x1.5', '-threshold', '37%', '(', fig, '-alpha', 'extract', '-threshold', '50%', ')', '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', join(OUT, `${base}.poster.png`)]);
+      const ringMask = join(tmp, `${p.hero}.${orient}.ring.mask.png`);
+      run('magick', [solid, '-morphology', 'Dilate', 'Disk:12', ringMask]);
+      run('magick', ['-size', `${run('magick', ['identify', '-format', '%wx%h', fig]).trim()}`, 'xc:white', ringMask, '-alpha', 'off', '-compose', 'CopyOpacity', '-composite', join(OUT, `${base}.ring.png`)]);
       entry.layout[orient] = {
         figure: add(`${base}.figure.png`), black: add(`${base}.black.png`), white: add(`${base}.white.png`),
+        poster: add(`${base}.poster.png`), ring: add(`${base}.ring.png`),
+        // центр героя в кадре: из него — лучи, раскрытие фона кругом, линии скорости impact-кадра
+        center: { x: Math.round(x + w / 2), y: Math.round(y + h * 0.4) },
         // позиция слоя (с полями PAD) в кадре и размер фигуры без полей
         x: x - PAD, y: y - PAD, w: w + 2 * PAD, h: h + 2 * PAD, pad: PAD, shadow: OS,
       };
@@ -186,80 +213,104 @@ for (let k = 0; k < 4; k++) {
   grain.push(add(rel));
 }
 
-// ---------------------------------------------------------------- SFX из нашей библиотеки (CC0/MIT), целостность — collect.mjs --verify
+// ---------------------------------------------------------------- SFX v2: внешние (SFX_EXTERNAL_DIR, лицензия unknown → licenseWarning) + щелчок из нашей библиотеки
+const EXT = fromEnv('SFX_EXTERNAL_DIR');
+if (!EXT || !existsSync(join(EXT, 'index.json'))) die('SFX_EXTERNAL_DIR не задан или в нём нет index.json (env.manifest.json → data_dirs; обычно …/reels-motion/sfx/raw/external)');
+const extIndex = JSON.parse(readFileSync(join(EXT, 'index.json'), 'utf8'));
+const SFX_LUFS = -16; // каждый внешний звук сначала приводится к одной громкости (README: −38…−9 LUFS), потом ×gainVsMusic
 const v = spawnSync('node', [join(ROOT, 'sfx', 'collect.mjs'), '--verify'], { encoding: 'utf8' });
 if (v.status !== 0) die(`sfx/collect.mjs --verify: library не совпадает с manifest.json — npm run sfx:collect\n${(v.stdout + v.stderr).slice(-800)}`);
 const sfxMan = JSON.parse(readFileSync(join(ROOT, 'sfx', 'manifest.json'), 'utf8'));
 const sfx = {};
-const takeSfx = (id, reverse = false) => {
-  const key = reverse ? `${id}.rev` : id;
-  if (sfx[key]) return;
-  const s = sfxMan.sounds.find((x) => x.id === id);
-  if (!s) die(`звук ${id} из outro.yaml нет в sfx/manifest.json`);
-  const rel = `sfx/${key}.wav`;
-  if (reverse) run('ffmpeg', ['-v', 'error', '-y', '-i', join(ROOT, 'sfx', s.file), '-af', 'areverse', '-c:a', 'pcm_s24le', join(OUT, rel)]);
-  else copyFileSync(join(ROOT, 'sfx', s.file), join(OUT, rel));
-  const src = sfxMan.sources.find((x) => x.id === s.source);
-  sfx[key] = {
-    id, reverse, file: add(rel), durationMs: s.durationMs,
-    // реверс: пик оригинала (transientMs от начала) оказывается на durationMs − transientMs
-    peakMs: reverse ? +(s.durationMs - s.transientMs).toFixed(1) : s.transientMs,
-    license: s.license, source: src ? `${src.id} (${src.url}${src.commit ? ` @${src.commit.slice(0, 7)}` : ''})` : s.source, origName: s.origName,
-  };
+const PREFIX = 'sfx/raw/external/';
+const takeExt = (dir, name) => {
+  if (sfx[name]) return name;
+  if (!dir.startsWith(PREFIX)) die(`outro.yaml sfx: папка «${dir}» должна начинаться с ${PREFIX} (читается относительно SFX_EXTERNAL_DIR)`);
+  const d = join(EXT, dir.slice(PREFIX.length));
+  const meta = extIndex.find((x) => x.id === name);
+  if (!meta) die(`внешний звук ${name} нет в ${join(EXT, 'index.json')}`);
+  const src = join(d, meta.file);
+  if (!existsSync(src)) die(`нет файла ${src}`);
+  const rel = `sfx/${name}.wav`;
+  const gain = +(SFX_LUFS - meta.lufs).toFixed(2);
+  run('ffmpeg', ['-v', 'error', '-y', '-i', src, '-af', `volume=${gain}dB`, '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s24le', '-map_metadata', '-1', join(OUT, rel)]);
+  sfx[name] = { id: name, file: add(rel), durationMs: Math.round(meta.dur * 1000), peakMs: Math.round(meta.peak_t * 1000), gainDb: gain, type: meta.type, source: `${meta.pack} — ${meta.origin}`, srcSha256: sha256(src), license: meta.license, licenseWarning: meta.licenseWarning !== false };
+  return name;
 };
-for (const ep of Object.values(outro.episodes)) {
-  takeSfx(ep.sfx.card);
-  takeSfx(ep.sfx.preCard.id, ep.sfx.preCard.reverse);
-  for (const id of ep.sfx.hitLayer) takeSfx(id);
-  if (ep.sfx.lull) takeSfx(ep.sfx.lull);
-  if (ep.sfx.final) takeSfx(ep.sfx.final);
-}
-// ---------------------------------------------------------------- музыка + SFX → микс серии, нормализация −14 LUFS / −1 dBTP (loudnorm, 2 прохода)
-// SFX сводятся здесь, а не секвенциями Remotion: там старт квантуется кадром (1/24 с = 42 мс), а пик должен лечь на удар
-// по transientMs с точностью до мс. Удар (пик в начале) — старт = удар − пик; реверс свиста — старт = удар − lead (beat-sync).
+const takeLib = (id) => {
+  if (sfx[id]) return id;
+  const s0 = sfxMan.sounds.find((x) => x.id === id);
+  if (!s0) die(`звук ${id} из outro.yaml нет в sfx/manifest.json`);
+  const rel = `sfx/${id}.wav`;
+  copyFileSync(join(ROOT, 'sfx', s0.file), join(OUT, rel));
+  const src = sfxMan.sources.find((x) => x.id === s0.source);
+  sfx[id] = { id, file: add(rel), durationMs: s0.durationMs, peakMs: s0.transientMs, gainDb: 0, type: s0.type, source: src ? `${src.id} (${src.url}${src.commit ? ` @${src.commit.slice(0, 7)}` : ''}), ${s0.origName}` : s0.source, license: s0.license, licenseWarning: !/^(CC0|MIT)$/.test(s0.license) };
+  return id;
+};
+
+// ---------------------------------------------------------------- музыка + SFX → микс серии (+ тишина holdAfter), нормализация −14 LUFS / −1 dBTP (loudnorm, 2 прохода)
+// Цель TP −1.5: запас 0.5 дБ под перехлёст AAC при кодировании (черновик с целью −1.0 дал −0.9 dBTP).
+// SFX сводятся здесь, а не секвенциями Remotion: там старт квантуется кадром (42 мс), а пик должен лечь на событие по времени пика с точностью до мс.
 const musicSrc = join(DIR, outro.music.file);
 if (!existsSync(musicSrc)) die(`нет трека ${musicSrc}`);
 const rawRel = 'music.raw.wav';
 run('ffmpeg', ['-v', 'error', '-y', '-ss', String(outro.music.from), '-to', String(outro.music.to), '-i', musicSrc, '-vn', '-map_metadata', '-1', '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s24le', join(OUT, rawRel)]);
 add(rawRel);
-const loud = (file, extra = []) => {
-  const e = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', file, ...extra, '-af', 'ebur128=peak=true', '-f', 'null', '-'], { encoding: 'utf8' }).stderr;
+const loud = (file) => {
+  const e = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', file, '-af', 'ebur128=peak=true', '-f', 'null', '-'], { encoding: 'utf8' }).stderr;
   const sm = e.slice(e.lastIndexOf('Summary:')); // итог, а не покадровый лог
   return { I: Number(sm.match(/I:\s+(-?[\d.]+) LUFS/)?.[1]), TP: Number(sm.match(/Peak:\s+(-?[\d.]+) dBFS/)?.[1]) };
 };
 const mixes = {};
 for (const [ep, tl] of Object.entries(episodes)) {
   const cfg = outro.episodes[ep].sfx;
-  const cues = [];
-  let cardNo = 0;
+  const cues = []; // {key, role, at (с, старт в ролике), peakAt, offset (с от начала файла), dur (с, null — до конца), fadeIn}
+  const fps = tl.fps;
+  const cue = (key, role, peakAt, extra = {}) => {
+    const pk = sfx[key].peakMs / 1000;
+    let at = peakAt - pk;
+    let offset = 0;
+    if (at < 0) { offset = -at; at = 0; }
+    cues.push({ key, role, peakAt: +peakAt.toFixed(4), at: +at.toFixed(4), offset: +offset.toFixed(4), dur: null, fadeIn: 0, ...extra });
+  };
+  let w = 0;
+  let h = 0;
   for (const p of tl.items) {
-    if (p.kind !== 'card') continue;
-    const hit = p.startSec;
-    const layer = cfg.hitLayer[cardNo] ?? cfg.hitLayer[cfg.hitLayer.length - 1];
-    cardNo++;
-    cues.push({ key: cfg.card, role: 'card', hero: p.hero, hit, at: hit - sfx[cfg.card].peakMs / 1000 });
-    const rk = cfg.preCard.reverse ? `${cfg.preCard.id}.rev` : cfg.preCard.id;
-    cues.push({ key: rk, role: 'preCard', hero: p.hero, hit, at: hit - cfg.preCard.lead });
-    cues.push({ key: layer, role: 'hitLayer', hero: p.hero, hit, at: hit - sfx[layer].peakMs / 1000 });
+    if (p.in === 'whip') cue(takeExt(cfg.whip.dir, cfg.whip.pick[w++ % cfg.whip.pick.length]), `whip→${p.index}`, p.startSec);
+    if (p.kind === 'card') {
+      const hit = p.startSec;
+      const rk = takeExt(cfg.riser.dir, cfg.riser.pick[h % cfg.riser.pick.length]);
+      // нарастание: пик = удар, после удара обрезано; если не помещается до начала ролика — начало срезается (fade-in 0.3 с)
+      cue(rk, `riser ${p.hero}`, hit, { fadeIn: 0.3 });
+      const c = cues[cues.length - 1];
+      c.dur = +(sfx[rk].peakMs / 1000 - c.offset).toFixed(4);
+      cue(takeExt(cfg.impact.dir, cfg.impact.pick[h % cfg.impact.pick.length]), `impact ${p.hero}`, hit);
+      cue(takeLib(cfg.card), `card ${p.hero}`, hit);
+      cue(takeExt(cfg.slam.dir, cfg.slam.pick[h % cfg.slam.pick.length]), `slam ${p.hero} (имя +3 к)`, hit + 3 / fps);
+      h++;
+    }
+    if (p.kind === 'final') cue(takeExt(cfg.final.dir, cfg.final.pick[0]), 'final (взрыв)', p.startSec);
   }
-  for (const c of cues) { if (c.at < 0) die(`${ep}: звук ${c.key} начался бы до начала ролика (${c.at.toFixed(3)} с)`); c.peakAt = +(c.at + sfx[c.key].peakMs / 1000).toFixed(4); c.at = +c.at.toFixed(4); }
   const inputs = ['-i', join(OUT, rawRel), ...cues.flatMap((c) => ['-i', join(OUT, sfx[c.key].file)])];
-  const fc = cues.map((c, i) => `[${i + 1}:a]aresample=48000,aformat=channel_layouts=stereo,volume=${cfg.gainVsMusic},adelay=${Math.round(c.at * 1000)}:all=1[s${i}]`).join(';') +
-    `;[0:a]${cues.map((_, i) => `[s${i}]`).join('')}amix=inputs=${cues.length + 1}:normalize=0:duration=first[m]`;
+  const fc = cues.map((c, i) => {
+    const trim = `atrim=start=${c.offset}${c.dur ? `:duration=${c.dur}` : ''},asetpts=PTS-STARTPTS`;
+    const fade = c.fadeIn ? `,afade=t=in:d=${c.fadeIn}` : '';
+    return `[${i + 1}:a]${trim}${fade},aresample=48000,aformat=channel_layouts=stereo,volume=${cfg.gainVsMusic},adelay=${Math.round(c.at * 1000)}:all=1[s${i}]`;
+  }).join(';') + `;[0:a]apad=whole_dur=${tl.durationSec}[mu];[mu]${cues.map((_, i) => `[s${i}]`).join('')}amix=inputs=${cues.length + 1}:normalize=0:duration=first[m]`;
   const premix = join(tmp, `premix.${ep}.wav`);
   run('ffmpeg', ['-v', 'error', '-y', ...inputs, '-filter_complex', fc, '-map', '[m]', '-ar', '48000', '-c:a', 'pcm_s24le', premix]);
-  const p1 = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', premix, '-af', 'loudnorm=I=-14:TP=-1:LRA=11:print_format=json', '-f', 'null', '-'], { encoding: 'utf8' }).stderr;
+  const p1 = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', premix, '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'], { encoding: 'utf8' }).stderr;
   const m1 = JSON.parse(p1.slice(p1.lastIndexOf('{'), p1.lastIndexOf('}') + 1));
-  const lnf = `loudnorm=I=-14:TP=-1:LRA=11:measured_I=${m1.input_i}:measured_TP=${m1.input_tp}:measured_LRA=${m1.input_lra}:measured_thresh=${m1.input_thresh}:offset=${m1.target_offset}:linear=true:print_format=json`;
+  const lnf = `loudnorm=I=-14:TP=-1.5:LRA=11:measured_I=${m1.input_i}:measured_TP=${m1.input_tp}:measured_LRA=${m1.input_lra}:measured_thresh=${m1.input_thresh}:offset=${m1.target_offset}:linear=true:print_format=json`;
   const rel = `mix.${ep}.wav`;
   const p2 = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-y', '-i', premix, '-af', `${lnf},aresample=48000`, '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s16le', '-map_metadata', '-1', join(OUT, rel)], { encoding: 'utf8' });
   if (p2.status !== 0) die(`loudnorm ${ep}: ${p2.stderr.slice(-800)}`);
   const t2 = JSON.parse(p2.stderr.slice(p2.stderr.lastIndexOf('{'), p2.stderr.lastIndexOf('}') + 1));
-  mixes[ep] = { file: add(rel), cues, gainVsMusic: cfg.gainVsMusic, loudness: { musicOnly: loud(join(OUT, rawRel)), premix: { I: Number(m1.input_i), TP: Number(m1.input_tp) }, loudnormType: t2.normalization_type, after: loud(join(OUT, rel)) } };
+  mixes[ep] = { file: add(rel), durationSec: tl.durationSec, cues, gainVsMusic: cfg.gainVsMusic, sfxLufs: SFX_LUFS, loudness: { musicOnly: loud(join(OUT, rawRel)), premix: { I: Number(m1.input_i), TP: Number(m1.input_tp) }, loudnormType: t2.normalization_type, after: loud(join(OUT, rel)) } };
   const L2 = mixes[ep].loudness;
-  console.log(`  ✓ микс ${ep}: музыка ${outro.music.from}–${outro.music.to} с + ${cues.length} SFX; музыка I ${L2.musicOnly.I} / TP ${L2.musicOnly.TP}, до нормализации I ${L2.premix.I} / TP ${L2.premix.TP} → I ${L2.after.I} LUFS / TP ${L2.after.TP} dBTP (${L2.loudnormType})`);
+  console.log(`  ✓ микс ${ep}: музыка ${outro.music.from}–${outro.music.to} с + тишина ${outro.music.holdAfter} с + ${cues.length} SFX; до нормализации I ${L2.premix.I} / TP ${L2.premix.TP} → I ${L2.after.I} LUFS / TP ${L2.after.TP} dBTP (${L2.loudnormType})`);
 }
-const music = { raw: rawRel, source: { file: outro.music.file, sha256: sha256(musicSrc) }, from: outro.music.from, to: outro.music.to, license: outro.music.license, mixes };
+const music = { raw: rawRel, source: { file: outro.music.file, sha256: sha256(musicSrc) }, from: outro.music.from, to: outro.music.to, holdAfter: outro.music.holdAfter, license: outro.music.license, mixes };
 
 rmSync(tmp, { recursive: true, force: true });
 
@@ -285,10 +336,11 @@ const lic = [
   `Сгенерировано: ${manifest.generatedAt} (prepare-assets ${SCRIPT_VERSION}). Гейт 6: лицензия каждого звука и музыки записана; ограничения — предупреждением.`, '',
   '| Что | Файл | Источник | Лицензия | Предупреждение |', '|---|---|---|---|---|',
   `| Музыка | ${outro.music.file} (${outro.music.from}–${outro.music.to} с) | MIA_SHORT_DIR | ${outro.music.license} | ⚠ тариф Suno не подтверждён: некоммерческое использование — ок по словам Олега; коммерческое — проверить тариф |`,
-  ...Object.values(sfx).map((s) => `| SFX | ${s.id}${s.reverse ? ' (реверс)' : ''} | ${s.source}, ${s.origName} | ${s.license} | ${/^(CC0|MIT)$/.test(s.license) ? '—' : '⚠ проверить'} |`),
+  ...Object.values(sfx).map((s) => `| SFX (${s.type}) | ${s.id} | ${s.source} | ${s.license} | ${s.licenseWarning ? '⚠ licenseWarning: лицензия неизвестна — только для некоммерческого черновика; перед публикацией в Instagram заменить на CC0 (outro.yaml sfx.note)' : '—'} |`),
   `| Шрифт | Anton-Regular.ttf | google/fonts ofl/anton | SIL OFL 1.1 | latinOnly: только латиница |`,
   `| Шрифт | Oswald-VF.ttf | google/fonts ofl/oswald | SIL OFL 1.1 | — |`,
-  `| Видео | V5, V9, V10, V12 | генерации Seedance (MIA_SHORT_DIR) | собственные материалы Олега | — |`,
+  `| Видео | ${Object.keys(srcInfo).sort().join(', ')} | генерации Seedance (MIA_SHORT_DIR) | собственные материалы Олега | — |`,
+  `| Картинка | ${Object.values(cards).map((c) => c.cutout).join(', ')} | вырезки архитектора (MIA_SHORT_DIR/_outro-analysis/cards) | собственные материалы Олега | — |`,
   '',
 ];
 mkdirSync(join(ROOT, 'out', 'mia-outro'), { recursive: true });

@@ -63,6 +63,8 @@ export const SPR = {
   calm: { damping: 16, stiffness: 64, mass: 1 }, // критическая, без перелёта: единственная для текста
   word: { damping: 20, stiffness: 170, mass: 0.9 }, // слова, входящие в паз (ограничивать у паза); только crisp
   detent: { damping: 24, stiffness: 380, mass: 0.6 }, // барабан/пикер щёлкает на место
+  slam: { stiffness: 1156, damping: 34, mass: 1 }, // ω 34, ζ 0.5 (≈16 % перелёта): имя-слэм 1.9→1 карточки аутро MIA (прототип 008, решение Олега «Динамика v2»); не для обычного текста
+  stamp: { stiffness: 900, damping: 27, mass: 1 }, // ω 30, ζ 0.45: номер-штамп 2.2→1 (прототип 008)
   glide: { stiffness: 150, damping: 20, mass: 1 }, // magic move (product-film move.ts)
   camera: { damping: 30, mass: 1.2, stiffness: 120 }, // камера: тяжёлая, без перелёта (product-film camera.ts)
 } satisfies Record<string, SpringConfig>;

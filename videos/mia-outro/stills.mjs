@@ -29,25 +29,27 @@ rmSync(join(OUT, 'bundle'), { recursive: true, force: true });
 const serveUrl = await bundle({ entryPoint: join(ROOT, 'src', 'index.ts'), rootDir: ROOT, publicDir: join(ROOT, 'public'), outDir: join(OUT, 'bundle'), webpackOverride: ConfigInternals.getWebpackOverrideFn(), enableCaching: true });
 console.log(`бандл ${((Date.now() - t0) / 1000).toFixed(1)} с`);
 
-const shots = []; // {comp, frame, props, name, label}
+const shots = []; // {comp, frame, props, name, label, group}
 const hitItems = tl.items.filter((p) => p.hit);
 for (const comp of ['MiaOutro', 'MiaOutroVertical']) {
-  for (const p of hitItems) {
-    shots.push({ comp, frame: p.startFrame, name: `h${p.hit}-f${p.startFrame}`, label: `h${p.hit} f${p.startFrame} ${p.kind}${p.kind === 'card' ? ' ' + p.hero : ''}` });
-    shots.push({ comp, frame: p.startFrame + 2, name: `h${p.hit}+2-f${p.startFrame + 2}`, label: `h${p.hit}+2 f${p.startFrame + 2}` });
-  }
-  for (const p of tl.items.filter((x) => x.kind === 'final')) for (const dt of [0.5, 1.4, 2.5]) {
-    const fr = Math.min(p.endFrame - 1, p.startFrame + Math.round(dt * tl.fps));
-    shots.push({ comp, frame: fr, name: `final+${dt}-f${fr}`, label: `финал +${dt} с f${fr}` });
+  // лист «вокруг ударов»: −3…+6 кадров от каждого удара (строка = удар)
+  for (const p of hitItems) for (let d = -3; d <= 6; d++) {
+    const fr = p.startFrame + d;
+    if (fr < 0 || fr >= tl.durationInFrames) continue;
+    shots.push({ comp, frame: fr, name: `h${p.hit}${d >= 0 ? '+' : ''}${d}-f${fr}`, label: `h${p.hit} ${d >= 0 ? '+' : ''}${d} f${fr}`, group: `around-${comp}` });
   }
   for (const p of tl.items.filter((x) => x.kind === 'card')) {
     const mid = p.startFrame + Math.floor((p.endFrame - p.startFrame) / 2);
-    shots.push({ comp, frame: mid, name: `card-${p.hero}-mid-f${mid}`, label: `${p.hero} середина f${mid}` });
+    shots.push({ comp, frame: mid, name: `card-${p.hero}-mid-f${mid}`, label: `${p.hero} середина f${mid}`, group: `main-${comp}` });
+  }
+  for (const p of tl.items.filter((x) => x.kind === 'final')) for (const fr of [p.startFrame + 12, tl.musicEndFrame - 1, tl.durationInFrames - 1]) {
+    shots.push({ comp, frame: fr, name: `final-f${fr}`, label: `финал f${fr}${fr >= tl.musicEndFrame ? ' (holdAfter)' : ''}`, group: `main-${comp}` });
   }
 }
-for (const p of tl.items.filter((x) => x.kind !== 'card')) {
+// варианты кропа 9:16 для погони (V7/V1/V3) — по умолчанию B, выбирает Олег
+for (const p of tl.items.filter((x) => x.kind === 'live' && ['V7', 'V1', 'V3'].includes(x.srcFrames.src))) {
   const mid = p.startFrame + Math.floor((p.endFrame - p.startFrame) / 2);
-  for (const v of ['A', 'B', 'C']) shots.push({ comp: 'MiaOutroVertical', frame: mid, props: { verticalCrop: v }, name: `crop-${p.index}-${v}-f${mid}`, label: `[${p.index}] ${p.kind} ${p.srcFrames.src} f${mid} кроп ${v}`, group: `crop-${p.index}` });
+  for (const v of ['A', 'B', 'C']) shots.push({ comp: 'MiaOutroVertical', frame: mid, props: { verticalCrop: v }, name: `crop-${p.index}-${v}-f${mid}`, label: `[${p.index}] ${p.srcFrames.src} f${mid} кроп ${v}`, group: 'crops' });
 }
 
 const comps = {};
@@ -68,7 +70,8 @@ console.log(`стиллы: ${shots.length} за ${((Date.now() - t0) / 1000).toF
 mkdirSync(join(OUT, 'sheets'), { recursive: true });
 const labelled = (s, w) => {
   const o = s.file.replace(/\.png$/, '.lbl.png');
-  spawnSync('magick', [s.file, '-resize', `${w}x`, '-fill', '#000A', '-draw', `rectangle 0,0 ${w},30`, '-fill', 'yellow', '-font', FONT, '-pointsize', '20', '-annotate', '+8+22', s.label, o]);
+  const pt = Math.max(11, Math.round(w / 13));
+  spawnSync('magick', [s.file, '-resize', `${w}x`, '-fill', '#000A', '-draw', `rectangle 0,0 ${w},${pt + 10}`, '-fill', 'yellow', '-font', FONT, '-pointsize', String(pt), '-annotate', `+5+${pt + 2}`, s.label, o]);
   return o;
 };
 const sheet = (list, w, cols, out) => {
@@ -77,8 +80,9 @@ const sheet = (list, w, cols, out) => {
   for (const f of files) rmSync(f);
   console.log(`  лист ${out}`);
 };
-const main = shots.filter((s) => !s.group);
-sheet(main.filter((s) => s.comp === 'MiaOutro'), 480, 4, join(OUT, 'sheets', 'MiaOutro-hits-cards.png'));
-sheet(main.filter((s) => s.comp === 'MiaOutroVertical'), 270, 5, join(OUT, 'sheets', 'MiaOutroVertical-hits-cards.png'));
-const crops = shots.filter((s) => s.group);
-sheet(crops, 270, 6, join(OUT, 'sheets', 'MiaOutroVertical-crops.png'));
+const of = (g) => shots.filter((s) => s.group === g);
+sheet(of('around-MiaOutro'), 240, 10, join(OUT, 'sheets', 'MiaOutro-around-hits.png'));
+sheet(of('around-MiaOutroVertical'), 135, 10, join(OUT, 'sheets', 'MiaOutroVertical-around-hits.png'));
+sheet(of('main-MiaOutro'), 480, 4, join(OUT, 'sheets', 'MiaOutro-cards-final.png'));
+sheet(of('main-MiaOutroVertical'), 270, 7, join(OUT, 'sheets', 'MiaOutroVertical-cards-final.png'));
+sheet(of('crops'), 270, 3, join(OUT, 'sheets', 'MiaOutroVertical-crops-chase.png'));

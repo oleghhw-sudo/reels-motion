@@ -9,7 +9,7 @@ import { assertZones, buildTimeline, parseOutro, zonesFrom, type Timeline, type 
 
 export const OUTRO = parseOutro(parse(outroText));
 
-type Layer = { figure: string; black: string; white: string; x: number; y: number; w: number; h: number; pad: number; shadow: [number, number] };
+type Layer = { figure: string; black: string; white: string; poster: string; ring: string; center: { x: number; y: number }; x: number; y: number; w: number; h: number; pad: number; shadow: [number, number] };
 export type Manifest = {
   outroSha256: string;
   publicBase: string;
@@ -17,7 +17,7 @@ export type Manifest = {
   live: Record<string, { src: string; from: number; to: number; frames: number; land: string; port: string; portW: number; portH: number; scaleLand: number; scalePort: number }>;
   cards: Record<string, { hero: string; touches: { top: boolean; bottom: boolean; left: boolean; right: boolean }; bg: string; dot: string; rays: string; raysAlpha: number; layout: { land: Layer; port: Layer }; bgLayer: { land: string; port: string } }>;
   grain: string[];
-  music: { mixes: Record<string, { file: string }> };
+  music: { mixes: Record<string, { file: string; durationSec: number }> };
 };
 export const MANIFEST = manifestJson as unknown as Manifest;
 
