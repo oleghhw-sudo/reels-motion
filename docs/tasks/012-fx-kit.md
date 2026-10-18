@@ -4,7 +4,7 @@
 Правила, которым служит код: `.claude/skills/cinematic-fx/SKILL.md` (§2 анатомия удара, §3 каталог, §4 реализация), living-motion §−1/§5/§9. Эталон движения: `docs/tasks/data/008-proto-rook-card.py` (ROOK).
 
 ## Зависимости (гейт 2: сначала env.manifest.json, потом package.json, версии ровно 4.0.534)
-- `@remotion/effects` (Remotion License — записать в `src/motion/THIRD-PARTY-LICENSES.md` решением «личный некоммерческий проект, как и remotion»), `@remotion/transitions` (Remotion License), `@remotion/motion-blur` (MIT), `@remotion/layout-utils` (MIT). `@remotion/noise` уже есть.
+- `@remotion/effects` и `@remotion/transitions` (Remotion License: бесплатна для физлиц и компаний ≤ 3 человек, коммерческое использование разрешено — записать в `src/motion/THIRD-PARTY-LICENSES.md` ссылкой на `LICENSE.md` репозитория Remotion), `@remotion/motion-blur` (MIT), `@remotion/layout-utils` (MIT). `@remotion/noise` уже есть. В 4.0.534 — 74 эффекта (список в `node_modules/@remotion/effects/dist`); имена параметров — по `.d.ts`, не по памяти.
 - Проверить в отчёте: `npm ls` показывает ровно 4.0.534 у всех `@remotion/*`; `npx remotion gpu --gl=angle` на Mac — WebGL2 доступен (вывод в отчёт). Без GPU (CI/Linux) — `REMOTION_GL=swangle` и пометка «медленно».
 - Studio: HtmlInCanvas в предпросмотре требует Chrome ≥ 149 с флагом `chrome://flags/#canvas-draw-element`; в headless-рендере с 4.0.534 — без настроек. Если Studio на Mac не показывает слой — это ожидаемо, проверять стиллами.
 
@@ -30,10 +30,10 @@
 
 ## 012-Б — удар и склейка как данные
 - Схема `scenes.yaml`/`outro.yaml` (расширение, гейт 3 — поле + читатель вместе): `look: film`, в пунктах `hit: S|M|L`, `in: whip|cut|flash`, `ramp: true`, `slam: {title, tag}`; `model.ts` аутро принимает v2-поля (`in`, `ramp`, `music.holdAfter`, `sfx` v2 с `pick`) — это пересекается с 008 v2: делать здесь только схему и валидацию, сборку аутро — в 008 v2.
-- `<TransitionSeries>` с `pushCut({flashOpacity, flashTailFrames})` для удара M между сценами презентации; `<TransitionSeries.Overlay>` + `lightLeak({seed, progress})` — для перехода `in: leak` (≤ 1 на ролик, cinematic-fx §1).
+- `<TransitionSeries>` с `pushCut({flashOpacity: 0.2, flashFrames: 2, cutProgress: 5/11, outgoingScale: 1.04, incomingStartScale: 1.04, incomingEndScale: 1.07})` (монотонный тайминг) для удара M между сценами презентации; `<TransitionSeries.Overlay>` + `lightLeak({seed, progress})` — для перехода `in: leak` (≤ 1 на ролик, cinematic-fx §1).
 
 ## 012-В — расширенный каталог (после 012-А/Б; cinematic-fx §3 G–M; по отдаче)
-1. **Нативные замены prep-слоёв ROOK**: `starburst` (лучи), `halftone`/`halftoneLinearGradient` (растр), `outline` + `dropShadow` (обводка/тень вырезки) — сравнить стиллом с prep-версией; если тонкие пряди хуже — оставить prep, записать.
+1. **Нативные замены prep-слоёв ROOK**: `starburst({rays, colors, rotation: градусы, smoothness})` (лучи; генератор — на `<Solid>` под фигурой), `halftone`/`halftoneLinearGradient` (растр), `outline({width, edgeSimplification})` + `dropShadow` (обводка/тень вырезки) — сравнить стиллом с prep-версией; если тонкие пряди хуже — оставить prep, записать.
 2. **Переходы-эффекты** как презентации/оверлеи: `tear`, `evolve`, `venetianBlinds`, `pixelDissolve`, `pixelate` 40→1 (ввод), `barrelDistortion` импульс 0→0.25→0 (6 кадров), `wave` «жидкий» 0→30→0 (8 кадров) — каждый с номером motion-prompt, если есть (#017/#018/#019/#045).
 3. **Свет**: god rays (копия → `levels` порог → `zoomBlur` → screen), bloom по порогу (`glow threshold 0.75`), `shine` (#022), rack focus (`regionBlur`), tilt-shift (`linearProgressiveBlur`).
 4. **Цвет**: `LOOK` на `colorCorrection`/`levels`/`vibrance`/`whiteBalance`/`linearGradientTint`; `lut` — один .cube (teal-orange) в `public/luts` через env.manifest; луки bleach/cross/day-for-night/faded как пресеты; «вспышка экспозицией» (`exposure` 3→0).
