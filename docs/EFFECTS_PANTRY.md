@@ -108,3 +108,11 @@ Motion — бета Team/Enterprise, анимация кодом, MP4; Docs/Slid
 (смена в [start,end] своего слова, между сменами ≥0.4 с) с позитивным контролем на смещённом якоре.
 
 **Расхождения источников, решать на эталоне:** мастер −16 LUFS (Barty-Bart, onetake) vs −14 (наш, howseen, lemo); «всегда 3 слоя движения» (LottieFiles) vs «≥25 % статичных кадров» (onetake).
+
+## G. cinetic и product-film-skill (разбор 2026-10-18, через prompt-motion.com)
+
+| Репо | Коммит | Лицензия | Вердикт |
+|---|---|---|---|
+| Leonxlnx/cinetic | ecfa660 | MIT | Нормы движения взяты в скиллы living-motion / motion-review / reel-presentation. Код-кандидаты на порт (задачей): `lib/anim.ts` (E, SPR, hitPulse, durFor, arrive/depart, squash, inertia), `lib/camera.ts`, `lib/pace.ts`, `lib/sync.ts` (peak, delayTo, settleOf), `fx/` (Words, Chain, TypeOn, Roll, Morph, MaskRise, Iris, Cursor, RackFocus). Риски: FontGate через requestAnimationFrame и без образца кириллицы; паузы calm короче readcheck; 60 fps по умолчанию; их safe-zone справа 120 (у нас 140). НЕ брать: score/kit-генерацию звука (перезаписывает файлы), HyperFrames-стартер (теряет кириллицу), вкусовые запреты цвета как гейт. |
+| Rieranthony/product-film-skill | fe11efc | MIT | Взято в beat-sync/motion-review: бит-сетка по стемам, резка по тактам, SFX на пиках, стоп-кадры одним бандлом, листы склеек, проверка цветового диапазона мастера. Код-кандидаты: `kit/spring.ts` (step/track — совпадает с задачей 003), `move.ts` (magic move, swapIn), `camera.ts`, `cursor.tsx`, `cursor-path.ts`, `punchlines.tsx`, `debug.tsx`; скрипты `beats.py`, `audio-edit.py`, `verify.py`, `stills.ts`. |
+| prompt-motion.com | — | без лицензии | Только референсы и статистика промптов (баны, «одна форма», 120 BPM / «на каждой доле»). Ассеты не брать. |

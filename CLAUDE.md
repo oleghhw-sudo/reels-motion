@@ -56,6 +56,14 @@
 - Новый ролик — readcheck обязателен до финального рендера. Каждый значимый текст (заголовки, подписи, метки, кнопка, контакты) обёрнут в `<Readable id text>` (`src/qa/Readable.tsx`, визуально прозрачен).
 - Пороги cps/minHold — гипотеза (по умолчанию cps=12, minHold=1.0 с, +0.5 с), калибруются на эталоне, а не принимаются как истина.
 
+## Скиллы роликов (.claude/skills, 2026-10-18)
+
+- `reel-director` — вход: тип ролика (кино / презентация / гибрид), бриф, чекпоинты.
+- `reel-cinematic` — история из видео (аутро, трейлер, герои); `reel-presentation` — графика, UI, текст, голос.
+- `living-motion` — обязательные правила «живой» анимации (пружины, вес, паузы, камера, морф, запреты).
+- `beat-sync` — музыка, доли, SFX по пикам; `motion-review` — проверка до финального рендера.
+- Нормы взяты из cinetic (MIT, @ecfa660) и product-film-skill (MIT, @fe11efc) — числа это гипотезы, калибруются на эталоне. Гейты этого файла главнее скиллов; выбранные номера motion-prompt главнее токенов living-motion; readcheck главнее норм времени на текст.
+
 ## motion-prompt (каталог именованных движений, vendor/motion-prompt, MIT, коммит 770eefb)
 
 - Скилл `.claude/skills/motion-prompt`. Каталог только локальный: `MOTION_PROMPT_BASE=vendor/motion-prompt/api/v1 node vendor/motion-prompt/skills/motion-prompt/scripts/motion-prompt.mjs <command>`; выбор глазами — `pick --local`.
