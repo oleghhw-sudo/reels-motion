@@ -15,7 +15,8 @@ export type FontId =
   | 'Exo2'
   | 'Montserrat'
   | 'PlayfairDisplayItalic'
-  | 'Manrope';
+  | 'Manrope'
+  | 'Anton';
 
 export type FontDef = {
   /** CSS-семейство с префиксом RM, чтобы никогда не подхватить системный шрифт с тем же именем. */
@@ -26,6 +27,11 @@ export type FontDef = {
   weight: string;
   /** Начертание для @font-face. Италик — отдельный файл того же семейства (font-style: italic). */
   style?: 'normal' | 'italic';
+  /**
+   * Шрифт без кириллицы: значение — причина/область (env.manifest.json → fonts.files[].latinOnly).
+   * Текст с U+0400–U+04FF или ’ этим шрифтом — громкая ошибка сборки (fontFor) и нарушение LATIN_ONLY в readcheck.
+   */
+  latinOnly?: string;
 };
 
 export const FONTS: Record<FontId, FontDef> = {
@@ -49,4 +55,24 @@ export const FONTS: Record<FontId, FontDef> = {
   },
   // В Manrope нет ʼ U+02BC — в текстах только ’ U+2019 (см. env.manifest.json).
   Manrope: { family: 'RM Manrope', file: 'fonts/Manrope/Manrope-VF.ttf', weight: '200 800' },
+  // В Anton нет ґ є і ї (решение Олега 2026-10-18: только латиница, тексты аутро MIA английские).
+  Anton: { family: 'RM Anton', file: 'fonts/Anton/Anton-Regular.ttf', weight: '400', latinOnly: 'только латиница, тексты аутро MIA английские' },
 };
+
+/** Символы, которых нельзя набирать шрифтом latinOnly: кириллица U+0400–U+04FF и украинский апостроф ’. */
+export const LATIN_ONLY_FORBIDDEN = /[\u0400-\u04FF\u2019]/u;
+
+/** null — текст подходит шрифту; иначе — текст ошибки. */
+export function latinOnlyViolation(id: FontId, text: string): string | null {
+  const def = FONTS[id];
+  if (!def.latinOnly) return null;
+  const bad = [...text].filter((c) => LATIN_ONLY_FORBIDDEN.test(c));
+  return bad.length ? `Шрифт ${id} — latinOnly (${def.latinOnly}), а в тексте «${text}» есть ${[...new Set(bad)].join(' ')}: кириллицу и ’ им набирать нельзя` : null;
+}
+
+/** CSS-стек шрифта для конкретного текста: для latinOnly с кириллицей — громкая ошибка (сборка/рендер падают). */
+export function fontFor(id: FontId, text: string): string {
+  const v = latinOnlyViolation(id, text);
+  if (v) throw new Error(v);
+  return `'${FONTS[id].family}'`;
+}

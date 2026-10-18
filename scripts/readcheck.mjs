@@ -16,7 +16,8 @@
 // Кадр «читаемый» = opacity ≥ 0.9, текст не обрезан предками (в пределах кадра) и целиком в кадре.
 // Метрика: самый длинный непрерывный отрезок читаемости vs требуемое = max(minHold, символы/cps + 0.5 с).
 // Нарушения: SHORT (читаем, но меньше нужного), OUT_OF_FRAME (видимый текст режется краем кадра),
-//            UNSAFE (читаемый текст заходит в safe zone), NEVER (ни разу не читаем целиком и не OUT_OF_FRAME).
+//            UNSAFE (читаемый текст заходит в safe zone), NEVER (ни разу не читаем целиком и не OUT_OF_FRAME),
+//            LATIN_ONLY (кириллица U+0400–U+04FF или ’ набрана шрифтом latinOnly из env.manifest.json — в <Readable> или вне его).
 // Не проверяется: перекрытие другими слоями (z-order), mask-image, clip-path кроме inset, контраст.
 //
 // ПОРОГИ — ГИПОТЕЗА (калибруются на эталоне): cps=12 (украинский, медленнее латиницы 15), minHold=1.0 с, +0.5 с.
@@ -25,7 +26,7 @@
 //
 // Опирается на внутренние модули @remotion/renderer (set-props-and-env, seek-to-frame, puppeteer-evaluate) —
 // версия зафиксирована в package.json; при другой версии скрипт отказывается работать (см. RENDERER_VERSION).
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +43,10 @@ const PAD_SEC = 0.5;
 const TOL = 0.5; // px
 
 // Ожидание позитивного контроля (src/qa/ReadcheckFixture.tsx)
+// Шрифты без кириллицы (решение Олега 2026-10-18): семейства из env.manifest.json → fonts.files[] с latinOnly.
+const LATIN_FAMILIES = JSON.parse(readFileSync(join(ROOT, 'env.manifest.json'), 'utf8'))
+  .fonts.files.filter((e) => typeof e === 'object' && e.latinOnly)
+  .map((e) => e.family);
 const SELF_TEST = { comp: 'ReadcheckFixture', expect: { 'fx.short': ['SHORT'], 'fx.edge': ['OUT_OF_FRAME'], 'fx.bottom': ['UNSAFE'], 'fx.ok': [] } };
 
 // ---------------------------------------------------------------- аргументы
@@ -91,7 +96,7 @@ await import('../remotion.config.ts');
 const { ConfigInternals } = await import('@remotion/cli/config');
 
 // ---------------------------------------------------------------- сбор в странице (сериализуется в браузер)
-function collect(attrId, attrText, W, H) {
+function collect(attrId, attrText, W, H, latinFamilies) {
   const parseLen = (v, ref) => (v.endsWith('%') ? (parseFloat(v) / 100) * ref : parseFloat(v) || 0);
   const inter = (a, b) => ({ l: Math.max(a.l, b.l), t: Math.max(a.t, b.t), r: Math.min(a.r, b.r), b: Math.min(a.b, b.b) });
   const area = (a) => Math.max(0, a.r - a.l) * Math.max(0, a.b - a.t);
@@ -176,7 +181,22 @@ function collect(attrId, attrText, W, H) {
     }
     out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), present: true, minOpacity, hidden, contentOk, visibleArea, box: u });
   }
-  return { items: out, unknownClip };
+  // LATIN_ONLY: каждый текстовый узел кадра (не только <Readable>), набранный семейством latinOnly, — без кириллицы и ’
+  const latinBad = [];
+  if (latinFamilies.length) {
+    const forbidden = /[\u0400-\u04FF\u2019]/u;
+    const all = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    while (all.nextNode()) {
+      const n = all.currentNode;
+      const txt = n.textContent;
+      if (!txt.trim() || !forbidden.test(txt) || !n.parentElement) continue;
+      const fam = getComputedStyle(n.parentElement).fontFamily.split(',')[0].trim().replace(/^['"]|['"]$/g, '');
+      if (!latinFamilies.includes(fam)) continue;
+      const owner = n.parentElement.closest(`[${attrId}]`);
+      latinBad.push({ text: txt.trim().slice(0, 60), family: fam, readableId: owner ? owner.getAttribute(attrId) : null });
+    }
+  }
+  return { items: out, unknownClip, latinBad };
 }
 
 // ---------------------------------------------------------------- прогон
@@ -277,6 +297,7 @@ try {
   for (let f = 0; f < D; f += STEP) frames.push(f);
   const tracks = new Map(); // key id\0text → данные
   let unknownClipFrames = 0;
+  const latinBad = new Map(); // текст\0семейство → { …, fromFrame }
   const zoneOf = (b) => {
     const z = [];
     if (b.t < SAFE.top - TOL) z.push({ zone: 'top', px: Math.round(SAFE.top - b.t) });
@@ -288,8 +309,9 @@ try {
   for (let i = 0; i < frames.length; i++) {
     const f = frames[i];
     await seekToFrame({ frame: f, page, composition: composition.id, timeoutInMilliseconds: timeout, logLevel: 'error', indent: false, attempt: 0 });
-    const { value } = await puppeteerEvaluateWithCatch({ pageFunction: collect, args: [ATTR.id, ATTR.text, W, H], frame: f, page, timeoutInMilliseconds: timeout });
+    const { value } = await puppeteerEvaluateWithCatch({ pageFunction: collect, args: [ATTR.id, ATTR.text, W, H, LATIN_FAMILIES], frame: f, page, timeoutInMilliseconds: timeout });
     if (value.unknownClip) unknownClipFrames++;
+    for (const b of value.latinBad) { const k = `${b.text}\u0000${b.family}`; if (!latinBad.has(k)) latinBad.set(k, { ...b, fromSec: +(f / fps).toFixed(3) }); }
     const span = (Math.min(f + STEP, D) - f) / fps;
     const seenNow = new Map();
     for (const it of value.items) {
@@ -364,6 +386,7 @@ try {
       if (best === 0 && outSec === 0) v.push('NEVER');
       if (best > 0 && best + 1e-9 < need) v.push('SHORT');
       if (unsafe.size) v.push('UNSAFE');
+      if ([...latinBad.values()].some((b) => b.readableId === tr.id)) v.push('LATIN_ONLY');
       texts.push({
         id: tr.id,
         text: tr.text,
@@ -394,9 +417,13 @@ try {
       const extra = x.unsafe.map((u) => ` [${u.zone} +${u.maxPx}px ${u.sec.toFixed(2)}с]`).join('');
       console.log(`${pad(st, 22)}${pad(x.id, 26)}${pad(at, 7)}${pad(x.chars, 6)}${pad(x.needSec.toFixed(2), 7)}${pad(x.longestSec.toFixed(2), 8)}${JSON.stringify(x.text.slice(0, 40))}${extra}`);
     }
-    const nViol = texts.reduce((s, x) => s + x.violations.length, 0);
+    // LATIN_ONLY вне <Readable>: отдельной строкой, тоже нарушение
+    const latinOutside = [...latinBad.values()].filter((b) => b.readableId === null);
+    for (const b of latinBad.values()) console.log(`LATIN_ONLY  ${b.readableId ?? '(вне Readable)'}  ${JSON.stringify(b.text)} шрифтом ${b.family} с ${b.fromSec} с — шрифт без кириллицы (env.manifest.json latinOnly)`);
+    const nViol = texts.reduce((s, x) => s + x.violations.length, 0) + latinOutside.length;
     const counts = {};
     for (const x of texts) for (const v of x.violations) counts[v] = (counts[v] ?? 0) + 1;
+    if (latinOutside.length) counts.LATIN_ONLY = (counts.LATIN_ONLY ?? 0) + latinOutside.length;
     console.log(`\nТекстов: ${texts.length}; нарушений: ${nViol} ${JSON.stringify(counts)}`);
     if (unknownClipFrames) console.log(`Внимание: clip-path не-inset встречен на ${unknownClipFrames} кадрах — такой клип не учитывается.`);
     const timing = { bundleSec: +((tBundle - t0) / 1000).toFixed(1), framesSec: +((tDone - tLoop) / 1000).toFixed(1), totalSec: +((tDone - t0) / 1000).toFixed(1), sampledFrames: frames.length };
@@ -410,6 +437,7 @@ try {
       timing,
       summary: { texts: texts.length, violations: nViol, byType: counts },
       texts,
+      latinOnly: { families: LATIN_FAMILIES, violations: [...latinBad.values()] },
     };
     const outDir = join(ROOT, 'out', 'qa');
     mkdirSync(outDir, { recursive: true });

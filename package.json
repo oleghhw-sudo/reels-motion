@@ -14,7 +14,9 @@
     "studio": "remotion studio src/index.ts",
     "still": "node scripts/still.mjs",
     "sfx:collect": "node sfx/collect.mjs",
-    "sfx:lab": "node sfx/lab/serve.mjs"
+    "sfx:lab": "node sfx/lab/serve.mjs",
+    "mia:prepare": "node --experimental-strip-types --no-warnings videos/mia-outro/prepare-assets.mjs",
+    "mia:zones": "node --experimental-strip-types --no-warnings videos/mia-outro/check-zones.mjs"
   },
   "dependencies": {
     "@paper-design/shaders": "0.0.81",
