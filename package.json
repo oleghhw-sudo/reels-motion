@@ -8,7 +8,7 @@
     "check": "node scripts/check-env.mjs",
     "check:self-test": "node scripts/check-env.mjs --self-test",
     "test:contrast": "node --experimental-strip-types src/theme/contrast.test.ts",
-    "test:motion": "node --experimental-strip-types src/motion/motion.test.ts",
+    "test:motion": "node --experimental-strip-types --no-warnings src/motion/test.ts",
     "test:countup": "node --experimental-strip-types src/elements/countup.test.ts",
     "readcheck": "node scripts/readcheck.mjs",
     "studio": "remotion studio src/index.ts",

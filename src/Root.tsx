@@ -6,6 +6,7 @@ import { BEAUTY_FPS, BEAUTY_FRAMES, BeautyStudioReel, beautySchema } from './vid
 import { BackgroundPicker } from './labs/BackgroundPicker.tsx';
 import { FIXTURE_FRAMES, ReadcheckFixture } from './qa/ReadcheckFixture.tsx';
 import { MOTION_LAB_FRAMES, MotionLab } from './labs/MotionLab.tsx';
+import { MOTION_LAB_KIT_FPS, MOTION_LAB_KIT_FRAMES, MotionLabKit } from './labs/MotionLabKit.tsx';
 
 const FPS = 30;
 
@@ -46,5 +47,6 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="ReadcheckFixture" component={ReadcheckFixture} width={1080} height={1920} fps={FPS} durationInFrames={FIXTURE_FRAMES} />
     {/* лаборатория функций src/motion */}
     <Composition id="MotionLab" component={MotionLab} width={1080} height={1920} fps={FPS} durationInFrames={MOTION_LAB_FRAMES} />
+    <Composition id="MotionLabKit" component={MotionLabKit} width={1080} height={1920} fps={MOTION_LAB_KIT_FPS} durationInFrames={MOTION_LAB_KIT_FRAMES} />
   </>
 );
