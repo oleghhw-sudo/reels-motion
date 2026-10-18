@@ -18,4 +18,4 @@
 `npx tsc --noEmit`; readcheck StyleLab (зелёный или каждое SHORT объяснено); стиллы 4 плиток в середине удара и в конце; `StyleLabGrid` PNG для выбора; grep на запрещённое в `src/styles src/labs/StyleLab.tsx`; позитивный контроль схемы — стиль с сырым bezier вне `tokens.ts` обязан упасть на валидации (линт из долга 011-А, минимальный вариант).
 
 ## Вне рамок
-Вторая волна стилей (`zine-collage`, `film-analog`, `riso-print`, `pixel-ui`) — после выбора Олега; ассеты вырезок; новые шрифты (Bebas Neue, Poppins, TikTok Sans — отдельной задачей с проверкой глифов ґ є і ї ’).
+Вторая волна стилей (`zine-collage`, `film-analog`, `riso-print`, `pixel-ui`) — после выбора Олега; ассеты вырезок; новые шрифты отдельной задачей с проверкой глифов ґ є і ї ’: TikTok Sans (OFL, кириллица есть — проверено по cmap), Hanken Grotesk / Mona Sans (кандидаты); **Bebas Neue и Poppins кириллицы не содержат** (проверено) — не брать.

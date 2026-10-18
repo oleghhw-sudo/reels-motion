@@ -128,7 +128,7 @@ Motion — бета Team/Enterprise, анимация кодом, MP4; Docs/Slid
 | `@remotion/motion-blur@4.0.534`: `HtmlInCanvasMotionBlur`, `CameraMotionBlur`, `Trail` | MIT | задача 012 (затвор 180°/360°, шлейф слэма) |
 | `@remotion/captions`, `@remotion/layout-utils`, `@remotion/paths` | MIT | 014 (субтитры), 012 (fitText), 011-Б (evolvePath, interpolatePaths) |
 | Remotion docs «accelerated video» (speed ramp на OffthreadVideo: накопленная remap + Sequence на кадр + `#disable`) | — | рецепт ramp; `@remotion/media <Video>` ramp не умеет, реверс не поддерживается |
-| Tejashmakwana/motionmaxxing | Apache-2.0 | числа 716 про-движений (медиана 10 к., перелёт < 9 %, G2 «> 3 неподвижных кадров — провал», hold 0.6–1.4 с) → cinematic-fx/motion-review как гипотезы; код (GSAP) не нужен |
+| Tejashmakwana/motionmaxxing | Apache-2.0 | числа 716 про-движений (по их `_meta` — декодированы моделью, не измерены; измеренное — в `references/`): медиана 10 к., перелёт 8.8 %, G2 «> 3 неподвижных кадров — провал», hold 0.6–1.4 с, слова 2–12 к. между собой, 11 «never ship» + 25 паттернов слопа + линт G5 → cinematic-fx/motion-review как гипотезы; код (GSAP) не нужен |
 | dev-isaacmello/extreme-motion-design | MIT | идеи QA: вспышки ≤ 3/с, loop seam, оценка относительно референса → 013 |
 | lemomo-ai/lemo-opuscar (повторно) | MIT | DIRECTOR.md числа (субтитры ≥ max(1.8, фраза+0.6) с, титр ≥ 4 с, ≥ 2 тишины, ≥ 2 J/L), грамматики halftone-dossier/risograph (штамп 2.6×→1 за 0.09 с, тряска 5–26 px квадратичное затухание, сдвиг совмещения на шот) |
 | Fats403/remotion-captions-kit, neutral-Stage/remotion-captioneer, AgriciDaniel/claude-shorts | MIT | пагинация (400 мс / 1200 мс / 42 симв / ≥ 300 мс / ≥ 2 слов), стили субтитров, cps-гейт 17/20 → 014 |
