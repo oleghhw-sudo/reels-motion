@@ -13,20 +13,7 @@
 
 ## Данные
 - Внешние пути — `env.manifest.json` → `data_dirs`: `MIA_SHORT_DIR` (папка «MIA short»: видео, `_outro-analysis/shots.json`, `_sfx/`, трек). Ничего из неё в git.
-- `videos/mia-outro/outro.yaml` — **невосстановимое (гейт 5)**: правит Олег/архитектор. Билдер создаёт первую версию по таблице ниже и дальше не перезаписывает скриптами. Схема:
-  ```yaml
-  music: {file: "Midnight Pursuit.wav", from: 49.739, to: 60.720, license: "Suno (тариф уточнить)"}
-  grid: {bpm: 130.81, firstHit: 0.917}   # удар 1 через 22 кадра от начала
-  episodes:
-    ep01:
-      roster:   # порядок = порядок на ударах
-        - {hero: MIA,   src: V3, liveFrom: 182, freeze: 204, crop: null, title: "MIA", tagline: "The Inventor", titleSide: left}
-        - {hero: DARK,  src: V10, liveFrom: ?, freeze: ?, crop: {x, y, w, h}, title: "DARK", tagline: "The Hunter", titleSide: bottom}
-        - {hero: BLOND, src: V9, liveFrom: 122, freeze: 144, crop: null, title: "BLOND", tagline: "Friend or enemy?", titleSide: bottom}
-      lull: {src: V5, from: 10.0, push: 0.04}
-      final: {title: "MIA", line: "She built the future. They came to take it.", tail: "To be continued"}
-      sfx: {hit: "...", whoosh: "...", final: "..."}   # из _sfx/sfx.md
-  ```
+- `videos/mia-outro/outro.yaml` — **невосстановимое (гейт 5)**, уже создан архитектором и является единственным источником кадров, кропов, титров и SFX (схема в нём). Билдер его только читает. (Прежний пример схемы здесь удалён 2026-10-18 — в нём были устаревшие кадры BLOND 122/144 и titleSide DARK.)
   Новая серия = новый ключ `epNN` (больше героев → больше тактов; ролик удлиняется на такт за героя).
 - Перед сборкой — проверка данных: ни один `liveFrom..freeze+hold` не пересекает `excluded` из `shots.json` (позитивный контроль: подложить запретный интервал → сборка падает с понятной ошибкой).
 
