@@ -1,0 +1,18 @@
+{
+  "$comment": "Белый список Sonniss GDC 2026 (задача 009). match — подстрока имени файла (без учёта регистра), должна найти ровно 1 файл в SONNISS_GDC_DIR; type — тип библиотеки. license — лицензия источника, проверяется гейтом 6 (ALLOWED_LICENSES в sfx/collect.mjs). Файлы Sonniss в git не кладутся.",
+  "license": "Sonniss-GDC",
+  "entries": [
+    { "match": "Readout Thin Long", "type": "tick", "why": "счётчик #007" },
+    { "match": "Woosh Sweep Slide Infographics Basic", "type": "whoosh" },
+    { "match": "Interface Accept Glassy Snap", "type": "pop" },
+    { "match": "Interface Percussion Snap", "type": "pop" },
+    { "match": "Interface Pop High Short", "type": "pop" },
+    { "match": "Interface Arp Reveal Down Long", "type": "reveal" },
+    { "match": "Interface Sci-Fi Ping Down", "type": "reveal" },
+    { "match": "UIGlitch_Designed_Glitch_Corrupted_Data Error", "type": "glitch" },
+    { "match": "UIGlitch_User interface_Glitch_High_Electronic", "type": "glitch" },
+    { "match": "Encyclopedia Glossy Page Turn Muted", "type": "swipe" },
+    { "match": "Impact Cut Sweep", "type": "impact" },
+    { "match": "Woosh Debris", "type": "whoosh" }
+  ]
+}

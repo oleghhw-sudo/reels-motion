@@ -7,28 +7,33 @@
 // Только встроенные модули Node (>=20) + CLI git / ffmpeg / ffprobe.
 // sfx/raw/* — недоверенные данные: из них только читаются файлы, ничего не исполняется.
 // Гейт 5: sfx/approved.json создаётся только если отсутствует, никогда не перезаписывается.
-// Гейт 6: звук без разрешённой лицензии (CC0 / MIT) не попадает в library.
+// Гейт 6: звук без разрешённой лицензии (CC0 / MIT / Sonniss-GDC) не попадает в library.
+// Sonniss GDC — локальная папка SONNISS_GDC_DIR (env.manifest.json → data_dirs) + белый список sfx/sonniss.whitelist.json;
+//   не клонируется и в sfx/raw не копируется. Переменная не задана → источник пропускается.
 
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import zlib from 'node:zlib';
 import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const COLLECTOR_VERSION = '1.0.0';
+const COLLECTOR_VERSION = '1.1.0';
 const SFX_DIR = path.dirname(fileURLToPath(import.meta.url));
 const RAW_DIR = path.join(SFX_DIR, 'raw');
 const LIB_DIR = path.join(SFX_DIR, 'library');
 const MANIFEST = path.join(SFX_DIR, 'manifest.json');
 const APPROVED = path.join(SFX_DIR, 'approved.json');
+const SONNISS_WHITELIST = path.join(SFX_DIR, 'sonniss.whitelist.json');
+const ENV_FILE = path.join(SFX_DIR, '..', '.env');
 
 const SR = 48000;
 const SILENCE_DB = -50;           // порог обрезки тишины в начале
 const TARGET_PEAK_DB = -3;        // нормализация пика
 const LUFS_PAD_S = 0.4;           // ebur128 не даёт integrated для <400 мс — добиваем тишиной (она ниже абсолютного гейта −70 и в расчёт не входит)
-const ALLOWED_LICENSES = new Set(['CC0', 'MIT']);
-const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'other'];
+const ALLOWED_LICENSES = new Set(['CC0', 'MIT', 'Sonniss-GDC']);
+const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'reveal', 'glitch', 'swipe', 'impact', 'other'];
 
 // Источники закреплены по коммиту: свежий clone даёт те же байты → те же sha256 → approved.json остаётся валидным.
 const SOURCES = [
@@ -163,6 +168,81 @@ async function soundcnCandidates(dir) {
   return out;
 }
 
+// Sonniss GDC: локальный бандл. Лицензия подтверждается файлом лицензии внутри бандла; нет файла — весь источник отброшен.
+// Каждая подстрока белого списка обязана найти ровно один аудиофайл; 0 или >1 — запись отброшена с причиной.
+const AUDIO_EXT = /\.(wav|flac|aiff?|ogg|mp3|m4a)$/i;
+const LICENSE_FILE = /licen[cs]e|eula|terms/i;
+const LICENSE_EXT = /\.(pdf|txt|md|rtf)$/i;
+
+function fromEnv(name) {
+  if (process.env[name]) return process.env[name];
+  if (!exists(ENV_FILE)) return null;
+  // читается только строка этой переменной; значение ключей из .env никуда не выводится
+  const m = fs.readFileSync(ENV_FILE, 'utf8').match(new RegExp(`^${name}=(.*)$`, 'm'));
+  return m?.[1]?.trim().replace(/^["']|["']$/g, '') || null;
+}
+
+async function walk(dir, out = []) {
+  for (const e of await fsp.readdir(dir, { withFileTypes: true })) {
+    if (e.name.startsWith('.') || e.name === '__MACOSX' || e.isSymbolicLink()) continue;
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) await walk(p, out); else if (e.isFile()) out.push(p);
+  }
+  return out;
+}
+
+// Текст PDF без зависимостей: распаковка FlateDecode-потоков и строк (...) Tj/TJ. Только чтение, ничего не исполняется.
+function pdfText(buf) {
+  const parts = [];
+  const bin = buf.toString('latin1');
+  for (const m of bin.matchAll(/stream\r?\n/g)) {
+    const start = m.index + m[0].length; const end = bin.indexOf('endstream', start);
+    if (end < 0) continue;
+    let txt;
+    try { txt = zlib.inflateSync(buf.subarray(start, end)).toString('latin1'); } catch { try { txt = zlib.inflateSync(buf.subarray(start, end - 1)).toString('latin1'); } catch { continue; } }
+    for (const t of txt.matchAll(/\(((?:\\.|[^\\)])*)\)\s*Tj|\[((?:[^\]])*)\]\s*TJ|(T\*|Td|TD|ET)/g)) {
+      if (t[3]) { parts.push('\n'); continue; }
+      const raw = t[1] ?? [...(t[2].matchAll(/\(((?:\\.|[^\\)])*)\)/g))].map((x) => x[1]).join('');
+      parts.push(raw.replace(/\\([()\\])/g, '$1').replace(/\\n/g, ' '));
+    }
+  }
+  return parts.join('').replace(/[ \t]+/g, ' ');
+}
+
+async function readLicense(file) {
+  const buf = await fsp.readFile(file);
+  const text = /\.pdf$/i.test(file) ? pdfText(buf) : buf.toString('utf8');
+  const line = text.split(/\r?\n/).map((l) => l.trim()).find((l) => /royalty|commercial|sonniss|licen[cs]e/i.test(l) && l.length > 20);
+  return line ? line.slice(0, 240) : null;
+}
+
+async function sonnissCandidates(root) {
+  const wl = JSON.parse(await fsp.readFile(SONNISS_WHITELIST, 'utf8'));
+  const files = await walk(root);
+  const licFiles = files.filter((f) => LICENSE_FILE.test(path.basename(f)) && LICENSE_EXT.test(f)).sort();
+  const audio = files.filter((f) => AUDIO_EXT.test(f));
+  const info = { root, license: wl.license, licenseFile: null, licenseLine: null, audioFiles: audio.length, entries: wl.entries.length };
+  const base = (e, extra) => ({ source: 'sonniss', name: clean(e.match), origName: e.match, license: wl.license, category: null, forcedType: e.type, ...extra });
+  if (!licFiles.length) {
+    return { info, out: wl.entries.map((e) => base(e, { dropReason: 'нет файла лицензии в бандле (LICENSE/EULA *.pdf|txt) — источник целиком отброшен' })) };
+  }
+  info.licenseFile = path.relative(root, licFiles[0]);
+  for (const f of licFiles) { info.licenseLine = await readLicense(f); if (info.licenseLine) { info.licenseFile = path.relative(root, f); break; } }
+  const out = [];
+  for (const e of wl.entries) {
+    if (!TYPES.includes(e.type)) { out.push(base(e, { dropReason: `неизвестный тип «${e.type}»` })); continue; }
+    const needle = e.match.toLowerCase();
+    const hits = audio.filter((f) => path.basename(f).toLowerCase().includes(needle));
+    if (hits.length !== 1) {
+      out.push(base(e, { dropReason: hits.length ? `подстрока нашла ${hits.length} файлов: «${hits.map((h) => path.relative(root, h)).join(' | ')}»` : 'подстрока не нашла файла' }));
+      continue;
+    }
+    const f = hits[0];
+    out.push(base(e, { name: clean(path.basename(f)), origName: path.relative(root, f), absPath: f, sourceSha256: sha256(await fsp.readFile(f)) }));
+  }
+  return { info, out };
+}
+
 // ---------- 3. классификация (консервативная: только явные слова) ----------
 // Порядок важен: первое совпадение побеждает. Неизвестное → other.
 const NAME_RULES = [
@@ -182,7 +262,8 @@ const CATEGORY_RULES = {
   // soundcn (categories)
   click: 'click', switch: 'toggle', toggle: 'toggle', tick: 'tick', error: 'error', notification: 'notify', confirmation: 'success',
 };
-function classify(name, category) {
+function classify(name, category, forcedType) {
+  if (forcedType) return { type: forcedType, typeConfidence: 'whitelist' };
   const tokens = name.split('-');
   for (const [re, type] of NAME_RULES) if (tokens.some((t) => re.test(t))) return { type, typeConfidence: 'name' };
   for (const c of (category || '').split(',')) if (CATEGORY_RULES[c]) return { type: CATEGORY_RULES[c], typeConfidence: 'category' };
@@ -254,7 +335,7 @@ async function processOne(c, tmpLib) {
   if (lead < 0) return { ...c, dropReason: 'тишина (ниже −50 dB целиком)' };
   let peak = 0; for (let i = lead * ch; i < pcm.length; i++) peak = Math.max(peak, Math.abs(pcm[i]));
   const gainDb = TARGET_PEAK_DB - dbfs(peak);
-  const { type, typeConfidence } = classify(c.name, c.category);
+  const { type, typeConfidence } = classify(c.name, c.category, c.forcedType);
   const id = `${c.source}__${c.name}`;
   const rel = `library/${type}/${id}.wav`;
   const outTmp = path.join(tmpLib, type, `${id}.wav`);
@@ -293,7 +374,7 @@ async function processOne(c, tmpLib) {
 //     никогда, а корреляция волны на mp3 ненадёжна (проверено: у одинаковых пар 0.7–1.0, у разных бывает 0.99 по огибающей).
 //     Поэтому soundcn-запись, имя которой есть в его же assets/kenney_interface-sounds/*.ogg, считается дублем
 //     kenney__<имя> (lossless-оригинал из Calinou/kenney-interface-sounds), если такой есть в библиотеке.
-const PRIORITY = { kenney: 0, remotion: 1, soundkit: 2, soundcn: 3 };
+const PRIORITY = { kenney: 0, remotion: 1, soundkit: 2, soundcn: 3, sonniss: 4 };
 function dedup(items) {
   items.sort((x, y) => PRIORITY[x.source] - PRIORITY[y.source] || x.id.localeCompare(y.id));
   const kept = []; const bySha = new Map(); const byId = new Map(); const exact = []; const near = [];
@@ -348,6 +429,14 @@ async function main() {
     ...(await remotionCandidates(dirs.remotion, SOURCES.find((s) => s.id === 'remotion'))),
     ...(await soundcnCandidates(dirs.soundcn)),
   ];
+  const sonnissDir = fromEnv('SONNISS_GDC_DIR');
+  let sonniss = null;
+  if (!sonnissDir) console.log('· Sonniss пропущен: SONNISS_GDC_DIR не задан');
+  else {
+    if (!exists(sonnissDir) || !fs.statSync(sonnissDir).isDirectory()) throw new Error(`SONNISS_GDC_DIR=${sonnissDir}: каталога нет`);
+    sonniss = await sonnissCandidates(sonnissDir);
+    candidates.push(...sonniss.out);
+  }
 
   const dropped = [];
   const todo = [];
@@ -384,11 +473,15 @@ async function main() {
   const manifest = {
     generatedAt: new Date().toISOString(),
     collectorVersion: COLLECTOR_VERSION,
-    sources: SOURCES.map(({ id, url, commit, license }) => ({ id, url: url.replace(/\.git$/, ''), commit, license })),
+    sources: [
+      ...SOURCES.map(({ id, url, commit, license }) => ({ id, url: url.replace(/\.git$/, ''), commit, license })),
+      ...(sonniss ? [{ id: 'sonniss', url: 'https://gdc.sonniss.com', commit: null, license: sonniss.info.license,
+        licenseFile: sonniss.info.licenseFile, licenseLine: sonniss.info.licenseLine, whitelist: 'sfx/sonniss.whitelist.json' }] : []),
+    ],
     sounds: kept.map((s) => ({
       id: s.id, type: s.type, typeConfidence: s.typeConfidence, source: s.source, license: s.license, file: s.file,
       sha256: s.sha256, durationMs: s.durationMs, peakDb: s.peakDb, lufs: s.lufs, transientMs: s.transientMs,
-      trimmedLeadMs: s.trimmedLeadMs, origName: s.origName,
+      trimmedLeadMs: s.trimmedLeadMs, origName: s.origName, ...(s.sourceSha256 ? { sourceSha256: s.sourceSha256 } : {}),
     })),
   };
   await fsp.writeFile(MANIFEST, JSON.stringify(manifest, null, 2) + '\n');
@@ -401,12 +494,12 @@ async function main() {
 
   // ---------- сводка ----------
   const tbl = (rows) => rows.map((r) => '  ' + r.join('\t')).join('\n');
-  const srcIds = SOURCES.map((s) => s.id);
+  const srcIds = [...SOURCES.map((s) => s.id), ...(sonniss ? ['sonniss'] : [])];
   console.log(`\nСводка (collector ${COLLECTOR_VERSION}): в library ${kept.length} звуков`);
-  console.log('Тип \\ источник:\t' + srcIds.join('\t') + '\tвсего\t(name/category/none)');
+  console.log('Тип \\ источник:\t' + srcIds.join('\t') + '\tвсего\t(name/category/whitelist/none)');
   console.log(tbl(TYPES.map((t) => {
     const of = kept.filter((k) => k.type === t);
-    const conf = ['name', 'category', 'none'].map((c) => of.filter((k) => k.typeConfidence === c).length).join('/');
+    const conf = ['name', 'category', 'whitelist', 'none'].map((c) => of.filter((k) => k.typeConfidence === c).length).join('/');
     return [t.padEnd(10), ...srcIds.map((s) => of.filter((k) => k.source === s).length), of.length, conf];
   })));
   const byLic = {}; for (const k of kept) byLic[k.license] = (byLic[k.license] || 0) + 1;
@@ -418,6 +511,12 @@ async function main() {
   console.log(`Отброшено: ${dropped.length}`);
   for (const [k, v] of Object.entries(dropGroups)) console.log(`  ${v}\t${k}`);
   for (const d of dropped.filter((x) => x.source === 'remotion')) console.log(`  remotion/${d.origName}: ${d.dropReason}`);
+  if (sonniss) {
+    const i = sonniss.info; const got = kept.filter((k) => k.source === 'sonniss').length;
+    console.log(`Sonniss: ${i.audioFiles} аудиофайлов в бандле, белый список ${i.entries}, в library +${got}`);
+    console.log(`  лицензия: ${i.licenseFile ?? 'файл НЕ найден'}${i.licenseLine ? ` — «${i.licenseLine}»` : i.licenseFile ? ' — ключевая строка не извлечена' : ''}`);
+    for (const d of dropped.filter((x) => x.source === 'sonniss')) console.log(`  ✗ sonniss «${d.origName}»: ${d.dropReason}`);
+  }
 }
 
 main().catch((e) => { console.error('✗ ' + (e.stack || e.message)); process.exit(1); });

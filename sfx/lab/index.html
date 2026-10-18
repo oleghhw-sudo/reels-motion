@@ -83,7 +83,7 @@
 </main>
 <script>
 'use strict';
-const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'other'];
+const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'reveal', 'glitch', 'swipe', 'impact', 'other'];
 const $ = (s) => document.querySelector(s);
 const el = (tag, props = {}, ...kids) => { const e = Object.assign(document.createElement(tag), props); for (const k of kids) if (k != null) e.append(k); return e; };
 

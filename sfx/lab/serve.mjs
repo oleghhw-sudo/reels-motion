@@ -23,7 +23,7 @@ const APPROVED = path.join(SFX_DIR, 'approved.json');
 const BACKUP = path.join(SFX_DIR, 'approved.backup.json');
 const MAX_BODY = 1024 * 1024;
 const ALLOWED_ORIGINS = new Set([`http://localhost:${PORT}`, `http://127.0.0.1:${PORT}`]);
-const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'other'];
+const TYPES = ['click', 'toggle', 'pop', 'whoosh', 'keystroke', 'tick', 'notify', 'success', 'error', 'reveal', 'glitch', 'swipe', 'impact', 'other'];
 
 function send(res, code, body, type = 'text/plain; charset=utf-8') {
   res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
