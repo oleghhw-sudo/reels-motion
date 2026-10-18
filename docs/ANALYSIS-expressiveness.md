@@ -1,0 +1,124 @@
+# Аналитика: выразительность роликов reels-motion (2026-10-18)
+
+Автор: архитектор (облачная сессия). Задача Олега: «прочитать всё, пройтись по GitHub и опыту людей, глубоко разобрать проект, чтобы кинематографичные и любые другие генерации были максимально выразительными — живость анимации, спецэффекты, привычные людям из After Effects; посмотреть опыт Opus, который перешагнул планку; улучшить скиллы, подход и финальный результат».
+
+## 0. Коротко
+1. **Планку перешагнул не инструмент, а подход.** «Opus» в истории проекта — это сессия архитектора на Claude Opus 5.5 (все коммиты до 2026-10-18), которая после отклонённого «статичного» черновика 1 аутро MIA сделала **прототип карточки ROOK** (`docs/tasks/data/008-proto-rook-card.py`): speed ramp с межкадровым смешиванием, наезд к удару, уход в ч/б, хроматика, вспышка, два impact-кадра, тряска с затуханием, раскрытие кругом, слэм имени со шлейфом, штамп, маска подписи, лучи, зерно, виньетка. Олег сказал «всё да». Это — язык After Effects, перенесённый в детерминированный код. Он и есть эталон.
+2. **Главная причина статичности — не билдер, а скиллы.** Черновик 1 был собран *строго по* living-motion: «перелёт на тексте — никогда», hitPulse +5 %, dolly 3 %, §12 запрещает хроматику, вспышки, глитч, свечение, light leak, частицы, bounce. Эти нормы взяты из cinetic — вкуса «дорогого спокойного продакт-фильма». Для трейлера и аутро они дают именно «статично». Каталог motion-prompt при этом содержит #023 Glitch, #024 Impact shake, #038 Speed ramp, #043 Whip pan, #111 CA, #119 Light leak — и CLAUDE.md говорит «номера Олега главнее токенов». Скиллы противоречили друг другу; решение — **режимы выразительности** (editorial / cinematic / punch) с явной дозой приёмов.
+3. **Ядро движения есть, ядра эффектов нет.** `src/motion` (011-А) покрывает пружины, кривые, камеру, синхрон, цвет. Ничего из словаря удара (ramp, смаз, хроматика, вспышка, impact-кадр, тряска с затуханием, слэм, look) в библиотеке нет — в `MiaOutro.tsx` это писалось бы руками на каждый ролик. **Проверено по npm:** в закреплённой версии Remotion 4.0.534 уже есть `@remotion/effects` (≈80 WebGL-эффектов: chromaticAberration, glow, vignette, noise, zoomBlur, directional blur, lightLeak, lightTrail, lut, halftone, duotone…), `<HtmlInCanvas>` (эффекты поверх DOM-текста), `pushCut()` (склейка с punch-in и вспышкой), `<HtmlInCanvasMotionBlur>` (затвор 180°), `interpolate({posterize})`. Пакеты не подключены к проекту. Это самый дешёвый рычаг.
+4. **Проверка не видела статичности.** Ревью черновика 1 смотрело стиллы «на ударе и +2 кадра» — по ним удар выглядел готовым. Нужны **лист удара** (−4…+8 кадров) и **кривая энергии** по черновику (`energycheck`) с позитивным контролем; тогда «статично» ловится до показа Олегу.
+5. **Сделано сейчас (документы и скиллы):** новый скилл `cinematic-fx` (словарь AE/CapCut с числами, анатомия удара, доза по режимам, реализация на Remotion 4.0.534, пресеты look, звук по приёмам, антипаттерны); режимы и перевод §12 в «доза по режиму» в `living-motion`; режим, эталоны, карта ударов и лист удара в `reel-director`; формула героя v2 в `reel-cinematic`; punch-режим и субтитры по словам в `reel-presentation`; слои удара и дакинг в `beat-sync`; лист удара, energycheck, критик «монтажёр AE» и новые признаки слопа в `motion-review`; задачи 012 (`src/fx` на `@remotion/effects`), 013 (`energycheck`), 014 (субтитры по словам); пополнена копилка (раздел H).
+6. **Не сделано (ждёт решений/билдера):** код `src/fx`, FxLab, energycheck, субтитры — по гейту 7 и протоколу ролей это задачи билдера на Mac после «да» Олега. Схема `model.ts` аутро ещё не знает полей v2 (`in`, `ramp`, `holdAfter`, новый блок `sfx`) — сборка `MiaOutro` на текущем `outro.yaml` падает по схеме до выполнения 008 v2 (это ожидаемо: данные опередили код).
+
+## 1. Что такое «Opus» — три кандидата, проверено
+| Кандидат | Что это | Вывод для нас |
+|---|---|---|
+| **Сессии архитектора на Claude Opus 5.5** (git trailers всех коммитов проекта) | прототип ROOK (`008-proto-rook-card.py`), динамика v2 в 008, скиллы 1e4007c/990aa36 | **Это и есть «перешагнувший планку» опыт**: прототип показал, что живость даёт не физика пружин, а язык удара/камеры/оптики. Взят как эталон cinematic-fx §2 (помечено «ROOK»). |
+| **lemo-opuscar** (lemomo-ai, MIT, ≈3 k★, активен до 2026-10-18; «настроен под Claude Opus 5.5») | 51 стиль со строгой грамматикой (`STYLE.md`, `style.json`), DIRECTOR.md с числами, readcheck (у нас уже портирован идеей), процедурный звук | Полезны **числа и грамматики стилей**: субтитры держатся ≥ max(1.8 с, фраза + 0.6 с); титр ≥ 4 с; ≥ 2 тишины перед пиком, ≥ 2 J/L-перехода; `halftone-dossier` — вход всё с back-ease 0.3–0.45 с, штамп 2.6×→1 за 0.09 с, тряска 5–26 px с квадратичным затуханием, вспышка ≤ 0.5; `risograph` — сдвиг совмещения ±1–3 px на шот (не на кадр), kick 8–14 px ~0.25 с, персонажи на двойках, камера на единицах; список «частых провалов» §10. Кинетической типографики и глитча там нет (swiss-motion их запрещает) — не источник AE-словаря. |
+| **OpusClip** (opus.pro) | AI-нарезка: reframe по лицу, субтитры с подсветкой ключевых слов (пресеты Karaoke / Beasty / Deep Diver / Mozi), AI-эмодзи, auto-zoom с «интенсивностью и частотой», B-roll | Задаёт **ожидание зрителя Reels**: субтитры 1–3 слова, активное слово цветом + pop, auto-zoom на говорящей голове. Критика пользователей: «шаблонно, если не сделать свой бренд-шаблон», мало стилей субтитров, субтитры поверх вшитых. Вывод: субтитры по словам — обязательный элемент punch-режима, но свой стиль, не «как у всех». |
+| Claude Motion (продукт Anthropic, бета Team/Enterprise с 2026-10-08) | анимация кодом → MP4, без генеративного видео | Публичных примеров уровня Reels нет; HN: «одноразовые Remotion-рендеры, нужна итерация». Не эталон. |
+
+## 2. Диагноз проекта (с доказательствами)
+### 2.1 Конфликт вкуса внутри скиллов
+- `living-motion §12` (до правки): запрещены свечения, частицы, глитч/RGB-split/light leak/film burn, bounce, побуквенные трюки, градиенты. Источник — cinetic «taste-and-slop» для SaaS-продакт-фильмов.
+- `008 динамика v2` («всё да» Олега): хроматика 10–14 px, вспышка 90 %, impact-кадры, тряска 30 px, слэм 1.9→1 с перелётом и шлейфом, лучи, зерно, виньетка.
+- `CLAUDE.md`: «выбранные номера motion-prompt главнее токенов living-motion» — каталог содержит все «запрещённые» приёмы.
+→ Правило без режима заставляло билдера делать кино как продакт-UI. Исправлено: режимы (`living-motion §−1`), §12 = editorial, в cinematic/punch — доза (`cinematic-fx §1`).
+
+### 2.2 Нет библиотеки эффектов, есть библиотека физики
+- `src/motion/*`: step/track/ctrack/vis, E/SPR/PACE, hitPulse/durFor/squash/stagger/inertia, peak/delayTo/settleOf, camera/breath/dip, move/swapIn, mixColor, ring/take/jump/shakeXY/onTwos/through/ribbon. Всё — вход/выход/вес.
+- Отсутствуют: time remap (ramp), направленный смаз, хроматика, вспышка/строб, постер/инверсия (impact-кадр), тряска с затуханием как пресет, слэм/штамп display-слова, зерно/виньетка/грейд как слой поверх ролика, light leak/flare, letterbox, субтитры по словам.
+- `MiaOutro.tsx` уже содержит ручные `Grain`, `Rays`, вспышку `f < 2` — признак, что примитивы нужны в библиотеке.
+→ Задача 012: `src/fx` на `@remotion/effects` + `HtmlInCanvas` + `@remotion/motion-blur` + `@remotion/transitions pushCut`, пресеты `FX.*`/`LOOK.*`, FxLab. Лицензия `@remotion/effects` и `@remotion/transitions` — Remotion License (не MIT; для личного некоммерческого проекта допустимо, как и сам `remotion`), `@remotion/motion-blur`, `captions`, `paths`, `layout-utils`, `noise` — MIT.
+
+### 2.3 Данные опередили код
+- `videos/mia-outro/outro.yaml` (v2): поля `in: whip`, `ramp: true`, `music.holdAfter`, новый блок `sfx.{whip, riser, impact, slam, card, final}`. `src/videos/mia-outro/model.ts`: схема `sfx` требует `preCard/hitLayer/lull/final` → `parseOutro` упадёт на v2-yaml; `in`/`ramp` схемой не читаются. Это нормально для протокола (архитектор положил данные, билдер делает 008 v2), но значит: **сейчас проект не собирает аутро**, и 008 v2 — первая задача, которая использует `src/fx`. Порядок: 012 → 008 v2 (или 008 v2 с минимальным `src/fx` внутри, что хуже — повторная работа).
+
+### 2.4 Проверка слепа к движению
+- 008 report: 70 стиллов, листы «hits-cards», черновики 0.5 — и ревью «принято», а Олег отклонил как статичное. Стиллы «удар, +2, середина карточки» не показывают ни подвода, ни отдачи. Кривой энергии нет; «мёртвая пауза > 1.2 с» проверяется глазами.
+→ Задача 013: `scripts/energycheck.mjs` (по черновику: средняя межкадровая разница, нормированная; отметки долей/ударов из данных; STATIC / MISSED_HIT / FLAT_TAIL / FLASH_RATE; позитивный контроль на стоп-кадре и MotionLabKit); «лист удара» −4…+8 кадров; критик «монтажёр AE» с порогом 8/10 по 7 критериям (из практики Liamrjohnston/remotion-motion-graphics-skill, extreme-motion-design `reference.py`).
+
+### 2.5 Субтитры и текст диктора — пробел, который зритель видит первым
+- 004 (якоря слов) blocked, 007 часть Б open, 011-Б (Words/Chain/TypeOn/Roll) open. Ни один ролик пока не имеет субтитров по словам; beauty-studio — без голоса.
+- Консенсус источников: 1–3 слова на страницу, разрыв по паузе ≥ 400 мс, страница ≤ 1.2 с и ≤ 42 символов (Fats403/remotion-captions-kit — лучшая спецификация пагинации), активное слово на своём стартовом кадре, высота строки ≥ 4.5 % кадра (kajisho5/ffmpeg-skill), cps 15–20 у западных инструментов против наших 12 (укр. длиннее — оставить 12 как консервативный, калибровать), «не дублировать голос текстом сцены» (Liamrjohnston), DHH-исследование: строки 6–12 слов читаются лучше, чем по одному слову — значит «карусель по слову» это крайность punch, а не норма.
+→ Задача 014: субтитры по словам из `words.json` через `createTikTokStyleCaptions` (MIT, уже в 4.0.534), стили `quiet` / `trailer` / `hormozi`, wordcheck из 004.
+
+### 2.6 fps и единицы
+- `living-motion` писал «кадры при 30 fps (наш стандарт)», а решение 2026-10-18 — презентация 60 fps, кино — fps исходника (24). Вспышка «1 кадр» при 60 fps = 17 мс и не видна. Исправлено: эффекты задаются в мс и кадрах @24 с пересчётом (cinematic-fx), fps в брифе.
+
+### 2.7 Нет эталонов
+- Все нормы помечены «гипотеза, калибровать на эталоне», а эталонов в репо нет (approved/backgrounds.json пуст, референс-роликов нет). Единственный утверждённый эталон движения — прототип ROOK. Добавлено в бриф: 2–3 референса Олега с таймкодом и «что берём»; без них — сравнение с ближайшим утверждённым роликом проекта. Метрики «как измерить референс» (cuts/s, плотность субтитров, доля zoom, уровень музыки под голосом) взяты из Melvynx/video-agent-skills `/steal` и edenfunf/reelmimic — в motion-review как список для критика.
+
+## 3. Что взято снаружи (кратко; полные отчёты агентов — в этой сессии, выжимка ниже)
+### 3.1 Remotion 4.0.534 (проверено по npm и исходникам доков)
+- `@remotion/effects`: `chromaticAberration({amount=8, angle})`, `glow({radius=20, intensity=1, threshold})`, `vignette({amount=.5, radius=.65, feather=.35})`, `noise({amount=.15, seed})`, `zoomBlur({amount=40, center, samples})`, `blur({radius, horizontal, vertical})`, `lightTrail({direction, distance, decay})`, `lightLeak({seed, hueShift, progress})`, `evolve`, `pixelDissolve`, `noiseDisplacement`, `duotone`, `lut({content})`, `halftone`, `scanlines`, `tear`, `tvSignalOff`, `starburst`, `invert`, `levels`, `colorCorrection`; `createEffect()` для своих (постер impact-кадра, halation). Требует `--gl=angle` (уже в конфиге). После 4.0.534: `turbulentDisplace`, `fractalNoise`, `lensBlur` (4.0.537) — не трогать без задачи апгрейда.
+- `<HtmlInCanvas>`: DOM (включая `<Readable>`) → canvas → effects; в headless-рендере с 4.0.534 работает без настроек, в Studio нужен Chrome ≥ 149 с флагом `canvas-draw-element`.
+- `@remotion/transitions`: `pushCut({flashOpacity, flashTailFrames})` = удар M; shader-презентации `zoomBlur`, `crossZoom`, `filmBurn`, `blurSlide`, `dissolve`, `ripple` (порты gl-transitions MIT); `<TransitionSeries.Overlay>` для light leak над склейкой.
+- `@remotion/motion-blur` (MIT): `<HtmlInCanvasMotionBlur samples shutterAngle>` (честный затвор, 4.0.529+), `<CameraMotionBlur>` (без GPU, искажает цвет, samples ≤ 8), `<Trail>` (эхо).
+- Speed ramp: только `<OffthreadVideo>` по рецепту «accelerated video» (накопленная `remap(frame)`, `<Sequence from={frame}>` на кадр, `src + '#disable'`); с `<Video>` из `@remotion/media` не работает; реверс не поддерживается; смешивание — второй слой с α (×2 извлечений) или prep в ffmpeg.
+- `interpolate({posterize: n})` — на двойках; `@remotion/captions createTikTokStyleCaptions({combineTokensWithinMilliseconds, breakOnSilenceAfterMilliseconds})`; `@remotion/layout-utils fitText/fillTextBox`; `@remotion/paths evolvePath/interpolatePaths`; `@remotion/noise noise2D` (уже в проекте).
+- Chromium: `filter` и `transform` — на разных обёртках; `backdrop-filter` в рендере не использовать; `background-image`/`mask-image` могут мерцать (гонка загрузки) — маски inline-SVG/`clip-path`; feTurbulence — программный путь, медленно на полном кадре.
+
+### 3.2 Словарь AE/Premiere/CapCut (числа из практики, источники — отчёт агента; «est.» = оценка)
+- Zoom-punch: 100 % → 108–112 % на маркере → обратно за несколько кадров; на говорящей голове — «тоньше лучше».
+- Тряска: AE `wiggle(freq, amp)`: тонко 2–3 / 5–8 px, ручная камера `wiggle(1, 35)`, бег `wiggle(3, 55)`, поворот `wiggle(5, 1)`; слой увеличить до ~106–120 %, чтобы не открыть края; удар — est. амплитуда 15–30 px, затухание за 8–12 кадров.
+- Вспышка: белый solid 1–2 кадра 100 %, затем 3–5 кадров спад; тёплый белый = «плёнка». Impact-кадры: 1–3 кадра @24, инверсия/чёрный/белый чередованием.
+- Speed ramp: медленный участок 30–50 % (или 20–30 % в velocity-edit) 8–15 кадров, разгон 250–500 % 4–8 кадров в склейку; < 10 % без оптического потока ступенит; «склейка там, где скорость максимальна».
+- Хлёст: 10 кадров (5 до + 5 после), Directional Blur 90°, длина 100–250 @1080p; zoom-through ≈ 20 кадров, blur ≈ 60, масштаб ≈ 250 % в середине; спин 360° за 10 кадров, затвор 360°; light leak — Screen/Add, ~70 % непрозрачности, пик на кадре склейки; luma-fade — «быстро становится клише».
+- Финиш: AE Glow стартовые — порог 63 %, радиус 17, интенсивность 3.6 (для неона); зерно 5–15 % (Overlay/Soft Light), «современное кино» 15–30 в Grain-эффекте; хроматика 1–2 px тонко, 3–6 px стилизованно, радиальная = линза, линейная = глитч; виньетка amount 0.3–0.45, feather 0.3–0.6; halation = порог ярких → blur 20–40 px → тёплый тинт → screen 20–35 % (est.); letterbox 2.39 в 9:16 съедает 38 % кадра — делать тонкие полосы 120–200 px.
+- Субтитры «hormozi»: Montserrat Black 900 / Anton, caps, толстая обводка, 1–3 слова, 80 px+, 60–70 % высоты, активное слово жёлтое/зелёное с pop, 2–3 эмодзи на ролик; pop 100–200 мс, перелёт 110–120 %; Netflix 17 cps (взрослые) — наш readcheck 12 cps консервативнее.
+- Звук: свист стартует перед склейкой и пикует на кадре смены; удар = transient > 3 кГц + тело 200–500 Гц + sub 40–80 Гц; riser 2–4 такта; «удар на 50 мс раньше читается неряшливо»; дакинг 6–12 дБ, атака 30–80 мс, отпускание 250–700 мс; −14 LUFS / −1…−1.5 dBTP.
+- Антипаттерны: один и тот же свист на 40 склейках, слишком много переходов, «линейно всё», ease-in на входах, перелёт по умолчанию, luma-fade чаще одного, мерцающие счётчики без tabular-nums, статичные планы > 3–5 с, текст под UI Reels.
+
+### 3.3 GitHub-скиллы 2026 (лицензии проверены; только идеи/числа, код не портируется без задачи)
+| Репо | Лицензия, ★ | Что берём |
+|---|---|---|
+| Tejashmakwana/motionmaxxing | Apache-2.0, 868 | 716 измеренных про-движений: медиана движения 10 кадров (0.33 с), входы 11–12 к., фейды 6, blur 7–8; перелёт < 9 % движений; логотипы «влетают с ~3.5×, ничего не растёт из нуля»; склейка каждые 0.3–2.3 с, резать в движении; **G2: ни одного прогона > 3 неподвижных кадров**; финальный hold 0.6–1.4 с; заголовки 7–11 % H, hero-цифры 22–29 % H; слова садятся за 0–2 кадра до того, как слышны; 12 «never ship»-признаков |
+| dev-isaacmello/extreme-motion-design | MIT, 56 | `qa.py` hard-fail: вспышки ≤ 3/с, одиночные кадры-попы, loop seam, контраст; `reference.py` — оценка 0–100 относительно референс-ролика |
+| lemomo-ai/lemo-opuscar | MIT, 3 k | DIRECTOR.md числа (§1 выше); грамматики halftone-dossier / risograph / swiss-motion как образец «стиль = фиксированная грамматика с числами» |
+| Fats403/remotion-captions-kit | MIT, 5 | пагинация субтитров: разрыв на `.!?…`, тишина ≥ 400 мс, страница ≤ 1200 мс, ≤ 42 символов, ≥ 300 мс, ≥ 2 слов, откат к границе клаузы |
+| neutral-Stage/remotion-captioneer | MIT, 18 | 14 стилей субтитров; cps-гейт 17/20 со `--strict`; beat snap 120 мс |
+| AgriciDaniel/claude-shorts | MIT, 232 | стили Bold (Montserrat, spring pop, жёлтое слово) / Bounce (70→120→100 %) / Clean; битрейты Shorts 12 Мбит/с, Reels 4.5 |
+| kapishdima/remocn, degueba/onda, reactvideoeditor/remotion-templates, RenderComp/free-remotion-templates, storybynumbers/remotion-glitch-effect | MIT | детерминированные образцы: camera-shake (sin с затуханием), whip-pan, zoom-pulse, film-burn, glitch-text (SVG feColorMatrix + screen), ink-spread, circle-wipe — кандидаты на порт задачей, если `@remotion/effects` где-то не хватит |
+| echris6/motion-video-kit, edenfunf/reelmimic, YeJe-cpu/SeeCut | MIT / MIT / PolyForm-NC | процесс: «строитель ≠ судья», свежие критики на рендере, парное A/B-сравнение версий надёжнее абсолютных оценок (SeeCut — только идея, лицензия NC) |
+| Liamrjohnston/remotion-motion-graphics-skill | MIT, 118 | «никогда не повторять голос текстом на экране»; критик 7 критериев, отклонить при < 8 |
+| Melvynx/video-agent-skills | MIT, 29 | `/steal`: измерить референс (cuts/s, раскладки, плотность субтитров, SFX по спектрограмме, музыка под голосом, размер лица, доля zoom) |
+| kajisho5/ffmpeg-skill | MIT, 2 k | субтитры ≥ 4.5 % высоты кадра; `check.py` PASS/WARN/FAIL по платформам |
+| Vincentwei1021/video-shotcraft | Apache-2.0, 12 k | каталог 150 shot-рецептов с Remotion-демо — только 16:9, как словарь |
+| YIAN6557/eian-riso-broll | **NC custom** | только как референс вида, код не брать |
+
+### 3.4 Что зрители и редакторы называют «дёшево» (для motion-review)
+Линейное движение; нет motion blur («веб-анимация, а не снятое»); двигается всё сразу; сцены «сбрасывают энергию» на стыке вместо переноса; всё входит фейдом и кончается растворением; угловые подписи, «02 / 05», таймкоды, скобки по углам, прогресс-бары, печать по букве с кареткой, «вайб-кодные» карточки с серыми статусами; одинаковый easing везде; субтитры по одному слову слишком быстро («если не прочесть вслух — слишком быстро»), caps труднее читать, белый текст без обводки на светлом; субтитры поверх вшитых; B-roll «плавает поверх звука, а не танцует с ним»; звук на каждой склейке; «всё одинаковое» (brief contagion — сотни похожих промптов дают ролики, которые «рифмуются»).
+
+## 4. Что изменено в репозитории сейчас
+- `.claude/skills/cinematic-fx/SKILL.md` — **новый**: принципы, таблица режимов и доза, анатомия удара (ROOK), каталог приёмов A–F с числами и реализацией, Remotion 4.0.534 (проверено), пресеты look, звук по приёмам, антипаттерны.
+- `living-motion`: §−1 режимы; §5 анатомия удара; §9 motion blur; §12 = editorial, в cinematic/punch — доза; §13 связи; шапка про fps.
+- `reel-director`: §1а режим; бриф — режим, фирменное движение, бюджет ударов, эталоны, look; вопросы Олегу; чекпоинты — карта ударов, лист удара, кривая энергии.
+- `reel-cinematic`: режим cinematic по умолчанию, формула героя v2, подвод/склейки по данным, запрет «кино по editorial-нормам».
+- `reel-presentation`: режим punch, субтитры по словам (пагинация, стили), приёмы punch с дозой.
+- `beat-sync`: слои удара, карта ударов → cue-лист, тишины и J/L, дакинг с атакой/отпусканием.
+- `motion-review`: energycheck и лист удара в «дёшево → дорого», слоп по режимам, проверка удара и субтитров, новые строки каталога признаков, критик «монтажёр AE», ворота выпуска.
+- `docs/tasks/012-fx-kit.md`, `013-energycheck.md`, `014-captions-words.md` — задачи билдера; `BACKLOG.md`; `docs/EFFECTS_PANTRY.md` раздел H; `CLAUDE.md` — строка о cinematic-fx и режимах.
+
+## 5. Дорожная карта (предложение; порядок — по отдаче на ролик)
+1. **012 `src/fx` + FxLab** (90–120 мин): подключить `@remotion/effects`, `@remotion/motion-blur`, `@remotion/transitions` (env.manifest → package.json ровно 4.0.534), пресеты `FX.*` / `LOOK.*`, компоненты `<Look>`, `<Hit>`, `<WhipCut>`, `<SpeedRamp>`, `<Slam>`, `<Stamp>`, `<ImpactFrame>`, FxLab 1080×1920 @24 и @60, тесты чисел, детерминизм, grep, readcheck FxLab, лист удара. Блокирует 008 v2.
+2. **008 v2** — аутро MIA на `src/fx` по `outro.yaml` v2 (схема `model.ts` расширяется полями `in`, `ramp`, `holdAfter`, `sfx` v2), лист удара на каждый удар, черновики 0.5 + energycheck, показ Олегу.
+3. **013 energycheck** (45 мин) — можно параллельно с 012 (файлы не пересекаются).
+4. **007-Б + 004 + 014** — голос → words.json → субтитры по словам (стили quiet/trailer/hormozi) → первый punch-ролик (промо курса) как калибровка punch-режима.
+5. **011-Б** — элементы Words/Chain/TypeOn/Roll/MaskRise/Morph/Iris/Cursor (ранее запланировано), теперь с учётом `HtmlInCanvas` (эффекты на тексте без потери readcheck).
+6. **Эталоны** — Олег: 2–3 референс-ролика на режим с таймкодами; критик измеряет их (cuts/s, zoom, субтитры) и калибрует числа cinematic-fx §1–§3 (сейчас — гипотезы + ROOK).
+7. Линт «сырые числа вне `tokens.ts`/`fx/presets.ts`» (долг из 011-А) — после 012.
+
+## 6. Вопросы Олегу (меняют работу)
+1. Подтвердить трактовку «Opus» = сессия архитектора/прототип ROOK как эталон cinematic (если имелся в виду OpusClip или lemo-opuscar — акценты §3 меняются: тогда приоритет — субтитры по словам и auto-zoom, задача 014 раньше 012).
+2. Режим по умолчанию для будущих промо-роликов курсов (editorial или punch?) и допустимость эмодзи/caps в субтитрах.
+3. Лицензия `@remotion/effects` / `@remotion/transitions` (Remotion License, как у `remotion`): для личного некоммерческого проекта — ок; записать в THIRD-PARTY-LICENSES как решение.
+4. Порядок: 012 → 008 v2 (рекомендую) или 008 v2 с минимальным fx внутри (быстрее показать, дороже потом).
+5. Референсы: 2–3 ролика на режим (ссылка + таймкод + «что берём»).
+
+## 7. Источники
+- Прототип: `docs/tasks/data/008-proto-rook-card.py`; задача `docs/tasks/008-mia-outro.md` («Динамика v2»); ревью `008-mia-outro.review-1.md`.
+- motion-prompt (MIT, 770eefb): `vendor/motion-prompt/api/v1/en/e/{003,005,008,010,011,014,020,022,023,024,032,034,038,040,043,046,109,111,118,119}.txt`.
+- Remotion: `remotion.dev/docs/effects/*`, `/docs/remotion/html-in-canvas`, `/docs/transitions/presentations/push-cut`, `/docs/motion-blur/*`, `/docs/videos/accelerated-video`, `/docs/captions/create-tiktok-style-captions`, `/docs/interpolate#posterize`, `/docs/flickering`; npm `@remotion/effects@4.0.534` (exports проверены 2026-10-18).
+- AE/CapCut (выборка): schoolofmotion.com/blog/wiggle-expression; aejuice.com (camera shake, zoom-blur, spin, parallax, VHS); photofocus.com (whip pan); tutvid.com (directional blur 250); motionarray.com (speed ramp, inertial bounce amp .1/freq 2/decay 2); borisfx.com (glow 63 %/17/3.6); frame.io (grain); nofilmschool.com (luma fade); zellahq.com (sound at cuts); ascynd.io / submagic.co / sendshort.ai (hormozi captions); backlothelp.netflix.com (17 cps); opus.pro / help.opus.pro (пресеты Karaoke/Beasty/Mozi, API brand templates).
+- GitHub (лицензии в таблице §3.3): lemomo-ai/lemo-opuscar (DIRECTOR.md, readcheck.mjs), Tejashmakwana/motionmaxxing, dev-isaacmello/extreme-motion-design, Fats403/remotion-captions-kit, neutral-Stage/remotion-captioneer, AgriciDaniel/claude-shorts, kapishdima/remocn, degueba/onda, reactvideoeditor/remotion-templates, storybynumbers/remotion-glitch-effect, echris6/motion-video-kit, edenfunf/reelmimic, Liamrjohnston/remotion-motion-graphics-skill, Melvynx/video-agent-skills, kajisho5/ffmpeg-skill, zhuyansen/awesome-claude-video-skills (индекс).
