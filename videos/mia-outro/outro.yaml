@@ -1,0 +1,65 @@
+# Аутро MIA — данные по сериям. НЕВОССТАНОВИМОЕ (гейт 5): правят Олег / архитектор, скрипты НЕ перезаписывают.
+# Источники: MIA_SHORT_DIR (env.manifest) → _outro-analysis/src/V1..V10 (ссылки на исходники), shots.json (запретные зоны).
+# Кадры (frame) — номера кадров исходника при его fps (24). Время — секунды.
+# Решения Олега: 2026-10-17/18 (задача 008). Кандидаты: отчёт Claude Code сессии MIA, 2026-10-18.
+
+music:
+  file: "Midnight Pursuit.wav"     # относительно MIA_SHORT_DIR
+  from: 49.739                     # предразгон 2 доли до удара 1 (утверждено на слух)
+  to: 60.720                       # естественный хвост, без fade
+  bpm: 130.81
+  hits: [0.917, 2.752, 4.586, 8.256]   # от начала отрезка: MIA, DARK, BLOND, финал; затишье ≈6.42
+  license: "Suno — тариф уточнить (некоммерческое использование ок; предупреждение по гейту 6)"
+
+format:
+  landscape: {w: 1920, h: 1080}
+  portrait:  {w: 1080, h: 1920}
+  fps: 24
+
+episodes:
+  ep01:
+    roster:
+      - hero: MIA
+        src: V3
+        liveFrom: 182          # 22 кадра живого плана до удара
+        freeze: 204            # 8.50 с
+        crop: {landscape: null, portrait: "выбрать по стиллам (4K, место под титр слева)"}
+        title: MIA
+        tagline: The Inventor
+        titleSide: left
+      - hero: DARK
+        src: V10
+        liveFrom: 199
+        freeze: 221            # 9.208 с — за 6 кадров до пистолета (f227); f225 = референс, но вплотную
+        crop:
+          landscape: "crop=2376:1336:0:253"     # ×1.72, BLOND вне кадра (проверено f199/f212/f225)
+          portrait: "кандидаты: crop=1296:2304:908:0 (V10-03a, очень крупно) | V10-02 f84 без MIA — выбрать по стиллам"
+        title: DARK
+        tagline: The Hunter
+        titleSide: left        # небо слева
+        note: "V10 — каждый кадр продублирован (фактически 12 к/с); 4K мягкий (апскейл)"
+      - hero: BLOND
+        src: V9
+        liveFrom: 146
+        freeze: 168            # 7.00 с
+        crop: {landscape: null, portrait: "выбрать по стиллам"}
+        title: BLOND
+        tagline: "Friend or enemy?"
+        titleSide: bottom
+    lull:
+      src: V5
+      from: 9.96               # пустой выбитый проём (пролог, сцена 8)
+      push: 0.04               # наезд 4 % за затишье, dolly
+    final:
+      src: V5                  # проём остаётся фоном
+      title: MIA
+      line: "She built the future. They came to take it."
+      tail: "To be continued"
+    sfx: {}                    # заполнить после _outro-analysis/sfx.md
+
+forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
+  - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}
+  - {src: V9,  from: 12.25, to: end,    reason: spoiler-flashback}
+  - {src: V10, from: 0,     to: 2.33,   reason: "morph + spoiler-flashback"}
+  - {src: V10, from: 8.13,  to: 9.458,  reason: "spoiler-flashback — только кроп без BLOND"}
+  - {src: V10, from: 9.458, to: end,    reason: spoiler}
