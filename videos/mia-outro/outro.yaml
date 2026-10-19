@@ -52,15 +52,15 @@ episodes:
     vertical:
       crops: {V7: B, V1: B, V3: A, V10_look: A, V10_gun: B, V9: A, V12_profile: A, V12_charge: C, V5_lull: C, V5_final: C}   # по листу MiaOutroVertical-crops.png (рекомендация архитектора, «всё да» Олега); для V7/V1/V3 вариантов ещё нет — билдер делает 3 варианта, по умолчанию B (центр действия), выбор Олега по листу
       cards: "фигура снизу, имя сверху; растворение верха фигуры 120 px"
-    sfx:                       # v2 — с внешними звуками (sfx/raw/external, лицензия unknown → licenseWarning, гейт 6); замена на CC0 перед публикацией в Instagram
-      whip: {dir: "sfx/raw/external/whoosh", pick: [need-02, hook-03, epic3-03], note: "на каждой смаз-склейке, пик = склейка"}
-      riser: {dir: "sfx/raw/external/riser", pick: [epic4-04, epic4-06, epic3-08], note: "конец = удар карточки"}
+    sfx:                       # v3 «звуковой бюджет» (Олег «да» 2026-10-19, задача 018): ≤ 2 слоя на ударе, свист не на каждой склейке, начало — одна музыка. Внешние звуки — лицензия unknown → licenseWarning (гейт 6); замена на CC0 перед публикацией в Instagram
+      whip: {dir: "sfx/raw/external/whoosh", pick: [need-02, hook-03, epic3-03], on: ["V3:228", "V10:150", "V12:317"], note: "только на 3 смаз-склейках из 7 (переворот, наводка, заряд); остальные смазы — без свиста"}
+      riser: {dir: "sfx/raw/external/riser", pick: [epic4-04, epic4-06, epic3-08], heroes: [DARK, OFFICER], note: "только перед ROOK и HALE, конец = удар карточки; MIA и JAX входят чистым ударом"}
       impact: {dir: "sfx/raw/external/boom", pick: [epic3-04, epic3-05, epic4-03], note: "на ударе карточки, пик по transientMs"}
       slam: {dir: "sfx/raw/external/impact", pick: [need-10, need-06], note: "на посадке имени (удар +3 кадра)"}
-      card: remotion__shutter-modern      # щелчок затвора на стоп-кадре (CC0, наша библиотека)
+      # card (щелчок затвора remotion__shutter-modern) убран в v3 — третий слой на ударе карточки
       final: {dir: "sfx/raw/external/boom", pick: [epic4-08], note: "взрыв на финальном ударе поверх музыки"}
-      gainVsMusic: 0.5
-      note: "конкретный файл из pick — по слуху/замерам билдера, разные на разных героев; ничего из sfx/raw в git"
+      gainVsMusic: 0.5           # v3 не меняет; решать на слух после A/B
+      note: "конкретный файл из pick — по слуху/замерам билдера; ничего из sfx/raw в git. v2 (до 2026-10-19): свист на всех 7 смазах, riser на всех 4 карточках, щелчок — 4 слоя на ударе"
 
 forbidden:   # дублирует shots.json для проверки сборки; источник правды — shots.json
   - {src: V8,  from: 0,     to: end,    reason: spoiler-flashback}

@@ -26,14 +26,17 @@ const card = z.object({
 const lull = z.object({ kind: z.literal('lull'), src, from: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), push: z.number().min(0).max(0.2), in: inFx.optional(), note: z.string().optional() });
 const final = z.object({ kind: z.literal('final'), src, on: on.optional(), flash: z.boolean(), title: z.string(), line: z.string(), tail: z.string(), note: z.string().optional() });
 const item = z.discriminatedUnion('kind', [live, card, lull, final]);
-// sfx v2: внешние звуки (папка + список имён на выбор) и наш CC0-щелчок; путь папки — относительно SFX_EXTERNAL_DIR (env.manifest)
+// sfx: внешние звуки (папка + список имён на выбор) и наш CC0-щелчок; путь папки — относительно SFX_EXTERNAL_DIR (env.manifest).
+// v3 «звуковой бюджет» (задача 018): whip.on — на каких смаз-склейках свист («src:from» пункта с in: whip), riser.heroes —
+// перед какими карточками нарастание, card — щелчок затвора (нет поля — не ставится). Нет on/heroes — как в v2: на всех.
+// Ссылки проверяет sfxPlan() при разборе (parseOutro): не та ссылка → громкий отказ до работы с медиа.
 const pick = z.object({ dir: z.string(), pick: z.array(z.string()).min(1), note: z.string().optional() });
 const sfx = z.object({
-  whip: pick,
-  riser: pick,
+  whip: pick.extend({ on: z.array(z.string().regex(/^V\d+:\d+$/, 'ожидалось «V3:228» (src:from пункта с in: whip)')).min(1).optional() }),
+  riser: pick.extend({ heroes: z.array(z.string()).min(1).optional() }),
   impact: pick,
   slam: pick,
-  card: z.string(),
+  card: z.string().optional(),
   final: pick,
   gainVsMusic: z.number().min(0).max(1),
   note: z.string().optional(),
@@ -60,7 +63,48 @@ export type Item = z.infer<typeof item>;
 export function parseOutro(data: unknown): Outro {
   const r = outroSchema.safeParse(data);
   if (!r.success) throw new Error(`outro.yaml не по схеме:\n  ${r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n  ')}`);
+  const errors = Object.keys(r.data.episodes).flatMap((ep) => sfxPlan(r.data, ep).errors);
+  if (errors.length) throw new Error(`outro.yaml: ссылки звука не сходятся с timeline (${errors.length}):\n  ✗ ${errors.join('\n  ✗ ')}`);
   return r.data;
+}
+
+// ---------------------------------------------------------------- звуковой бюджет (задача 018): где ставятся свист и нарастание
+/** Ключ смаз-склейки для sfx.whip.on: «src:from» пункта timeline с in: whip. */
+const whipKey = (it: Item): string | null => ('in' in it && it.in === 'whip' && 'src' in it && 'from' in it ? `${it.src}:${it.from}` : null);
+
+/**
+ * Какие пункты серии получают звук: whip — индексы timeline (= Placed.index) смаз-склеек со свистом, riser — герои карточек
+ * с нарастанием. Нет sfx.whip.on / sfx.riser.heroes — все склейки in: whip / все карточки (как в v2).
+ * errors: ссылка whip.on совпала не ровно с одним пунктом in: whip; повтор ссылки; герой riser.heroes не встречается среди карточек серии.
+ */
+export function sfxPlan(outro: Outro, episode: string): { whip: number[]; riser: string[]; errors: string[] } {
+  const ep = outro.episodes[episode];
+  const where = `${episode}.sfx`;
+  const whips = ep.timeline.map((it, index) => ({ index, key: whipKey(it) })).filter((x): x is { index: number; key: string } => x.key !== null);
+  const heroes = ep.timeline.flatMap((it) => (it.kind === 'card' ? [it.hero] : []));
+  const errors: string[] = [];
+  let whip = whips.map((x) => x.index);
+  const on = ep.sfx.whip.on;
+  if (on) {
+    whip = [];
+    on.forEach((ref, i) => {
+      const m = whips.filter((x) => x.key === ref);
+      if (on.indexOf(ref) !== i) errors.push(`${where}.whip.on[${i}] «${ref}»: повтор ссылки`);
+      else if (m.length !== 1) errors.push(`${where}.whip.on[${i}] «${ref}»: ${m.length ? `совпало с ${m.length} пунктами` : 'нет пункта с in: whip'} — ссылка должна указывать ровно на один пункт timeline с in: whip (есть: ${whips.map((x) => x.key).join(', ')})`);
+      else whip.push(m[0].index);
+    });
+  }
+  let riser = [...heroes];
+  const hs = ep.sfx.riser.heroes;
+  if (hs) {
+    riser = [];
+    hs.forEach((h, i) => {
+      if (hs.indexOf(h) !== i) errors.push(`${where}.riser.heroes[${i}] «${h}»: повтор`);
+      else if (!heroes.includes(h)) errors.push(`${where}.riser.heroes[${i}] «${h}»: такого героя нет среди карточек серии (есть: ${heroes.join(', ')}; ключи names, не имена в кадре)`);
+      else riser.push(h);
+    });
+  }
+  return { whip: whip.sort((a, b) => a - b), riser, errors };
 }
 
 // ---------------------------------------------------------------- таймлайн

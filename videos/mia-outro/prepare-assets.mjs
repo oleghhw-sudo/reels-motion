@@ -10,9 +10,9 @@ import { copyFileSync, existsSync, lstatSync, mkdirSync, readFileSync, rmSync, s
 import { basename, dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
-import { buildTimeline, checkZones, parseOutro, zonesFrom, zonesFromShots } from '../../src/videos/mia-outro/model.ts';
+import { buildTimeline, checkZones, parseOutro, sfxPlan, zonesFrom, zonesFromShots } from '../../src/videos/mia-outro/model.ts';
 
-const SCRIPT_VERSION = '2.0.0'; // 2.0 — динамика v2: погоня, impact-слои, звук v2 из SFX_EXTERNAL_DIR
+const SCRIPT_VERSION = '2.1.0'; // 2.0 — динамика v2: погоня, impact-слои, звук v2 из SFX_EXTERNAL_DIR; 2.1 — звуковой бюджет v3 (задача 018): sfx.whip.on, sfx.riser.heroes, card необязателен
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(HERE, '..', '..');
 const OUT = join(HERE, 'assets');
@@ -33,7 +33,9 @@ if (!DIR) die('MIA_SHORT_DIR не задан (окружение или .env). �
 const A = join(DIR, '_outro-analysis');
 for (const rel of ['shots.json', 'src', 'cards']) if (!existsSync(join(A, rel))) die(`MIA_SHORT_DIR=${DIR}: нет _outro-analysis/${rel}`);
 const yamlPath = join(HERE, 'outro.yaml');
-const outro = parseOutro(parse(readFileSync(yamlPath, 'utf8')));
+// разбор и проверка ссылок (схема, sfx.whip.on / sfx.riser.heroes) — до rmSync(OUT): ошибка в yaml не стирает готовые ассеты
+let outro;
+try { outro = parseOutro(parse(readFileSync(yamlPath, 'utf8'))); } catch (e) { die(e.message); }
 const shotsPath = join(A, 'shots.json');
 const shotZones = zonesFromShots(JSON.parse(readFileSync(shotsPath, 'utf8')));
 const fps = outro.format.fps;
@@ -273,19 +275,30 @@ for (const [ep, tl] of Object.entries(episodes)) {
     if (at < 0) { offset = -at; at = 0; }
     cues.push({ key, role, peakAt: +peakAt.toFixed(4), at: +at.toFixed(4), offset: +offset.toFixed(4), dur: null, fadeIn: 0, ...extra });
   };
+  // звуковой бюджет (задача 018): свист — только на склейках из sfx.whip.on, нарастание — только перед героями sfx.riser.heroes,
+  // щелчок — только если задан sfx.card. Файл из pick назначается по порядковому номеру склейки / карточки среди ВСЕХ
+  // (как в v2), поэтому оставшиеся звуки — те же файлы, что были на этих местах в v2: A/B отличается только убранными слоями.
+  const plan = sfxPlan(outro, ep);
+  const whipOn = new Set(plan.whip);
+  const riserOn = new Set(plan.riser);
   let w = 0;
   let h = 0;
   for (const p of tl.items) {
-    if (p.in === 'whip') cue(takeExt(cfg.whip.dir, cfg.whip.pick[w++ % cfg.whip.pick.length]), `whip→${p.index}`, p.startSec);
+    if (p.in === 'whip') {
+      const key = cfg.whip.pick[w++ % cfg.whip.pick.length];
+      if (whipOn.has(p.index)) cue(takeExt(cfg.whip.dir, key), `whip→${p.index}`, p.startSec);
+    }
     if (p.kind === 'card') {
       const hit = p.startSec;
-      const rk = takeExt(cfg.riser.dir, cfg.riser.pick[h % cfg.riser.pick.length]);
-      // нарастание: пик = удар, после удара обрезано; если не помещается до начала ролика — начало срезается (fade-in 0.3 с)
-      cue(rk, `riser ${p.hero}`, hit, { fadeIn: 0.3 });
-      const c = cues[cues.length - 1];
-      c.dur = +(sfx[rk].peakMs / 1000 - c.offset).toFixed(4);
+      if (riserOn.has(p.hero)) {
+        const rk = takeExt(cfg.riser.dir, cfg.riser.pick[h % cfg.riser.pick.length]);
+        // нарастание: пик = удар, после удара обрезано; если не помещается до начала ролика — начало срезается (fade-in 0.3 с)
+        cue(rk, `riser ${p.hero}`, hit, { fadeIn: 0.3 });
+        const c = cues[cues.length - 1];
+        c.dur = +(sfx[rk].peakMs / 1000 - c.offset).toFixed(4);
+      }
       cue(takeExt(cfg.impact.dir, cfg.impact.pick[h % cfg.impact.pick.length]), `impact ${p.hero}`, hit);
-      cue(takeLib(cfg.card), `card ${p.hero}`, hit);
+      if (cfg.card) cue(takeLib(cfg.card), `card ${p.hero}`, hit);
       cue(takeExt(cfg.slam.dir, cfg.slam.pick[h % cfg.slam.pick.length]), `slam ${p.hero} (имя +3 к)`, hit + 3 / fps);
       h++;
     }
@@ -306,7 +319,7 @@ for (const [ep, tl] of Object.entries(episodes)) {
   const p2 = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-y', '-i', premix, '-af', `${lnf},aresample=48000`, '-ar', '48000', '-ac', '2', '-c:a', 'pcm_s16le', '-map_metadata', '-1', join(OUT, rel)], { encoding: 'utf8' });
   if (p2.status !== 0) die(`loudnorm ${ep}: ${p2.stderr.slice(-800)}`);
   const t2 = JSON.parse(p2.stderr.slice(p2.stderr.lastIndexOf('{'), p2.stderr.lastIndexOf('}') + 1));
-  mixes[ep] = { file: add(rel), durationSec: tl.durationSec, cues, gainVsMusic: cfg.gainVsMusic, sfxLufs: SFX_LUFS, loudness: { musicOnly: loud(join(OUT, rawRel)), premix: { I: Number(m1.input_i), TP: Number(m1.input_tp) }, loudnormType: t2.normalization_type, after: loud(join(OUT, rel)) } };
+  mixes[ep] = { file: add(rel), durationSec: tl.durationSec, cues, plan: { whip: plan.whip, riser: plan.riser, card: !!cfg.card }, gainVsMusic: cfg.gainVsMusic, sfxLufs: SFX_LUFS, loudness: { musicOnly: loud(join(OUT, rawRel)), premix: { I: Number(m1.input_i), TP: Number(m1.input_tp) }, loudnormType: t2.normalization_type, after: loud(join(OUT, rel)) } };
   const L2 = mixes[ep].loudness;
   console.log(`  ✓ микс ${ep}: музыка ${outro.music.from}–${outro.music.to} с + тишина ${outro.music.holdAfter} с + ${cues.length} SFX; до нормализации I ${L2.premix.I} / TP ${L2.premix.TP} → I ${L2.after.I} LUFS / TP ${L2.after.TP} dBTP (${L2.loudnormType})`);
 }

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-18T21:15:25.241Z",
-  "script": "videos/mia-outro/prepare-assets.mjs 2.0.0",
-  "outroSha256": "73f74c719fd83ca310facd0ed596f3b042408a5e7cd0567daccc5309d1194d46",
+  "generatedAt": "2026-10-19T17:10:19.801Z",
+  "script": "videos/mia-outro/prepare-assets.mjs 2.1.0",
+  "outroSha256": "167a751a5cdebf51c1bb4fb710d1d0e307d0d64ba6c9e42efaa5052857b03617",
   "shots": {
     "sha256": "3ad81192a7c70775ab365ad6a6490d76724b56e55655617799601d9c05399fd6",
     "excludedZones": [
@@ -574,15 +574,6 @@
         "durationSec": 19.591,
         "cues": [
           {
-            "key": "need-02",
-            "role": "whip→1",
-            "peakAt": 0.917,
-            "at": 0,
-            "offset": 0.123,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
             "key": "hook-03",
             "role": "whip→2",
             "peakAt": 1.8344,
@@ -590,15 +581,6 @@
             "offset": 0,
             "dur": null,
             "fadeIn": 0
-          },
-          {
-            "key": "epic4-04",
-            "role": "riser MIA",
-            "peakAt": 2.752,
-            "at": 0.972,
-            "offset": 0,
-            "dur": 1.78,
-            "fadeIn": 0.3
           },
           {
             "key": "epic3-04",
@@ -610,28 +592,10 @@
             "fadeIn": 0
           },
           {
-            "key": "remotion__shutter-modern",
-            "role": "card MIA",
-            "peakAt": 2.752,
-            "at": 2.65,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
             "key": "need-10",
             "role": "slam MIA (имя +3 к)",
             "peakAt": 2.877,
             "at": 2.637,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
-            "key": "epic3-03",
-            "role": "whip→4",
-            "peakAt": 4.128,
-            "at": 3.528,
             "offset": 0,
             "dur": null,
             "fadeIn": 0
@@ -664,15 +628,6 @@
             "fadeIn": 0
           },
           {
-            "key": "remotion__shutter-modern",
-            "role": "card DARK",
-            "peakAt": 6.432,
-            "at": 6.33,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
             "key": "need-06",
             "role": "slam DARK (имя +3 к)",
             "peakAt": 6.557,
@@ -680,24 +635,6 @@
             "offset": 0,
             "dur": null,
             "fadeIn": 0
-          },
-          {
-            "key": "hook-03",
-            "role": "whip→7",
-            "peakAt": 7.808,
-            "at": 6.668,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
-            "key": "epic3-08",
-            "role": "riser BLOND",
-            "peakAt": 8.277,
-            "at": 4.997,
-            "offset": 0,
-            "dur": 3.28,
-            "fadeIn": 0.3
           },
           {
             "key": "epic4-03",
@@ -709,28 +646,10 @@
             "fadeIn": 0
           },
           {
-            "key": "remotion__shutter-modern",
-            "role": "card BLOND",
-            "peakAt": 8.277,
-            "at": 8.175,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
             "key": "need-10",
             "role": "slam BLOND (имя +3 к)",
             "peakAt": 8.402,
             "at": 8.162,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
-            "key": "epic3-03",
-            "role": "whip→9",
-            "peakAt": 9.653,
-            "at": 9.053,
             "offset": 0,
             "dur": null,
             "fadeIn": 0
@@ -749,15 +668,6 @@
             "role": "impact OFFICER",
             "peakAt": 10.112,
             "at": 9.452,
-            "offset": 0,
-            "dur": null,
-            "fadeIn": 0
-          },
-          {
-            "key": "remotion__shutter-modern",
-            "role": "card OFFICER",
-            "peakAt": 10.112,
-            "at": 10.01,
             "offset": 0,
             "dur": null,
             "fadeIn": 0
@@ -790,6 +700,18 @@
             "fadeIn": 0
           }
         ],
+        "plan": {
+          "whip": [
+            2,
+            5,
+            11
+          ],
+          "riser": [
+            "DARK",
+            "OFFICER"
+          ],
+          "card": false
+        },
         "gainVsMusic": 0.5,
         "sfxLufs": -16,
         "loudness": {
@@ -798,7 +720,7 @@
             "TP": -5.9
           },
           "premix": {
-            "I": -14.53,
+            "I": -14.87,
             "TP": 0.15
           },
           "loudnormType": "dynamic",
@@ -811,18 +733,6 @@
     }
   },
   "sfx": {
-    "need-02": {
-      "id": "need-02",
-      "file": "sfx/need-02.wav",
-      "durationMs": 1590,
-      "peakMs": 1040,
-      "gainDb": -0.3,
-      "type": "whoosh",
-      "source": "sfx pack 1.rar («нужный звук») — неизвестно",
-      "srcSha256": "2c1b9d9e32974f6324f955c022393e89bee3e53b4a0961b8728f4e427b01c3a7",
-      "license": "unknown",
-      "licenseWarning": true
-    },
     "hook-03": {
       "id": "hook-03",
       "file": "sfx/hook-03.wav",
@@ -832,18 +742,6 @@
       "type": "whoosh",
       "source": "sfx pack 2.rar («цепляющий звук») — неизвестно",
       "srcSha256": "0db4fd124cb4c4bb813f785f5cfb998a7e37429e03a6acd58ea52189cc2b0ab0",
-      "license": "unknown",
-      "licenseWarning": true
-    },
-    "epic4-04": {
-      "id": "epic4-04",
-      "file": "sfx/epic4-04.wav",
-      "durationMs": 2770,
-      "peakMs": 1780,
-      "gainDb": 6.2,
-      "type": "riser",
-      "source": "sfx pack 4.rar («эпичный звук») — неизвестно",
-      "srcSha256": "2513584832443c92739ae0d8e2aefa9137da0d7ffd5b51b7af466f32b54558c9",
       "license": "unknown",
       "licenseWarning": true
     },
@@ -859,17 +757,6 @@
       "license": "unknown",
       "licenseWarning": true
     },
-    "remotion__shutter-modern": {
-      "id": "remotion__shutter-modern",
-      "file": "sfx/remotion__shutter-modern.wav",
-      "durationMs": 347.6,
-      "peakMs": 102,
-      "gainDb": 0,
-      "type": "other",
-      "source": "remotion (https://github.com/remotion-dev/remotion.media @2f139eb), shutter-modern.wav",
-      "license": "CC0",
-      "licenseWarning": false
-    },
     "need-10": {
       "id": "need-10",
       "file": "sfx/need-10.wav",
@@ -882,15 +769,15 @@
       "license": "unknown",
       "licenseWarning": true
     },
-    "epic3-03": {
-      "id": "epic3-03",
-      "file": "sfx/epic3-03.wav",
-      "durationMs": 1040,
-      "peakMs": 600,
-      "gainDb": 2.7,
+    "need-02": {
+      "id": "need-02",
+      "file": "sfx/need-02.wav",
+      "durationMs": 1590,
+      "peakMs": 1040,
+      "gainDb": -0.3,
       "type": "whoosh",
-      "source": "sfx pack 3.rar («эпичный звук») — неизвестно",
-      "srcSha256": "81c935cd98cbb7376de762446f7898ed9bdbed0e95d490a33ff2d706118e97a1",
+      "source": "sfx pack 1.rar («нужный звук») — неизвестно",
+      "srcSha256": "2c1b9d9e32974f6324f955c022393e89bee3e53b4a0961b8728f4e427b01c3a7",
       "license": "unknown",
       "licenseWarning": true
     },
@@ -930,18 +817,6 @@
       "license": "unknown",
       "licenseWarning": true
     },
-    "epic3-08": {
-      "id": "epic3-08",
-      "file": "sfx/epic3-08.wav",
-      "durationMs": 3840,
-      "peakMs": 3280,
-      "gainDb": 7.5,
-      "type": "riser",
-      "source": "sfx pack 3.rar («эпичный звук») — неизвестно",
-      "srcSha256": "0dc014d79ad5a0d1a8627b4cfd19c025b4e0454ecdb40cdb41910eb5292dbcf1",
-      "license": "unknown",
-      "licenseWarning": true
-    },
     "epic4-03": {
       "id": "epic4-03",
       "file": "sfx/epic4-03.wav",
@@ -951,6 +826,18 @@
       "type": "boom",
       "source": "sfx pack 4.rar («эпичный звук») — неизвестно",
       "srcSha256": "6f6e6c01aa2cb4deb9aa6f9759e35945fa4a54b45a4ed10cefefed521eeb8d22",
+      "license": "unknown",
+      "licenseWarning": true
+    },
+    "epic4-04": {
+      "id": "epic4-04",
+      "file": "sfx/epic4-04.wav",
+      "durationMs": 2770,
+      "peakMs": 1780,
+      "gainDb": 6.2,
+      "type": "riser",
+      "source": "sfx pack 4.rar («эпичный звук») — неизвестно",
+      "srcSha256": "2513584832443c92739ae0d8e2aefa9137da0d7ffd5b51b7af466f32b54558c9",
       "license": "unknown",
       "licenseWarning": true
     },
@@ -1050,243 +937,231 @@
     },
     {
       "file": "cards/MIA.land.figure.png",
-      "sha256": "0796c548fc63f4c185902d26632f166a3e620a612bcacf667a7e474e3d2555c0"
+      "sha256": "a1d80b18a4a44ae150954f1901091f89221d743f03dc39e53bf909f6dca60e36"
     },
     {
       "file": "cards/MIA.land.black.png",
-      "sha256": "0b4bd0d2e931035043dfad3f3bcca421c3867431b2941c96d16db830a46584b4"
+      "sha256": "9cd3d3beab99e3a9724325dabd61a5d7d6f50fe0e3cb5adccd27c73dce209a7b"
     },
     {
       "file": "cards/MIA.land.white.png",
-      "sha256": "c5591b065c1f781253b44008c2c24b13839b752aa517d6606ab0a6f6b1e203b6"
+      "sha256": "6f6a48e879d1b6322b48a3e6c3f3e8ac78413d7deea08a704347c6ad93afb3c1"
     },
     {
       "file": "cards/MIA.land.poster.png",
-      "sha256": "1442f4e106cb226a077f819f5d60434c0ee6fe0a62f1ef3028a5802f4db21981"
+      "sha256": "8cb109498ee3ec3a320cb5cb2decdd552a4a6bcd2b9838c9ef2b8040bd4ce58c"
     },
     {
       "file": "cards/MIA.land.ring.png",
-      "sha256": "c056396a7d5da0e41ee6e0dd6063d800e109db1c1f201583286e2bd14938b093"
+      "sha256": "82b0e9a58ca1dac0a4304527e0b18d2c12749391a4ee53576d640414f1b38765"
     },
     {
       "file": "cards/MIA.port.figure.png",
-      "sha256": "b78e25e5c17a726d7052a84614a3efcdc1f2dc2ddf93a0bd26d93aa99ed51f25"
+      "sha256": "c18c5588e0dc879ad6aafeae50f0a50514f3bce37cd15f2c6724eebc40e1b55f"
     },
     {
       "file": "cards/MIA.port.black.png",
-      "sha256": "247195a8926f9f62295541ebfeb58c382a4086d9cab27e5999878e4182d67297"
+      "sha256": "2894f446f82103f15ec4247eb67822c1e822bbe1e57813a74b1318b86378583b"
     },
     {
       "file": "cards/MIA.port.white.png",
-      "sha256": "e353ceab944ede9a01e5f3ea8be7e607c91dfe70e741b3bbf0f12a7b45a19f88"
+      "sha256": "2f64e69cf38b21328030129fa2ec782d7a971e542fdee781a1d0b2aa00e58aae"
     },
     {
       "file": "cards/MIA.port.poster.png",
-      "sha256": "8a2e38626f09238b7b4c0458fbe6c3f72f9b85fb01622d16e7d8182f998b90b4"
+      "sha256": "4b19ef2d77df29e54cc9ee3e37adaa94323a45717649a44c4f64c55a469c8ec6"
     },
     {
       "file": "cards/MIA.port.ring.png",
-      "sha256": "ff0e093d26bbb77b76ddef6813aa82e3f11520cbb9195c1123a7eec5f8d55509"
+      "sha256": "a823c3c3711ceb4764ee88d93d6777e0e075ff7c0877b4fb8ed0b5cd8f212d6d"
     },
     {
       "file": "bg/MIA.land.dots.png",
-      "sha256": "a2262e6444c399629c5943466c40bf1dc49fd1fbd652677cbdc60a8b704b2527"
+      "sha256": "d8e170c40645ac12d43d90e1ae5279dcdd5f115f6ac6e3430dca25a9a5461a85"
     },
     {
       "file": "bg/MIA.port.dots.png",
-      "sha256": "70267721935a59a1400f701c35e0e4e673b397d4485c81dc4822cfcb99047b1f"
+      "sha256": "afd6e6bcd3e2fad6edaa49ebc414a9147a9fe4acc00756cf22107caeaf93351d"
     },
     {
       "file": "cards/DARK.land.figure.png",
-      "sha256": "f563ed6993e70defe7a6258ad597a3a888fdd2186e39e0c5a98e2c6f296fc59e"
+      "sha256": "7707bb1123aeb01ce8aa9bebae29b9a79a84133493f6fefc123dceb474b68dd7"
     },
     {
       "file": "cards/DARK.land.black.png",
-      "sha256": "925c14ff035d6bd622b61c660f3fc2d398cbbc1228f995bafda9090c7f03a080"
+      "sha256": "7e1ac9f8cab0d5aff1f6d23147c0f0c8565f08c9d184a99d4844fc9b584a90f5"
     },
     {
       "file": "cards/DARK.land.white.png",
-      "sha256": "4222ff96b94b63c78b9177dc97d3be0c05c1bd4308d5021c1663f506946a208d"
+      "sha256": "2372103e3170f30aacf8e5be9026739913dc94b2c5445651e25c796542596be9"
     },
     {
       "file": "cards/DARK.land.poster.png",
-      "sha256": "d983c15c91487c40fecc6cdd583b15556221a65611d37cc6454a71a7ef6fa5c6"
+      "sha256": "ac5177612719d91a23a63587797cf7a329b6a432ef9109f8d3723465a36b1288"
     },
     {
       "file": "cards/DARK.land.ring.png",
-      "sha256": "d571d84b5fdfcf29a2181f583c51e1a3b37ad9c6a8f7d186d11ba4cafc44cec0"
+      "sha256": "4b362080c854cb084aa60319eda3815cb529554f0d78b242b379a8f652c9eccd"
     },
     {
       "file": "cards/DARK.port.figure.png",
-      "sha256": "79cbf603f56711943ff68b4b66a913a0f07eb065df77168d2ca56f28003367c0"
+      "sha256": "479a94c9251970a103b94d6a5beeb161194629e63857eda023e7d7405434c4ee"
     },
     {
       "file": "cards/DARK.port.black.png",
-      "sha256": "9eb4dd71820b880617698182df8d9d1991c3d3e785bb21db742e2726e23a1b77"
+      "sha256": "ff6434be66fcef794d706db57ad3a0442ea52df1b893f279335ea9dee6b0364d"
     },
     {
       "file": "cards/DARK.port.white.png",
-      "sha256": "f79002d88b86d8234f2ef0fd2d87350ac8e6d68a999afef0781284162598fe2a"
+      "sha256": "36e8897f035413d6029b0595274b5908e23fdca645c1c8c3312eaaf4b388d16d"
     },
     {
       "file": "cards/DARK.port.poster.png",
-      "sha256": "9033983833f576a81ee4c583e2d1516e0c7ca4dcafcc83dd1e9d01afe9ec4336"
+      "sha256": "02759d32f092df4c0519c7794f3f07a20bb53836fbdec93b73138bd258e2ec57"
     },
     {
       "file": "cards/DARK.port.ring.png",
-      "sha256": "c70fb0cf1e3bd550c838e26e86125ac7965d67012bf35526383683ba5c33c774"
+      "sha256": "dbfda2a4e5b2783c2bebafbc56f792135e02c476a61771d39b5678de783f123c"
     },
     {
       "file": "bg/DARK.land.dots.png",
-      "sha256": "78c6dd7796dbd4cff279e73376052e5e825dabf1640d7a4be16db60820d7e0ed"
+      "sha256": "f6e7ca2d4655ccc43914cc3c7baed5d00121d60579be12249dd090f87bcbf6ee"
     },
     {
       "file": "bg/DARK.port.dots.png",
-      "sha256": "99cd528de0725777a116a18c629fa95023ab7076542968dc7116d21d93b45c3a"
+      "sha256": "0bdd0534d26cd8a835a57c03fc6b0083e0abe2a20f25e7055b4c2786422b03e0"
     },
     {
       "file": "cards/BLOND.land.figure.png",
-      "sha256": "702334a282778aac4337df310d46424ddb932370798d5cb3fb6c74758b350f31"
+      "sha256": "cebb4776dfe91ffd35d73a3c9bc2395c67c34de080c1d741b9e5e8791114b641"
     },
     {
       "file": "cards/BLOND.land.black.png",
-      "sha256": "bf696e998e04b7fd5193007066a2ed2c7abd30efb662b58c73e4848cc0a82bb7"
+      "sha256": "4d888792bc79d102c774f642085b8200d8bad093b350d1eebe547957fc05638e"
     },
     {
       "file": "cards/BLOND.land.white.png",
-      "sha256": "f0fc8eeecb4f08088c4e2613f923c9b55d0c48d7bb7e2464f28a1e597a55cb1d"
+      "sha256": "7595c1e51d8e26ee35a88641cdc3efb7c8c39cd32254214a3f14af88d4221102"
     },
     {
       "file": "cards/BLOND.land.poster.png",
-      "sha256": "1352909e34ffb7a5dffba3aa49342bba1424f89dc53993bab63ddef89892e43b"
+      "sha256": "b0e438d0e2b4fd317aaac1a44a9dffa442abc8f02c8c1e2c2d932e1e61aa5f13"
     },
     {
       "file": "cards/BLOND.land.ring.png",
-      "sha256": "1ba750269e52c3419e2602e5697dca8e217f3ed8bf2e64cd27cfa18e144dd7ea"
+      "sha256": "6a2ea13000d88be5b0ae7bb1f8c58016c86d09c45d713e97381f305f40045497"
     },
     {
       "file": "cards/BLOND.port.figure.png",
-      "sha256": "034671624f7c828fc1fccd1a0954634dfd908369667bcf2ab8d65ebbd56f1c52"
+      "sha256": "070f876321fb421491e0bebbb9b3d670e61d14fe52ce67de1891950258dd2847"
     },
     {
       "file": "cards/BLOND.port.black.png",
-      "sha256": "3415fa94ea83de2dd01a101b9ba801d4529d700e9b6d834f48186c6181b82276"
+      "sha256": "07284b1d5160fd26e48b05942528951e5ef91565780d86044e00c54759d4b734"
     },
     {
       "file": "cards/BLOND.port.white.png",
-      "sha256": "39e51e3d8c5ede8a92165f4e02fb038ef73f8779480f41efd144b88897a06e64"
+      "sha256": "85c89eebe2575efd125645937efed8ed6392e39b7a3f7715a2358c3ac4bdd3ec"
     },
     {
       "file": "cards/BLOND.port.poster.png",
-      "sha256": "c6c8ed6f8319feee43813487a81c34856fef9d9fc51ed649229a984c50a477f6"
+      "sha256": "55d1b83eefeaac748d00abf2025492b9ef4458ca61cdd069233042703fb3113f"
     },
     {
       "file": "cards/BLOND.port.ring.png",
-      "sha256": "2eaf33b25bd7aee9e132a331dce699b06fb940a41eda26a82176725d92a68340"
+      "sha256": "0d9fa5d7e67e167acdb391bbb84d8714d7e366cba2a19dc4c6401c1f83ed4544"
     },
     {
       "file": "bg/BLOND.land.dots.png",
-      "sha256": "7b7731fa461502540b696e99cf064f27bdc79cc41e67c99bda477f37b15eed6a"
+      "sha256": "9c8440b199627b600a1a0140ae7949b9e89a2cf74ab7e3c85164595f0e1aaa5b"
     },
     {
       "file": "bg/BLOND.port.dots.png",
-      "sha256": "4ec850d7c7fde9285a07cbc87005cad5903657a1bee93da092042bc6b5959ee7"
+      "sha256": "ced5b39630ea7e9f57fa9b31115a9be0cef13e8a3f57390011d65d9249a538ba"
     },
     {
       "file": "cards/OFFICER.land.figure.png",
-      "sha256": "40a2a32ec154c7c044fd78395f367c357a0e541e291226446f0d169f2a2ed0a3"
+      "sha256": "a5d8546b3fffc365f7f8beb52375610da3466cc4640f62e78a002a659d15d889"
     },
     {
       "file": "cards/OFFICER.land.black.png",
-      "sha256": "053cfbdd0c278fac28fd05e665b36f588b8230ba6241a2611fe3adc28919d7fb"
+      "sha256": "d3abd4a451928c895b2d766b8d9e46d93c65c8906da01bbf58a471e3758d4898"
     },
     {
       "file": "cards/OFFICER.land.white.png",
-      "sha256": "24c64a5b244c83c2354e39d025cd0a96006e43629a797f8e9892bb972e5a718f"
+      "sha256": "43051d4039c1fc4518d8fb642bc911d2f8f9a9c61c3d3b9819ea881f65d40530"
     },
     {
       "file": "cards/OFFICER.land.poster.png",
-      "sha256": "ec156688a2b696dc56594ab836de3974a1f910c1a1f42f672343ead9e58fcb19"
+      "sha256": "d396c03178b1f6ad79bd7ec28f534b0c21229f9a361b02e82e7499dc3a0a3c21"
     },
     {
       "file": "cards/OFFICER.land.ring.png",
-      "sha256": "23b0a925d3167ab01be8593f936172ea0421a8f5e53c7bde99a435a05da509a4"
+      "sha256": "a28f8423799f50c8533955b6bad073e173e02b564384ccfd6a5344603ef03a5d"
     },
     {
       "file": "cards/OFFICER.port.figure.png",
-      "sha256": "3430a0bdad046f34d87fa7fef13d9a86d9eabe57b7c691376c2a9cd2540a90b8"
+      "sha256": "44ba751f600e5ba24ea118c5d676cfa2e0e0fcec3a5f764e2fbb2034812cfa3c"
     },
     {
       "file": "cards/OFFICER.port.black.png",
-      "sha256": "2634cf0cb5d00cd18f81e8b09b305b9a21678dee109294685f0a9fa9a18b5e92"
+      "sha256": "8abdf3b8571d979844421c6dd92dedace98663ba7b48d5550c2a0def8649b611"
     },
     {
       "file": "cards/OFFICER.port.white.png",
-      "sha256": "841544ed0d7f33fd77582beef0640b8c80830084eeb3697c0e8326dc130c9411"
+      "sha256": "a0325221cf9ca6daa0dc2b1aae495379878c2a920c0c3fecd26e3c7e19d9d127"
     },
     {
       "file": "cards/OFFICER.port.poster.png",
-      "sha256": "01181696c013bd13e4b9037265ea12f918a504ee417221d49297b022e0f1e21f"
+      "sha256": "4748e266fe71dbae1d2738ff3bcec0f09775cacbac96b7f8500089fa341d1372"
     },
     {
       "file": "cards/OFFICER.port.ring.png",
-      "sha256": "d6142a1ba458c1be93a1f162df2ba2506cec197d60717fe025b3a0c0e7b09ac1"
+      "sha256": "80974e4c4aae910312e91c7edac51e2959155cf2ea905ba87b5ac50bae8c0eb4"
     },
     {
       "file": "bg/OFFICER.land.dots.png",
-      "sha256": "d1f304700fcceabcdfd9522a040a80009d82e1d996ab2079f024fa03f870044d"
+      "sha256": "9c4c866ab6bde852ade4b0cb6c61423f21b55c73ff1107c221a608db8527ce6b"
     },
     {
       "file": "bg/OFFICER.port.dots.png",
-      "sha256": "f55736228a8424f5f42497f8020ae5829bfc0617b26c16fd5337bb8157fbc0a2"
+      "sha256": "138eaefc05a926f58159331e0e3a0456b7eb68825ce78c4a99555a9101c8c812"
     },
     {
       "file": "grain/grain-0.png",
-      "sha256": "a9f3209734ebc0cc7bc1b161865216078f189f39bccfbb132048d789c3c2ac38"
+      "sha256": "50cf5b1a635fef74e197ad20fe79d0aaed6434f0850eb578bbeb817d1f4c1933"
     },
     {
       "file": "grain/grain-1.png",
-      "sha256": "16dd4e1884c3912655331b1ef38c124a656839418b8802debbb78197392dbd20"
+      "sha256": "a5df8cb4d7d880126250826dbe4550f5a1aa908dc06d61cfb2b842a05ea18110"
     },
     {
       "file": "grain/grain-2.png",
-      "sha256": "0e258f990275bd53923c7c0f7f46cfb7e8227f07b5034855249ec4e997e80bc9"
+      "sha256": "490ae6924ced04f5f791c0542b19e1bac703cbc8f246d872e718219189374388"
     },
     {
       "file": "grain/grain-3.png",
-      "sha256": "9799dda003d2695e992ea9d05145fa95e833671efb59563145d6019a87d74f20"
+      "sha256": "b1061e893a4dd0850516bfcc987737e699aa8d1bb1ea32945c91670fb41cbd22"
     },
     {
       "file": "music.raw.wav",
       "sha256": "d88b569db7e98a7c2457d92c779da5a3a847c4b1636a0780f894092514349e00"
     },
     {
-      "file": "sfx/need-02.wav",
-      "sha256": "f3eb674af33a4091939cc7868bfb9b095a5bd066bdaba875f3c6a112b3835596"
-    },
-    {
       "file": "sfx/hook-03.wav",
       "sha256": "c9c0cad54ade4da3756a050fc5f8aeceff4d37a7402fd690e6ad81ec19b46d93"
-    },
-    {
-      "file": "sfx/epic4-04.wav",
-      "sha256": "c988ea4c61cea6cd5764abb212acea86da036679ca3ea4c5ba3f777f8c358e42"
     },
     {
       "file": "sfx/epic3-04.wav",
       "sha256": "57ad517b217fe9763465d711a4cb7b3f85eaccebe52158259d78de4d2ce94eaf"
     },
     {
-      "file": "sfx/remotion__shutter-modern.wav",
-      "sha256": "14ab0f6f10c13a28adc837dde1058c4ba5c46b67f9709ac9562351bde342f0b4"
-    },
-    {
       "file": "sfx/need-10.wav",
       "sha256": "082a10a990d542d78aedcb6f85551c3327fda367106d380885961204856660b2"
     },
     {
-      "file": "sfx/epic3-03.wav",
-      "sha256": "182a6631f52a3b37010fda1cf0a91ec6377bde98821077896c30984ddc3a1ee8"
+      "file": "sfx/need-02.wav",
+      "sha256": "f3eb674af33a4091939cc7868bfb9b095a5bd066bdaba875f3c6a112b3835596"
     },
     {
       "file": "sfx/epic4-06.wav",
@@ -1301,12 +1176,12 @@
       "sha256": "ea536d82ca5566e24e5b32b87dfefa57304c1b8355e5e9c8fed9fc9317162d7f"
     },
     {
-      "file": "sfx/epic3-08.wav",
-      "sha256": "c19b6a8ef0a7b69a99b6e4b2e1da8760f1b4bc404320d1e5b70ddc480b83eb47"
-    },
-    {
       "file": "sfx/epic4-03.wav",
       "sha256": "dee9b8d76cb46d1ec00b25cb00260a90c9ffbd8c61ebdb4c664bf0dda54bdaa3"
+    },
+    {
+      "file": "sfx/epic4-04.wav",
+      "sha256": "c988ea4c61cea6cd5764abb212acea86da036679ca3ea4c5ba3f777f8c358e42"
     },
     {
       "file": "sfx/epic4-08.wav",
@@ -1314,7 +1189,7 @@
     },
     {
       "file": "mix.ep01.wav",
-      "sha256": "19a33655f91985fba5039df7743a0fb61c581ffe527267584967320f55720964"
+      "sha256": "da645d1479db410e0689e796e66cd1be2d7969f0e05f838a4a94f6f70ddecf90"
     }
   ]
 }
