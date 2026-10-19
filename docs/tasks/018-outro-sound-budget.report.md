@@ -135,3 +135,35 @@ OK: 84 файлов → videos/mia-outro/assets   (v2: 87 — не копиру�
 - После A/B на слух: если «качает» — проверить хвосты `boom` (2.3–2.7 с) и подрезать их до следующего riser, а не трогать `gainVsMusic`.
 - Если «начало — одна музыка» нужно строже — свист V3 с коротким разгоном (у `hook-03` 1.14 с до пика).
 - `out/mia-outro/final/license-report.md` при следующем финальном рендере заменить новым (v3 без щелчка, 10 внешних звуков).
+
+## Рендер v3 (2026-10-19, Mac; Олег: «v3 лучше, рендер»)
+Тем же способом, что финальный рендер ep01 (отчёт 008 «Финальный рендер»). Код и картинка — HEAD `d925c95`; звук — `videos/mia-outro/assets/mix.ep01.wav` = `out/mia-outro/ab/ep01-sfx-v3.wav` (sha256 `da645d14…decf90`, prepare 2.1.0, 14 SFX). Старые `out/mia-outro/final/*-ep01.mp4` (v2) не тронуты.
+
+**Перед рендером:**
+```
+npm run check -- --scope mia-outro                                         → OK: среда готова (MIA_SHORT_DIR, SFX_EXTERNAL_DIR на месте)
+node --env-file=.env --experimental-strip-types --no-warnings videos/mia-outro/check-zones.mjs
+  OK: ни один кадр не задевает запретные зоны                               → exit 0
+node scripts/readcheck.mjs MiaOutro         --props '{"episode":"ep01"}'   → 15 текстов, нарушений 3 {"SHORT":3}, exit 1
+node scripts/readcheck.mjs MiaOutroVertical --props '{"episode":"ep01"}'   → 15 текстов, нарушений 3 {"SHORT":3}, exit 1
+  SHORT MIA.tagline «THE INVENTOR» 1.00/1.42 · DARK.tagline «THE HUNTER» 1.00/1.25 · BLOND.tagline «FRIEND OR ENEMY?» 1.00/1.67 с
+```
+Те же 3 SHORT подписей, что при рендере v2, — калиброванное исключение (решение Олега «Динамика v2»). Остальные 12 текстов OK, в т. ч. final.line 3.67 из 3.42 с.
+
+**Рендер** (оба параллельно, ≈ 1.5 мин, exit 0, Encoded 470/470):
+```
+npx remotion render src/index.ts MiaOutro         out/mia-outro/final/MiaOutro-ep01-v3.mp4         --codec=h264 --crf=18 --audio-codec=aac --audio-bitrate=320K --props='{"episode":"ep01"}'
+npx remotion render src/index.ts MiaOutroVertical out/mia-outro/final/MiaOutroVertical-ep01-v3.mp4 --codec=h264 --crf=18 --audio-codec=aac --audio-bitrate=320K --props='{"episode":"ep01"}'
+```
+
+**Готовые файлы** (ffprobe; `ffmpeg -af ebur128=peak=true`):
+| Файл | Размер | Видео | Кадры | Аудио | I | LRA | True peak |
+|---|---|---|---|---|---|---|---|
+| `out/mia-outro/final/MiaOutro-ep01-v3.mp4` | 18 156 833 B | h264 High, 1920×1080, 24/1, ~7.09 Mb/s | 470, 19.584 с | AAC-LC 48 kHz, 317 kb/s | **−14.0 LUFS** | 1.8 LU | **−1.4 dBTP** |
+| `out/mia-outro/final/MiaOutroVertical-ep01-v3.mp4` | 15 983 964 B | h264 High, 1080×1920, 24/1, ~6.21 Mb/s | 470, 19.584 с | AAC-LC 48 kHz, 317 kb/s | **−14.0 LUFS** | 1.8 LU | **−1.4 dBTP** |
+
+Цели −14 LUFS ±1 и true peak ≤ −1 dBTP выполнены. LRA 1.8 против 2.1 у v2 — меньше слоёв SFX.
+
+**Лицензии:** `out/mia-outro/final/license-report-v3.md` — копия `out/mia-outro/license-report.md` от prepare 2.1.0. В нём 10 внешних SFX с ⚠ licenseWarning (лицензия unknown, перед Instagram заменить на CC0), музыка Suno с ⚠ «тариф не подтверждён», щелчка затвора нет. `license-report.md` рядом описывает v2-ролики.
+
+**Не проверялось:** на слух готовые mp4 (A/B слушал Олег по WAV); стиллы не снимались — картинка та же, что у v2 (код не менялся с 012-А, регрессия 012-А — 0 px).
