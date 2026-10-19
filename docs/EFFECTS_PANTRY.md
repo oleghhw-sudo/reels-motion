@@ -7,7 +7,7 @@
 |---|---|---|---|
 | JohnHeibel/ClaudeAnimationBase | 0ac8bf2 | MIT | p5.js + p5.brush, персонажная анимация, детерминированный рендер `renderAt(t)`; ~1400 строк кода |
 | feitangyuan/onetake | 4157581 | **PolyForm Noncommercial** | методика «carry» + `lib/motion.js` на HTML/Playwright. **Код не копировать** (ролики коммерческие; в коде водяной знак `otk-7f3e1c`) — только идеи |
-| lemomo-ai/lemo-opuscar | fdc46d7 | MIT | 43 стиля-промпта + ядро на Playwright/ffmpeg; ценны проверки и аудио-инструменты |
+| lemomo-ai/lemo-opuscar | fdc46d7 | MIT | 43 стиля-промпта + ядро на Playwright/ffmpeg; ценны проверки и аудио-инструменты. Пересмотрено 2026-10-19 на b5e8ef9: 51 стиль (+8 «Evidence Films» 10-16), DIRECTOR/TECHNIQUE по сути те же — новых правил для нас нет; кандидаты на будущее: `spy-titles`/`halftone-dossier` (титры, досье героев), Evidence Films (объяснялки на данных) |
 | pyang5166/gbro-collage-broll | a1a4ee2 | MIT | скилл для **Codex**; коллаж генерирует Gemini/Veo по промпту, кода эффектов нет |
 
 ## A. Портировать код (MIT) — чистые функции от t → в Remotion `t = frame/fps`
@@ -67,7 +67,7 @@
 - gbro `upload_file.py:70-79`: вызывает отсутствующий `prep_video.py` через subprocess; `allow_implicit_invocation: true`; ключ через `--api-key` виден в процессах.
 - ClaudeAnimationBase: `eval` для CLI-флага `--crop-at` (`src/core.js:307`), Chrome с `--no-sandbox`.
 - onetake: функция камеры `OM.rig` описана, но вырезана (в Pro); пороги откалиброваны на нескольких роликах одного заказчика.
-- README ≠ код: lemo обещает 98 стилей, в репо 43; дефолт у всех — 1920×1080 при 24 fps, не 9:16/30.
+- README ≠ код: lemo обещает 98 стилей, в репо 43 (на b5e8ef9 — 51); дефолт у всех — 1920×1080 при 24 fps, не 9:16/30.
 
 ## E. motion-prompt (showheyohtaki, MIT, коммит 770eefb) — подключено 2026-10-15
 
