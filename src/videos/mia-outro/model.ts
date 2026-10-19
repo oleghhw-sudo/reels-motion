@@ -2,6 +2,7 @@
 // Чистый модуль без React/remotion: его импортируют и композиция (script.ts), и консольная проверка (check-zones.mjs),
 // поэтому сборка и проверка считают одно и то же.
 import { z } from 'zod';
+import { RAMP, remapSpeed } from '../../fx/core.ts';
 
 // ---------------------------------------------------------------- схема outro.yaml (только поля, которые читает сборка)
 const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
@@ -200,22 +201,15 @@ export function parseInjected(spec: string): Zone {
   return { src: m[1], from: Number(m[2]), to: m[3] === 'end' ? Infinity : Number(m[3]), reason: 'ПОДЛОЖЕНО (позитивный контроль)', origin: '--inject' };
 }
 
-// ---------------------------------------------------------------- speed ramp живого плана (#038, прототип 008-proto-rook-card.py)
-export const RAMP_SLOW = 0.55; // скорость в замедлении (доля исходной)
-export const RAMP_FRAMES = 9; // последних кадров плана в замедлении
-
+// ---------------------------------------------------------------- speed ramp живого плана (#038): числа и формула — src/fx/core.ts (RAMP, remapSpeed)
 /**
  * Позиция в кадрах исходника (0 = from, дробная → межкадровое смешивание) для i-го кадра плана длиной n кадров,
- * если в исходнике L кадров. Без ramp — 1:1 с удержанием последнего. С ramp — последние RAMP_FRAMES кадров идут
- * на ×0.55, остальное — равномерно с той скоростью, чтобы план кончился ровно на последнем кадре исходника
- * (кадр, из которого сделан стоп-кадр/вырезка). Короткий план (быстрый участок < 3 кадров) целиком в замедлении и
- * начинается позже from — это подмножество проверенного интервала, зоны не задеваются.
+ * если в исходнике L кадров. Без ramp — 1:1 с удержанием последнего. С ramp — remapSpeed: последние RAMP.slowDur с
+ * (9 кадров при 24 fps) идут на ×0.55, остальное — равномерно так, чтобы план кончился ровно на последнем кадре
+ * исходника (кадр, из которого сделан стоп-кадр/вырезка). Короткий план (быстрый участок < 3 кадров) целиком в
+ * замедлении и начинается позже from — это подмножество проверенного интервала, зоны не задеваются.
  */
-export function livePos(i: number, n: number, L: number, ramp: boolean): number {
+export function livePos(i: number, n: number, L: number, ramp: boolean, fps: number): number {
   if (!ramp) return Math.min(i, L - 1);
-  const last = L - 1;
-  const fastN = n - 1 - RAMP_FRAMES;
-  if (fastN < 3) return Math.max(0, last - RAMP_SLOW * (n - 1 - i)); // быстрый участок < 3 кадров читался бы рывком
-  const v = Math.max(0, (last - RAMP_SLOW * RAMP_FRAMES) / fastN);
-  return i <= fastN ? v * i : v * fastN + RAMP_SLOW * (i - fastN);
+  return remapSpeed(i, n, L, Math.round(RAMP.slowDur * fps), RAMP.slow);
 }

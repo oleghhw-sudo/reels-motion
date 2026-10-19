@@ -10,6 +10,7 @@ import { MIA_FPS, MiaOutro, MiaOutroVertical, miaOutroMetadata, miaOutroSchema }
 import { OUTRO } from './videos/mia-outro/script.ts';
 import { MOTION_LAB_FRAMES, MotionLab } from './labs/MotionLab.tsx';
 import { MOTION_LAB_KIT_FPS, MOTION_LAB_KIT_FRAMES, MotionLabKit } from './labs/MotionLabKit.tsx';
+import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
 
 const FPS = 30;
 
@@ -74,5 +75,7 @@ export const RemotionRoot: React.FC = () => (
     {/* лаборатория функций src/motion */}
     <Composition id="MotionLab" component={MotionLab} width={1080} height={1920} fps={FPS} durationInFrames={MOTION_LAB_FRAMES} />
     <Composition id="MotionLabKit" component={MotionLabKit} width={1080} height={1920} fps={MOTION_LAB_KIT_FPS} durationInFrames={MOTION_LAB_KIT_FRAMES} />
+    {/* лаборатория приёмов src/fx (задача 012-А): плитки S/M/L, слэм, штамп, плашка, хлёст, ramp, look */}
+    <Composition id="FxLab24" component={FxLab24} width={1080} height={1920} fps={FX_LAB_FPS} durationInFrames={FX_LAB_FRAMES} />
   </>
 );
