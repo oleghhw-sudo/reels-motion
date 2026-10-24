@@ -1,5 +1,5 @@
 # Отчёт: 019-capcut-pilot
-Статус: готово (запись выполнена; проверка в CapCut — за Олегом, шаг 8 — отдельным промптом)
+Статус: готово; **шаг 8 выполнен 2026-10-25** (причина неработающего зума найдена — идентификатор `UNIFORM_SCALE`; зум перекодирован в `KFTypeScaleX`/`KFTypeScaleY`; проверка глазами в CapCut — за Олегом). Раздел «Шаг 8» — в конце отчёта.
 Время: ≈ 15 мин (22:21–22:36, 2026-10-24) · Mac, CapCut 9.5.0, capcut-cli 0.31.1
 
 ## Сделано
@@ -13,6 +13,7 @@
 
 ## Файлы (новые / изменённые)
 - new `pilot/capcut/package.json`, `pilot/capcut/package-lock.json`, `pilot/capcut/.gitignore`, `pilot/capcut/make-spec.mjs`
+- new `pilot/capcut/fix-zoom-kftype.mjs` (шаг 8: перекодировка зума `UNIFORM_SCALE` → `KFTypeScaleX`/`KFTypeScaleY`, `--check`/`--apply`)
 - mod `env.manifest.json` (+2 переменные, scope `capcut`)
 - new `docs/tasks/019-capcut-pilot.report.md`
 - вне git (`out/` в .gitignore): `out/capcut-pilot/backup-20261024-222343/` (полная копия `1024/` + `root_meta_info.json` до записи), `written-pre-pc/`, `written/` (снимки после записи), `pilot-spec.json`, `compile-output.json`, `sha-*.txt`, `pc-*.txt`, `cli-transitions.json`, `user-enums.json` (не создан — нечего было записать), `app-versions.json` (трипвайр версий capcut-cli)
@@ -152,3 +153,71 @@ echo 'CAPCUT_MEDIA_DIR=/Users/olegkhukhashvili/Movies/reels-pilot-media' >> ~/Pr
 cd ~/Projects/reels-motion && npm run check -- --scope capcut
 ```
 Проверка глазами (CapCut): открыть проект **Pilot** → 3 клипа (V1 0–0.92 с, V3 0.92–2.75 с, V10 2.75–4.54 с), музыка на всю длину с затуханием в конце, переход Dissolve на стыке V3→V10, плавный наезд ×1.12 на V3; закрыть и открыть снова; экспорт 1080p. Ответ архитектору одной строкой. Откат, если нужно: `out/capcut-pilot/backup-20261024-222343/1024/` → поверх папки `1024` при закрытом CapCut.
+
+## Шаг 8 — что переписал CapCut, причина неработающего зума, исправление (2026-10-25, 02:01–02:15)
+
+Вход: Олег открыл проект в CapCut 9.5 (25.10 01:57–02:01) и сообщил: 3 клипа, переход Dissolve и музыка с фейдом — на месте; **зум на V3 не работает**; имя проекта «1024», а не «Pilot». Разрешение Олега: «пусть агент реализует Zoom». Правила шага: запись только в папку `1024`, новый полный бэкап, CapCut закрыт, остальные проекты только чтение, без сети/`init`/`quickstart`/UI-автоматизации.
+
+### 8.1 Диагностика: `out/capcut-pilot/written/` (как записал compile) vs живые файлы `1024`
+Команда: `find … -type f`, `shasum -a 256`, разбор JSON (`python3 -I`), сравнение полей сегментов и материалов.
+- 4 копии таймлайна (`draft_info.json`, `template-2.tmp`, `Timelines/E670B181…/draft_info.json`, `…/template-2.tmp`) CapCut переписал **байт-в-байт одинаково**: sha `f276d1f5…` → `4956aa34…`. `Timelines/project.json` не изменился (`e957c70c…`). Появился `Timelines/E670B181…/template.tmp` (new_version 75.0.0, пустой шаблон приложения).
+- **Границы квантованы к сетке 30 fps** (ответ на отклонение 4): 917000→933333, 1835000→1833333, 2752000→2766666, 1791667→1800000 мкс; `duration` 4543667→4566666. Доли h1/h2 сдвинулись на +16 мс и +15 мс.
+- **Пути медиа** переписаны из абсолютных в плейсхолдер `##_draftpath_placeholder_<UUID>_##/assets/video/V3.mp4`; файлы в `1024/assets/{video,audio}` на месте (размеры совпадают).
+- **Переход Dissolve остался** — CapCut дописал в материал `path` на свой кэш `Cache/effect/670883/…`, `request_id`, `is_ai_transition` и т. п. Гипотеза анализа §3 «ID не в кэше → выбросит» для встроенного `dissolve` **не подтвердилась**.
+- Сегментам дописаны поля приложения: `uniform_scale: {on: true, value: 1.0}`, `enable_*`, `hdr_settings`, `responsive_layout`, `source: "segmentsourcenormal"`, …; `render_index` 14000→0 (compile ставил 14000).
+- **Ключевые кадры масштаба CapCut НЕ выбросил**: список `common_keyframes[0]` с `property_type: "UNIFORM_SCALE"` и двумя кадрами (0→[1.0], 1835000→[1.12]) сохранён, CapCut лишь добавил `string_value: ""`. Но не анимирует (наблюдение Олега). Побочно: после квантования кадр 1835000 оказался на 1667 мкс **позже конца сегмента** (1833333).
+- `draft_meta_info.json`: `draft_materials` — 4 медиа (как зарегистрировал compile, пути переписаны в `./assets/…`), `tm_duration` 4566666, `draft_name` «1024» (см. 8.5). `.bak`, `.capcut-cli-history/`, `assets/` CapCut не трогал (mtime 24.10 22:30).
+
+### 8.2 Причина: движок CapCut 9.5 не знает идентификатор `UNIFORM_SCALE`
+1. **Эталона в проектах Олега нет**: просмотрены все 46 `draft_info.json`/`template*.tmp` остальных 9 проектов (только чтение) — 0 сегментов с `common_keyframes`/`keyframe_refs`, корневые `keyframes.*` пустые. В `User Data` и контейнере `com.lemon.lvoverseas` строк `KFTypeScaleX`/`UNIFORM_SCALE` вне папки `1024` нет (grep -rl).
+2. **Эталон — сам движок** (`strings -n 6 /Applications/CapCut.app/Contents/Frameworks/libvideoeditor.dylib`, только чтение; приложение 9.5.0). В нём встроены Lua-миграции формата черновика, и они называют свойство масштаба прямо:
+   - `downgrade_74_to_73_crop_scale`: `if property_type == "KFTypeScale" and #list ~= 0 then return false, 'contain scale keyframe', '74.0.0'` — до версии 77 единый масштаб звался **`KFTypeScale`**;
+   - `downgrade_keyframeType`: `property_type == 'KFTypeScaleX' or 'KFTypeScaleY' or 'KFTypeMaskSizeX' … → return false`; `downgrade_77_76_keyframe`: `'cannot downgrade because of having splited KFTypeScale', '77.0.0'`; рядом `downgrade_77_76_uniform_scale` проверяет `seg['uniform_scale']['on']` — с **new_version 77.0.0** единый масштаб «расщеплён» на **`KFTypeScaleX` + `KFTypeScaleY`** при `segment.uniform_scale.on = true`.
+   - Строки `UNIFORM_SCALE` как `property_type` в `libvideoeditor.dylib` и `libVECreator.dylib` **нет** — только имя действия `SET_UNIFORM_SCALE_ACTION`. Перечень известных движку типов (`KFTypeScaleX` ×46, `KFTypeScaleY` ×63, `KFTypePositionX/Y`, `KFTypeRotation`, `KFTypeVolume`, …) — в `strings`. Наш черновик — `new_version 187.0.0`, т. е. формат ≥ 77.
+3. **Косвенные подтверждения**: capcut-cli 0.31.1 `lint` имеет проверку `uniform-scale-keyframe` («JianYing 11.6+ has been reported to ignore UNIFORM_SCALE, it reads KFTypeScaleX with uniform scaling on») — но включается только для `app_source: "lv"` ≥ 11.6, для CapCut `cc 9.5.0` молчит, поэтому lint шага 5 был чист; собственный рецепт пакета `examples/keyframe-zoom.md` пишет зум как **`KFTypeScaleX`** (с заметкой «ScaleX interpolated linearly»). Источник ошибки capcut-cli — таблица `PROPERTY_MAP` в `dist/decorators.js` (`uniform_scale: "UNIFORM_SCALE"`), унаследованная из pyJianYingDraft (`KeyframeProperty.uniform_scale`); сам pyJianYingDraft офлайн недоступен (сети нет), сверка — по этой таблице и докам `docs/draft-schema/03-keyframes-and-animations.md`.
+4. **Вывод**: место в JSON (`segment.common_keyframes[]`), время (`time_offset` мкс от начала сегмента), значения (`values: [1.0]`/`[1.12]`), `curveType: "Line"` — совпадают с форматом движка; неверен только идентификатор свойства. CapCut сохраняет неизвестный список как есть и не анимирует.
+
+### 8.3 Исправление
+Файл `pilot/capcut/fix-zoom-kftype.mjs` (гейт 2: корень проектов только из `CAPCUT_PROJECTS_DIR`, дефолта нет). Заменяет в указанном сегменте список `UNIFORM_SCALE` на два списка `KFTypeScaleX` и `KFTypeScaleY` с теми же кадрами; последний кадр прижимает к `target_timerange.duration` (1835000→1833333 — «от начала до конца клипа»); `uniform_scale.on = true`; пишет **атомарно во все 4 копии** (temp + fsync + rename, откат при сбое) и только если копии байт-в-байт одинаковы и CapCut закрыт. `--check` ничего не пишет и красный (exit 1), если в сегменте есть `UNIFORM_SCALE` или нет пары `KFTypeScaleX/Y`. Штатной командой capcut-cli нельзя: `capcut keyframe` 0.31.1 кодирует `scale` только как `UNIFORM_SCALE` и не умеет удалять список.
+
+Команды (терминал Mac, `cd ~/Projects/reels-motion`, `CAPCUT_PROJECTS_DIR` через окружение; сегмент клипа V3 — `252fb279-ae43-43ae-b63b-4c4c9b478db5`):
+```
+pgrep -x CapCut; echo exit=$?            # → exit=1 (CapCut закрыт) до и после
+mkdir -p out/capcut-pilot/backup-20261025-020959 && cp -R "$CAPCUT_PROJECTS_DIR/1024" out/capcut-pilot/backup-20261025-020959/1024 && cp "$CAPCUT_PROJECTS_DIR/root_meta_info.json" out/capcut-pilot/backup-20261025-020959/
+diff -rq "$CAPCUT_PROJECTS_DIR/1024" out/capcut-pilot/backup-20261025-020959/1024   # → пусто (108 МБ)
+node pilot/capcut/fix-zoom-kftype.mjs 1024 252fb279-ae43-43ae-b63b-4c4c9b478db5 --check
+node pilot/capcut/fix-zoom-kftype.mjs 1024 252fb279-ae43-43ae-b63b-4c4c9b478db5 --apply
+node pilot/capcut/fix-zoom-kftype.mjs 1024 252fb279-ae43-43ae-b63b-4c4c9b478db5 --check
+```
+Результат дословно:
+```
+--check ДО:   списки ключевых кадров: [ 'UNIFORM_SCALE: 0→1 1835000→1.12' ]
+              ПРОБЛЕМЫ: есть список UNIFORM_SCALE (2 кадров) — движок CapCut 9.5 его не знает; нет списка KFTypeScaleX; нет списка KFTypeScaleY   → exit=1  (позитивный контроль, гейт 4)
+--apply:      записано: 62507d96adcef9a2 × 4 (draft_info.json, template-2.tmp, Timelines/E670B181…/draft_info.json, …/template-2.tmp)
+              новые списки: [ 'KFTypeScaleX: 0→1 1833333→1.12', 'KFTypeScaleY: 0→1 1833333→1.12' ]   → exit=0
+--check ПОСЛЕ: OK: зум закодирован как KFTypeScaleX/KFTypeScaleY, UNIFORM_SCALE нет   → exit=0
+```
+
+### 8.4 Проверки
+- **Точечность правки**: структурный diff бэкап→живой файл при численном равенстве (`1.0 == 1`) — ровно одно отличие: `/tracks[0]/segments[1]/common_keyframes [len 1->2]`. (Побайтно файлы отличаются ещё и формой чисел: `JSON.stringify` пишет `1` вместо `1.0`, `30` вместо `30.0` — так же писал compile в шаге 5, CapCut это принял и вернул `1.0`.)
+- **lint живого проекта** (`capcut lint "$CAPCUT_PROJECTS_DIR/1024" --active-timeline`, `out/capcut-pilot/step8-lint.txt`): `errors: 4, warnings: 0, info: 1` — все 4 ошибки `missing-file` на пути вида `##_draftpath_placeholder_…_##/assets/…`: **capcut-cli 0.31.1 не знает плейсхолдер CapCut** (`grep -rn draftpath_placeholder dist docs` — 0 совпадений), файлы в `1024/assets/` существуют. Это артефакт перезаписи путей приложением (8.1), не правки зума. Доказательство, что других ошибок нет: scratch-копия проекта с подставленным вместо плейсхолдера реальным путём (16 замен, вне папки проектов) → `ok: true, errors: 0, warnings: 0, info: 5` (`media-outside-draft` ×4 — следствие той же подстановки, `keyframe-trimmed-clock` — info о сегменте с sourceStart>0, было и в шаге 5). Файл: `out/capcut-pilot/step8-lint-abs-paths.txt`.
+- **Позитивный контроль lint (гейт 4)**: scratch-копия бэкапа с `segment2.target_timerange.start = 0` → `error segment-overlap` («Segments 5155de4c and 252fb279 overlap by 933333us»), exit 2.
+- **Неприкосновенность**: sha256 всех `draft_info.json` вне `1024` (19 файлов, включая `.recycle_bin/0909`) + `root_meta_info.json` — `step8-sha-others-before.txt` = `step8-sha-others-after.txt` (20 строк, `cmp` идентичны). `draft_meta_info.json` не менялся (`bf46a1fb…` до и после). Временных `*.step8.tmp` не осталось. `pgrep -x CapCut` пуст до и после.
+- **Бэкап**: `out/capcut-pilot/backup-20261025-020959/` (полная папка `1024` + `root_meta_info.json`, `diff -rq` пуст). **Снимок записанного**: `out/capcut-pilot/written-step8/` + `step8-sha-pilot-written.txt` (таймлайн `62507d96…` ×4, `project.json` `e957c70c…`, `draft_meta_info.json` `bf46a1fb…`).
+
+### 8.5 Имя «1024» вместо «Pilot»
+- **Наша запись имя не меняла**: в снимке `written/draft_meta_info.json` (после compile) `draft_name: "Pilot"`; `root_meta_info.json` compile не трогал (sha до = после, шаг 7); оба говорили «Pilot» до открытия в CapCut.
+- **Переименовал CapCut** при открытии 25.10 01:57–02:01: `draft_name` «Pilot»→«1024» одновременно в `draft_meta_info.json` и `root_meta_info.json` (вместе с `tm_duration 0→4566666`, `tm_draft_modified`). Механизм (по данным на этом Mac): CapCut держит имя папки = имени проекта — проект «Mias Story» лежит в папке `Mias Story`, переименованной приложением из `1002` (в его `draft_meta_info.draft_fold_path` остался старый `…/1002`); у остальных 8 проектов папка = имя. У Pilot папка осталась `1024` (переименование папки до закрытия приложения не произошло), и при открытии CapCut привёл имя к папке. Других хранилищ имени нет: `grep -rl Pilot` по `User Data` и контейнеру — 0; в `Config/draftLayoutConfig.ini` только `draft_id=0`; логов за 25.10 нет.
+- **«Pilot» не возвращал**: это не следствие нашей записи, а правка имени требует писать `root_meta_info.json` **вне папки `1024`** (запрет шага). Переименовать может Олег в CapCut (правый клик → Rename): приложение переименует и папку.
+
+### 8.6 Отклонения шага 8
+1. «lint без ошибок» на живом проекте буквально не выполняется: 4 ложных `missing-file` из-за плейсхолдера путей CapCut, которого capcut-cli 0.31.1 не знает (8.4). На копии с раскрытым плейсхолдером — 0 ошибок, 0 предупреждений. Переписывать пути обратно в абсолютные не стал: это не зум, и CapCut вернёт плейсхолдер при следующем сохранении.
+2. Эталон найден не в проектах Олега (там ключевых кадров нет) и не в pyJianYingDraft (офлайн недоступен), а в Lua-миграциях движка `libvideoeditor.dylib` + примере и lint-заметке capcut-cli (8.2). Это чтение строк бинарника приложения, без модификации и без запуска.
+3. Правка — точечная JSON-правка собственным скриптом, не штатной командой capcut-cli (штатная пишет только `UNIFORM_SCALE`); все гарантии записи capcut-cli (атомарность, 4 копии, закрытый CapCut, одинаковые копии) воспроизведены в скрипте.
+
+### Для Олега (шаг 8)
+CapCut: открыть проект **«1024»** → клип V3 (0.93–2.77 с) должен плавно наезжать до ×1.12 к концу клипа; переход V3→V10 и музыка — как раньше. Если зум виден — переименовать проект в «Pilot» правым кликом (приложение переименует и папку). Ответ архитектору одной строкой: «зум работает / не работает». Откат, если нужно (терминал Mac, при закрытом CapCut):
+```
+rm -rf "$HOME/Movies/CapCut/User Data/Projects/com.lveditor.draft/1024" && cp -R ~/Projects/reels-motion/out/capcut-pilot/backup-20261025-020959/1024 "$HOME/Movies/CapCut/User Data/Projects/com.lveditor.draft/1024"
+```
+Для capcut-cli стоит завести issue: `PROPERTY_MAP.uniform_scale` должен давать пару `KFTypeScaleX`/`KFTypeScaleY` для черновиков new_version ≥ 77 (CapCut 9.x) — вне рамок задачи, не делал.
