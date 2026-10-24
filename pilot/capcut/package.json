@@ -1,0 +1,8 @@
+{
+  "name": "reels-motion-capcut-pilot",
+  "private": true,
+  "description": "Пилот 019: локальная закреплённая установка capcut-cli (не плагин, не глобально). Запуск: node_modules/.bin/capcut …",
+  "dependencies": {
+    "capcut-cli": "0.31.1"
+  }
+}
