@@ -1,0 +1,458 @@
+{
+ "object": "O05",
+ "input": "O05.jpg",
+ "size": [
+  1200,
+  1600
+ ],
+ "deskew_deg": 0.0,
+ "deskew_measured_deg": 0.125,
+ "M": [
+  [
+   1.0,
+   0.0,
+   0.0
+  ],
+  [
+   -0.0,
+   1.0,
+   0.0
+  ]
+ ],
+ "open_kernel_px": 5,
+ "walls": {
+  "centers": [
+   12.33,
+   29.44
+  ],
+  "n_medial": 4882,
+  "threshold_px": 20.89,
+  "thick_px": 29.44,
+  "thin_px": 12.33,
+  "share_thick": 0.414
+ },
+ "scale": {
+  "source": "5.58 height of room 5",
+  "value_m": 5.58,
+  "span_px": 292,
+  "seg": [
+   [
+    600,
+    485
+   ],
+   [
+    600,
+    777
+   ]
+  ],
+  "m_per_px": 0.01911,
+  "check": {
+   "label": "5.87 width of room 5 (top)",
+   "value_m": 5.87,
+   "span_px": 318,
+   "seg": [
+    [
+     447,
+     520
+    ],
+    [
+     765,
+     520
+    ]
+   ],
+   "measured_m": 6.077,
+   "err_pct": 3.52
+  }
+ },
+ "door_close_px": 57.6,
+ "mark": {
+  "families": {
+   "red": {
+    "n": 55547,
+    "medS": 75.0,
+    "indark": 0.211,
+    "accepted": "fill"
+   },
+   "blue": {
+    "n": 7618,
+    "medS": 95.0,
+    "indark": 0.689,
+    "accepted": false
+   },
+   "green": {
+    "n": 1008,
+    "medS": 52.0,
+    "indark": 0.772,
+    "accepted": false
+   }
+  },
+  "type": "dashed open outline (closed by convex hull)",
+  "solidity": 0.153,
+  "pieces": 41,
+  "region_frac": 0.1142,
+  "n_components": 3
+ },
+ "merge_k_px": 44,
+ "outline": {
+  "n_components": 2,
+  "ortho": true,
+  "dp_vertices": 11,
+  "vertices": 11,
+  "valid": true,
+  "area_px": 87642.1,
+  "mask_area_px": 102923,
+  "closes": false,
+  "polygon_px": [
+   [
+    445.5,
+    485.5
+   ],
+   [
+    445.5,
+    775.5
+   ],
+   [
+    768.5,
+    775.5
+   ],
+   [
+    768.5,
+    667.2
+   ],
+   [
+    740.9,
+    654.5
+   ],
+   [
+    714.4,
+    654.5
+   ],
+   [
+    698.0,
+    636.0
+   ],
+   [
+    698.0,
+    591.0
+   ],
+   [
+    709.7,
+    573.5
+   ],
+   [
+    764.0,
+    573.5
+   ],
+   [
+    764.0,
+    485.5
+   ]
+  ],
+  "area_m2": 32.0,
+  "polygon_m": [
+   [
+    8.513,
+    9.278
+   ],
+   [
+    8.513,
+    14.819
+   ],
+   [
+    14.686,
+    14.819
+   ],
+   [
+    14.686,
+    12.751
+   ],
+   [
+    14.159,
+    12.507
+   ],
+   [
+    13.653,
+    12.507
+   ],
+   [
+    13.338,
+    12.154
+   ],
+   [
+    13.338,
+    11.294
+   ],
+   [
+    13.561,
+    10.959
+   ],
+   [
+    14.6,
+    10.959
+   ],
+   [
+    14.6,
+    9.278
+   ]
+  ]
+ },
+ "rooms": [
+  {
+   "id": 7,
+   "area_px": 87781,
+   "centroid_px": [
+    597.1,
+    632.8
+   ],
+   "polygon_px": [
+    [
+     449.0,
+     485.0
+    ],
+    [
+     442.0,
+     776.0
+    ],
+    [
+     769.0,
+     775.0
+    ],
+    [
+     768.0,
+     667.0
+    ],
+    [
+     746.0,
+     668.0
+    ],
+    [
+     742.0,
+     655.0
+    ],
+    [
+     702.0,
+     656.0
+    ],
+    [
+     699.0,
+     573.0
+    ],
+    [
+     764.0,
+     571.0
+    ],
+    [
+     764.0,
+     486.0
+    ]
+   ],
+   "area_m2": 32.06,
+   "polygon_m": [
+    [
+     8.58,
+     9.268
+    ],
+    [
+     8.446,
+     14.829
+    ],
+    [
+     14.695,
+     14.81
+    ],
+    [
+     14.676,
+     12.746
+    ],
+    [
+     14.256,
+     12.765
+    ],
+    [
+     14.179,
+     12.517
+    ],
+    [
+     13.415,
+     12.536
+    ],
+    [
+     13.358,
+     10.95
+    ],
+    [
+     14.6,
+     10.912
+    ],
+    [
+     14.6,
+     9.287
+    ]
+   ]
+  },
+  {
+   "id": 12,
+   "area_px": 14851,
+   "centroid_px": [
+    487.4,
+    1060.5
+   ],
+   "polygon_px": [
+    [
+     435.0,
+     993.0
+    ],
+    [
+     432.0,
+     1127.0
+    ],
+    [
+     541.0,
+     1128.0
+    ],
+    [
+     542.0,
+     993.0
+    ]
+   ],
+   "area_m2": 5.42,
+   "polygon_m": [
+    [
+     8.313,
+     18.976
+    ],
+    [
+     8.255,
+     21.537
+    ],
+    [
+     10.338,
+     21.556
+    ],
+    [
+     10.357,
+     18.976
+    ]
+   ]
+  }
+ ],
+ "rooms_found": 2,
+ "rooms_sum_m2": 37.48,
+ "crop": [
+  308,
+  358,
+  848,
+  1271
+ ],
+ "checks": {
+  "a_outline": {
+   "area_m2": 32.0,
+   "truth_m2": 70.9,
+   "err_pct": -54.87,
+   "level": 1
+  },
+  "a_rooms_sum": {
+   "sum_m2": 37.48,
+   "err_pct": -47.14
+  },
+  "b_rooms": {
+   "found": 2,
+   "expected": 7,
+   "match": false
+  },
+  "c_rooms": [
+   {
+    "label": "6",
+    "truth_m2": 5.0,
+    "pos_norm": [
+     610,
+     440
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "5",
+    "truth_m2": 31.2,
+    "pos_norm": [
+     575,
+     625
+    ],
+    "room_id": 7,
+    "area_m2": 32.06,
+    "err_pct": 2.8,
+    "status": "matched"
+   },
+   {
+    "label": "7",
+    "truth_m2": 1.6,
+    "pos_norm": [
+     735,
+     650
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "2",
+    "truth_m2": 25.6,
+    "pos_norm": [
+     615,
+     895
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "1",
+    "truth_m2": 1.6,
+    "pos_norm": [
+     735,
+     960
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "4",
+    "truth_m2": 1.5,
+    "pos_norm": [
+     455,
+     940
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "3",
+    "truth_m2": 4.4,
+    "pos_norm": [
+     485,
+     1050
+    ],
+    "room_id": 12,
+    "area_m2": 5.42,
+    "err_pct": 23.2,
+    "status": "matched"
+   }
+  ],
+  "d_closes": false,
+  "e_scale_check": {
+   "label": "5.87 width of room 5 (top)",
+   "value_m": 5.87,
+   "span_px": 318,
+   "seg": [
+    [
+     447,
+     520
+    ],
+    [
+     765,
+     520
+    ]
+   ],
+   "measured_m": 6.077,
+   "err_pct": 3.52
+  }
+ }
+}

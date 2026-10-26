@@ -11,6 +11,7 @@ import { OUTRO } from './videos/mia-outro/script.ts';
 import { MOTION_LAB_FRAMES, MotionLab } from './labs/MotionLab.tsx';
 import { MOTION_LAB_KIT_FPS, MOTION_LAB_KIT_FRAMES, MotionLabKit } from './labs/MotionLabKit.tsx';
 import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
+import { AGENT_FPS, AGENT_FRAMES, AgentTerminal } from './videos/agent-terminal/AgentTerminal.tsx';
 
 const FPS = 30;
 
@@ -77,5 +78,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="MotionLabKit" component={MotionLabKit} width={1080} height={1920} fps={MOTION_LAB_KIT_FPS} durationInFrames={MOTION_LAB_KIT_FRAMES} />
     {/* лаборатория приёмов src/fx (задача 012-А): плитки S/M/L, слэм, штамп, плашка, хлёст, ramp, look */}
     <Composition id="FxLab24" component={FxLab24} width={1080} height={1920} fps={FX_LAB_FPS} durationInFrames={FX_LAB_FRAMES} />
+    {/* «Термінал помічника кресляра» (задача 020): 1920×1080, 30 fps, 32 с, петля */}
+    <Composition id="AgentTerminal" component={AgentTerminal} width={1920} height={1080} fps={AGENT_FPS} durationInFrames={AGENT_FRAMES} />
   </>
 );

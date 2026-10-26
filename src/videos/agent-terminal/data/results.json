@@ -1,0 +1,257 @@
+[
+ {
+  "id": "O01",
+  "name": "Кам'янець-Подільський, Огієнка 30б",
+  "area": 67.3,
+  "truth": 67.7,
+  "err": -0.59,
+  "level": 3,
+  "rooms": {
+   "found": 2,
+   "expected": 2,
+   "match": true
+  },
+  "check": {
+   "label": "7.38 interior width of room 1 (bottom)",
+   "value_m": 7.38,
+   "span_px": 285,
+   "measured_m": 7.388,
+   "err_pct": 0.11
+  },
+  "route": "чернетка",
+  "reasons": []
+ },
+ {
+  "id": "O02",
+  "name": "Кропивницький, Героїв Рятувальників 11г",
+  "area": 99.29,
+  "truth": 99.0,
+  "err": 0.29,
+  "level": 3,
+  "rooms": {
+   "found": 2,
+   "expected": 2,
+   "match": true
+  },
+  "check": {
+   "label": "3.65 top wall of room 1 to the 1.66 stub",
+   "value_m": 3.65,
+   "span_px": 218,
+   "measured_m": 3.582,
+   "err_pct": -1.87
+  },
+  "route": "чернетка",
+  "reasons": []
+ },
+ {
+  "id": "O03",
+  "name": "Львів, Пекарська 3",
+  "area": 53.17,
+  "truth": null,
+  "err": null,
+  "level": "n/a",
+  "rooms": {
+   "found": 12,
+   "expected": 5,
+   "match": false
+  },
+  "check": {
+   "label": "3.41 bottom of 21-2",
+   "value_m": 3.41,
+   "span_px": 147,
+   "measured_m": 3.194,
+   "err_pct": -6.34
+  },
+  "route": "до людини",
+  "reasons": [
+   "немає експлікації для звірки",
+   "другий розмір -6,3 %"
+  ]
+ },
+ {
+  "id": "O04",
+  "name": "Львів, Драгана 9",
+  "area": null,
+  "truth": 50.1,
+  "err": null,
+  "level": "n/a",
+  "rooms": {
+   "found": 0,
+   "expected": 3,
+   "match": false
+  },
+  "check": null,
+  "route": "до людини",
+  "reasons": [
+   "немає масштабу"
+  ]
+ },
+ {
+  "id": "O05",
+  "name": "Хмельницький, Миру 66",
+  "area": 32.0,
+  "truth": 70.9,
+  "err": -54.87,
+  "level": 1,
+  "rooms": {
+   "found": 2,
+   "expected": 7,
+   "match": false
+  },
+  "check": {
+   "label": "5.87 width of room 5 (top)",
+   "value_m": 5.87,
+   "span_px": 318,
+   "measured_m": 6.077,
+   "err_pct": 3.52
+  },
+  "route": "до людини",
+  "reasons": [
+   "площа -54,9 % від експлікації"
+  ]
+ },
+ {
+  "id": "O06",
+  "name": "Дніпро, Незалежності 21",
+  "area": 83.51,
+  "truth": 90.0,
+  "err": -7.21,
+  "level": 2,
+  "rooms": {
+   "found": 3,
+   "expected": 4,
+   "match": false
+  },
+  "check": {
+   "label": "6.66 bottom of room 6",
+   "value_m": 6.66,
+   "span_px": 401,
+   "measured_m": 7.269,
+   "err_pct": 9.14
+  },
+  "route": "до людини",
+  "reasons": [
+   "площа -7,2 % від експлікації",
+   "другий розмір +9,1 %"
+  ]
+ },
+ {
+  "id": "O07",
+  "name": "Київ, Харківське шосе 172",
+  "area": 22.91,
+  "truth": 83.6,
+  "err": -72.6,
+  "level": 1,
+  "rooms": {
+   "found": 3,
+   "expected": 6,
+   "match": false
+  },
+  "check": {
+   "label": "5.94 height of room 2",
+   "value_m": 5.94,
+   "span_px": 202,
+   "measured_m": 3.426,
+   "err_pct": -42.33
+  },
+  "route": "до людини",
+  "reasons": [
+   "площа -72,6 % від експлікації",
+   "другий розмір -42,3 %"
+  ]
+ },
+ {
+  "id": "O08",
+  "name": "Київ, Палладіна 7/60",
+  "area": 45.36,
+  "truth": 50.1,
+  "err": -9.46,
+  "level": 2,
+  "rooms": {
+   "found": 2,
+   "expected": 1,
+   "match": false
+  },
+  "check": {
+   "label": "3450 mm right room width",
+   "value_m": 3.45,
+   "span_px": 187,
+   "measured_m": 3.248,
+   "err_pct": -5.84
+  },
+  "route": "до людини",
+  "reasons": [
+   "площа -9,5 % від експлікації",
+   "другий розмір -5,8 %"
+  ]
+ },
+ {
+  "id": "O09",
+  "name": "Кривий Ріг, Миру 7",
+  "area": 113.16,
+  "truth": null,
+  "err": null,
+  "level": "n/a",
+  "rooms": {
+   "found": 5,
+   "expected": null,
+   "match": "n/a"
+  },
+  "check": {
+   "label": "4.20 bottom of room 34",
+   "value_m": 4.2,
+   "span_px": 73,
+   "measured_m": 4.102,
+   "err_pct": -2.34
+  },
+  "route": "до людини",
+  "reasons": [
+   "немає експлікації для звірки"
+  ]
+ },
+ {
+  "id": "O10",
+  "name": "Харків, Полтавський шлях 153",
+  "area": 6.55,
+  "truth": null,
+  "err": null,
+  "level": "n/a",
+  "rooms": {
+   "found": 2,
+   "expected": null,
+   "match": "n/a"
+  },
+  "check": {
+   "label": "6.78 width of the upper hall",
+   "value_m": 6.78,
+   "span_px": 238,
+   "measured_m": 6.479,
+   "err_pct": -4.44
+  },
+  "route": "до людини",
+  "reasons": [
+   "немає експлікації для звірки"
+  ]
+ },
+ {
+  "id": "O11",
+  "name": "Чернівці, Головна 128",
+  "area": null,
+  "truth": 137.7,
+  "err": null,
+  "level": "n/a",
+  "rooms": {
+   "found": 0,
+   "expected": 8,
+   "match": false
+  },
+  "check": {
+   "label": "3.65 height of 38-8",
+   "failed": true
+  },
+  "route": "до людини",
+  "reasons": [
+   "контур не знайдено"
+  ]
+ }
+]

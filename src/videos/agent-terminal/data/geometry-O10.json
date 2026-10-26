@@ -1,0 +1,269 @@
+{
+ "object": "O10",
+ "input": "O10.jpg",
+ "size": [
+  690,
+  1284
+ ],
+ "deskew_deg": 0.375,
+ "deskew_measured_deg": 0.375,
+ "M": [
+  [
+   0.999979,
+   0.006545,
+   -0.181457
+  ],
+  [
+   -0.006545,
+   0.999979,
+   4.245532
+  ]
+ ],
+ "open_kernel_px": 3,
+ "walls": {
+  "centers": [
+   8.2,
+   13.32
+  ],
+  "n_medial": 5496,
+  "threshold_px": 10.76,
+  "thick_px": 13.32,
+  "thin_px": 8.2,
+  "share_thick": 0.48
+ },
+ "scale": {
+  "source": "9.12 left wall of the upper hall",
+  "value_m": 9.12,
+  "span_px": 335,
+  "seg": [
+   [
+    300,
+    99
+   ],
+   [
+    300,
+    434
+   ]
+  ],
+  "m_per_px": 0.027224,
+  "check": {
+   "label": "6.78 width of the upper hall",
+   "value_m": 6.78,
+   "span_px": 238,
+   "seg": [
+    [
+     251,
+     220
+    ],
+    [
+     489,
+     220
+    ]
+   ],
+   "measured_m": 6.479,
+   "err_pct": -4.44
+  }
+ },
+ "door_close_px": 40.4,
+ "mark": {
+  "families": {
+   "red": {
+    "n": 4952,
+    "medS": 106.0,
+    "indark": 0.848,
+    "accepted": "stroke"
+   },
+   "magenta": {
+    "n": 13339,
+    "medS": 144.0,
+    "indark": 0.956,
+    "accepted": "stroke"
+   }
+  },
+  "type": "dashed outline",
+  "solidity": 0.041,
+  "pieces": 200,
+  "region_frac": 0.3427,
+  "n_components": 2
+ },
+ "merge_k_px": 20,
+ "outline": {
+  "n_components": 1,
+  "ortho": true,
+  "dp_vertices": 4,
+  "vertices": 4,
+  "valid": true,
+  "area_px": 8832.0,
+  "mask_area_px": 8979,
+  "closes": true,
+  "polygon_px": [
+   [
+    169.0,
+    301.0
+   ],
+   [
+    169.0,
+    429.0
+   ],
+   [
+    238.0,
+    429.0
+   ],
+   [
+    238.0,
+    301.0
+   ]
+  ],
+  "area_m2": 6.55,
+  "polygon_m": [
+   [
+    4.601,
+    8.194
+   ],
+   [
+    4.601,
+    11.679
+   ],
+   [
+    6.479,
+    11.679
+   ],
+   [
+    6.479,
+    8.194
+   ]
+  ]
+ },
+ "rooms": [
+  {
+   "id": 2,
+   "area_px": 4479,
+   "centroid_px": [
+    203.5,
+    332.5
+   ],
+   "polygon_px": [
+    [
+     169.0,
+     301.0
+    ],
+    [
+     169.0,
+     364.0
+    ],
+    [
+     238.0,
+     363.0
+    ],
+    [
+     238.0,
+     301.0
+    ]
+   ],
+   "area_m2": 3.32,
+   "polygon_m": [
+    [
+     4.601,
+     8.194
+    ],
+    [
+     4.601,
+     9.909
+    ],
+    [
+     6.479,
+     9.882
+    ],
+    [
+     6.479,
+     8.194
+    ]
+   ]
+  },
+  {
+   "id": 3,
+   "area_px": 3710,
+   "centroid_px": [
+    203.5,
+    403.0
+   ],
+   "polygon_px": [
+    [
+     169.0,
+     377.0
+    ],
+    [
+     169.0,
+     429.0
+    ],
+    [
+     238.0,
+     429.0
+    ],
+    [
+     238.0,
+     377.0
+    ]
+   ],
+   "area_m2": 2.75,
+   "polygon_m": [
+    [
+     4.601,
+     10.263
+    ],
+    [
+     4.601,
+     11.679
+    ],
+    [
+     6.479,
+     11.679
+    ],
+    [
+     6.479,
+     10.263
+    ]
+   ]
+  }
+ ],
+ "rooms_found": 2,
+ "rooms_sum_m2": 6.07,
+ "crop": [
+  98,
+  22,
+  620,
+  1280
+ ],
+ "checks": {
+  "a_outline": {
+   "area_m2": 6.55,
+   "truth_m2": null,
+   "level": "n/a",
+   "why": "no truth"
+  },
+  "b_rooms": {
+   "found": 2,
+   "expected": null,
+   "match": "n/a"
+  },
+  "c_rooms": [],
+  "d_closes": true,
+  "e_scale_check": {
+   "label": "6.78 width of the upper hall",
+   "value_m": 6.78,
+   "span_px": 238,
+   "seg": [
+    [
+     251,
+     220
+    ],
+    [
+     489,
+     220
+    ]
+   ],
+   "measured_m": 6.479,
+   "err_pct": -4.44
+  }
+ }
+}

@@ -1,0 +1,186 @@
+{
+ "object": "O11",
+ "input": "O11.jpg",
+ "size": [
+  967,
+  1286
+ ],
+ "deskew_deg": 0.375,
+ "deskew_measured_deg": 0.375,
+ "M": [
+  [
+   0.999979,
+   0.006545,
+   -0.17849
+  ],
+  [
+   -0.006545,
+   0.999979,
+   6.152005
+  ]
+ ],
+ "open_kernel_px": 5,
+ "walls": {
+  "centers": [
+   9.28,
+   25.49
+  ],
+  "n_medial": 8078,
+  "threshold_px": 17.39,
+  "thick_px": 25.49,
+  "thin_px": 9.28,
+  "share_thick": 0.403
+ },
+ "scale": {
+  "source": "3.71 height of 38-7",
+  "value_m": 3.71,
+  "span_px": 339,
+  "seg": [
+   [
+    680,
+    545
+   ],
+   [
+    680,
+    884
+   ]
+  ],
+  "m_per_px": 0.010944,
+  "check": {
+   "label": "3.65 height of 38-8",
+   "failed": true
+  }
+ },
+ "door_close_px": 100.5,
+ "mark": {
+  "families": {
+   "red": {
+    "n": 6789,
+    "medS": 59.0,
+    "indark": 0.72,
+    "accepted": false
+   },
+   "blue": {
+    "n": 2777,
+    "medS": 55.0,
+    "indark": 0.946,
+    "accepted": false
+   }
+  },
+  "type": "none"
+ },
+ "merge_k_px": 38,
+ "outline": {
+  "n_components": 0,
+  "closes": false
+ },
+ "rooms": [],
+ "rooms_found": 0,
+ "rooms_sum_m2": 0,
+ "crop": [
+  0,
+  0,
+  795,
+  1286
+ ],
+ "checks": {
+  "a_outline": {
+   "area_m2": null,
+   "truth_m2": 137.7,
+   "level": "n/a",
+   "why": "no outline (no rooms selected)"
+  },
+  "b_rooms": {
+   "found": 0,
+   "expected": 8,
+   "match": false
+  },
+  "c_rooms": [
+   {
+    "label": "38-1",
+    "truth_m2": 2.7,
+    "pos_norm": [
+     338,
+     925
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-2",
+    "truth_m2": 80.4,
+    "pos_norm": [
+     380,
+     770
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-3",
+    "truth_m2": 16.3,
+    "pos_norm": [
+     125,
+     505
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-4",
+    "truth_m2": 13.2,
+    "pos_norm": [
+     290,
+     440
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-5",
+    "truth_m2": 9.6,
+    "pos_norm": [
+     450,
+     440
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-6",
+    "truth_m2": 3.1,
+    "pos_norm": [
+     470,
+     525
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-7",
+    "truth_m2": 6.3,
+    "pos_norm": [
+     680,
+     640
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "38-8",
+    "truth_m2": 6.1,
+    "pos_norm": [
+     690,
+     445
+    ],
+    "room_id": null,
+    "status": "missed"
+   }
+  ],
+  "d_closes": false,
+  "e_scale_check": {
+   "label": "3.65 height of 38-8",
+   "failed": true
+  }
+ }
+}

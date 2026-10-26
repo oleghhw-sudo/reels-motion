@@ -1,0 +1,736 @@
+{
+  "generatedAt": "2026-10-26T11:11:13.557Z",
+  "script": "videos/agent-terminal/prepare-assets.mjs 1.0.0",
+  "packDir": "/Users/olegkhukhashvili/ANC/draft_exp/video_pack",
+  "publicPrefix": "videos/agent-terminal",
+  "pages": [
+    "O01",
+    "O02",
+    "O03",
+    "O04",
+    "O05",
+    "O06",
+    "O07",
+    "O08",
+    "O09",
+    "O10",
+    "O11"
+  ],
+  "thumb": {
+    "w": 240,
+    "h": 168
+  },
+  "files": [
+    {
+      "kind": "data",
+      "src": "results.json",
+      "srcSha256": "ba6aa773f16e224ff1e5a2f99de2a56b9874e9d46818afaa19d863d71d9bb356",
+      "file": "src/videos/agent-terminal/data/results.json",
+      "sha256": "ba6aa773f16e224ff1e5a2f99de2a56b9874e9d46818afaa19d863d71d9bb356"
+    },
+    {
+      "kind": "data",
+      "src": "scale.json",
+      "srcSha256": "3905db22aa5b20d9b0765c73d1ced1595e35f8ddcdb61fb21d3de4910a16fe9e",
+      "file": "src/videos/agent-terminal/data/scale.json",
+      "sha256": "3905db22aa5b20d9b0765c73d1ced1595e35f8ddcdb61fb21d3de4910a16fe9e"
+    },
+    {
+      "kind": "data",
+      "src": "real_examples.json",
+      "srcSha256": "8909835835463887345f12c8d759708644d95d95ad288bed575a10c2ee56197d",
+      "file": "src/videos/agent-terminal/data/real_examples.json",
+      "sha256": "8909835835463887345f12c8d759708644d95d95ad288bed575a10c2ee56197d"
+    },
+    {
+      "kind": "data",
+      "src": "stats.json",
+      "srcSha256": "2154b9faefe7bf622e5afb3e80abfd43dbcef2ca5d464f0d8de83b782a0268a0",
+      "file": "src/videos/agent-terminal/data/stats.json",
+      "sha256": "2154b9faefe7bf622e5afb3e80abfd43dbcef2ca5d464f0d8de83b782a0268a0"
+    },
+    {
+      "kind": "data",
+      "src": "truth.json",
+      "srcSha256": "7a3a3bc5805754cc1c4b4bbf4b150f1b714e82ac1144b9d8ddd4864d8b8c91c5",
+      "file": "src/videos/agent-terminal/data/truth.json",
+      "sha256": "7a3a3bc5805754cc1c4b4bbf4b150f1b714e82ac1144b9d8ddd4864d8b8c91c5"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O01/geometry.json",
+      "srcSha256": "2454f7aee40e56bfb7ffdf655e4c570c47d8e7151e5ad1f4d1f5a37b9e98c914",
+      "file": "src/videos/agent-terminal/data/geometry-O01.json",
+      "sha256": "2454f7aee40e56bfb7ffdf655e4c570c47d8e7151e5ad1f4d1f5a37b9e98c914"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O02/geometry.json",
+      "srcSha256": "7df7e50dc610b341faff1ea0c91cf0115c45f82876b9b53202b0bec76a07b37f",
+      "file": "src/videos/agent-terminal/data/geometry-O02.json",
+      "sha256": "7df7e50dc610b341faff1ea0c91cf0115c45f82876b9b53202b0bec76a07b37f"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O03/geometry.json",
+      "srcSha256": "33e8a5c6c8b48d40f10b8641f1954bef98dc7e356b4a22bea6aae4f64cb6039f",
+      "file": "src/videos/agent-terminal/data/geometry-O03.json",
+      "sha256": "33e8a5c6c8b48d40f10b8641f1954bef98dc7e356b4a22bea6aae4f64cb6039f"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O04/geometry.json",
+      "srcSha256": "ba645e1a52c6a0ba3806803c4cdc47e53ed44874a8c8470f47391e033910e2da",
+      "file": "src/videos/agent-terminal/data/geometry-O04.json",
+      "sha256": "ba645e1a52c6a0ba3806803c4cdc47e53ed44874a8c8470f47391e033910e2da"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O05/geometry.json",
+      "srcSha256": "700347d680a5b07c648b155f0070da23b1b54839027385c1db0d8fb961e57611",
+      "file": "src/videos/agent-terminal/data/geometry-O05.json",
+      "sha256": "700347d680a5b07c648b155f0070da23b1b54839027385c1db0d8fb961e57611"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O06/geometry.json",
+      "srcSha256": "f863af0c9ec8d0f8f5757f1f9a9544f12fc8f9d2d23863a79bb9ec1ac2f06062",
+      "file": "src/videos/agent-terminal/data/geometry-O06.json",
+      "sha256": "f863af0c9ec8d0f8f5757f1f9a9544f12fc8f9d2d23863a79bb9ec1ac2f06062"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O07/geometry.json",
+      "srcSha256": "6c100e3f95f7f0f9d4bfe79668e762faa500f38d82a1178f3a72663069b9adf4",
+      "file": "src/videos/agent-terminal/data/geometry-O07.json",
+      "sha256": "6c100e3f95f7f0f9d4bfe79668e762faa500f38d82a1178f3a72663069b9adf4"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O08/geometry.json",
+      "srcSha256": "3c699460df85d89c3a612922ecb36c81a86a7dbbbab913ba20fd113fd692dbf6",
+      "file": "src/videos/agent-terminal/data/geometry-O08.json",
+      "sha256": "3c699460df85d89c3a612922ecb36c81a86a7dbbbab913ba20fd113fd692dbf6"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O09/geometry.json",
+      "srcSha256": "216f1a4cae7e606d4cfa1e346cf62a2f487ba294dede9c9e763bef76daa7c2f0",
+      "file": "src/videos/agent-terminal/data/geometry-O09.json",
+      "sha256": "216f1a4cae7e606d4cfa1e346cf62a2f487ba294dede9c9e763bef76daa7c2f0"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O10/geometry.json",
+      "srcSha256": "405a8a79e7e49043f4d3181a99c70b52de720a56c99dbe5d60e4ef47249b833d",
+      "file": "src/videos/agent-terminal/data/geometry-O10.json",
+      "sha256": "405a8a79e7e49043f4d3181a99c70b52de720a56c99dbe5d60e4ef47249b833d"
+    },
+    {
+      "kind": "data",
+      "src": "frames/O11/geometry.json",
+      "srcSha256": "c099676918bee194d55337d210e7c387ab1d18dadf99a2f835b4778211f39a8c",
+      "file": "src/videos/agent-terminal/data/geometry-O11.json",
+      "sha256": "c099676918bee194d55337d210e7c387ab1d18dadf99a2f835b4778211f39a8c"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/01_input.png",
+      "srcSha256": "242b9cbc28ab305de4e6f877af9cd39a93fa679e5202a4c67420d37c163dbbc8",
+      "file": "public/videos/agent-terminal/frames/O01/01_input.png",
+      "sha256": "242b9cbc28ab305de4e6f877af9cd39a93fa679e5202a4c67420d37c163dbbc8"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/02_mark.png",
+      "srcSha256": "242b9cbc28ab305de4e6f877af9cd39a93fa679e5202a4c67420d37c163dbbc8",
+      "file": "public/videos/agent-terminal/frames/O01/02_mark.png",
+      "sha256": "242b9cbc28ab305de4e6f877af9cd39a93fa679e5202a4c67420d37c163dbbc8"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/03_walls.png",
+      "srcSha256": "a46022edd38702d5eae9bc8ebaef5cd49f2507bc1f3c22743a6731ce677a226f",
+      "file": "public/videos/agent-terminal/frames/O01/03_walls.png",
+      "sha256": "a46022edd38702d5eae9bc8ebaef5cd49f2507bc1f3c22743a6731ce677a226f"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/04_outline.png",
+      "srcSha256": "0b24ae2846aa659857b7fc99cdfbfb97cb5f7774ed31896e281834763235372e",
+      "file": "public/videos/agent-terminal/frames/O01/04_outline.png",
+      "sha256": "0b24ae2846aa659857b7fc99cdfbfb97cb5f7774ed31896e281834763235372e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/05_rooms.png",
+      "srcSha256": "9a0ce27239e3947cdd2e8efc1f6ae84eeb5aeea07fda7a6b7c01dd436118f216",
+      "file": "public/videos/agent-terminal/frames/O01/05_rooms.png",
+      "sha256": "9a0ce27239e3947cdd2e8efc1f6ae84eeb5aeea07fda7a6b7c01dd436118f216"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O01/06_check.png",
+      "srcSha256": "7da30bb901ed8d69111838b7aee4a7091a6c0290242af25838fca943d65d93ba",
+      "file": "public/videos/agent-terminal/frames/O01/06_check.png",
+      "sha256": "7da30bb901ed8d69111838b7aee4a7091a6c0290242af25838fca943d65d93ba"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/01_input.png",
+      "srcSha256": "e4eb5d055d2252e72888c879cb17f0cf3ddda0d07efb6075bd9a9960969fd94b",
+      "file": "public/videos/agent-terminal/frames/O02/01_input.png",
+      "sha256": "e4eb5d055d2252e72888c879cb17f0cf3ddda0d07efb6075bd9a9960969fd94b"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/02_mark.png",
+      "srcSha256": "e4eb5d055d2252e72888c879cb17f0cf3ddda0d07efb6075bd9a9960969fd94b",
+      "file": "public/videos/agent-terminal/frames/O02/02_mark.png",
+      "sha256": "e4eb5d055d2252e72888c879cb17f0cf3ddda0d07efb6075bd9a9960969fd94b"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/03_walls.png",
+      "srcSha256": "d8b5d30e329b3dea1475f26c50ab4c92e908074eed567fa4f4c07b4373fdb406",
+      "file": "public/videos/agent-terminal/frames/O02/03_walls.png",
+      "sha256": "d8b5d30e329b3dea1475f26c50ab4c92e908074eed567fa4f4c07b4373fdb406"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/04_outline.png",
+      "srcSha256": "b505f8efa5273eaa226c1db47f252363d8b4657086e6076ef379dfb24e4f9978",
+      "file": "public/videos/agent-terminal/frames/O02/04_outline.png",
+      "sha256": "b505f8efa5273eaa226c1db47f252363d8b4657086e6076ef379dfb24e4f9978"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/05_rooms.png",
+      "srcSha256": "280f5855c8a2165ae7e467de2bf206a730c16acfdd4bd69e96f66628e22d4f1d",
+      "file": "public/videos/agent-terminal/frames/O02/05_rooms.png",
+      "sha256": "280f5855c8a2165ae7e467de2bf206a730c16acfdd4bd69e96f66628e22d4f1d"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O02/06_check.png",
+      "srcSha256": "700d25ca5008e8d60aa1eeee94c616ca13c2d38244047234bf64c4ba97b10c7d",
+      "file": "public/videos/agent-terminal/frames/O02/06_check.png",
+      "sha256": "700d25ca5008e8d60aa1eeee94c616ca13c2d38244047234bf64c4ba97b10c7d"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/01_input.png",
+      "srcSha256": "2ab6df96e736b4d274158ede3733ac172f18b9325f70a4fb33de02beeed00be0",
+      "file": "public/videos/agent-terminal/frames/O03/01_input.png",
+      "sha256": "2ab6df96e736b4d274158ede3733ac172f18b9325f70a4fb33de02beeed00be0"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/02_mark.png",
+      "srcSha256": "2ab6df96e736b4d274158ede3733ac172f18b9325f70a4fb33de02beeed00be0",
+      "file": "public/videos/agent-terminal/frames/O03/02_mark.png",
+      "sha256": "2ab6df96e736b4d274158ede3733ac172f18b9325f70a4fb33de02beeed00be0"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/03_walls.png",
+      "srcSha256": "37743fa9462a80a28e8291e84480ce661d129dcb93c9977a8044fa6adf094fb6",
+      "file": "public/videos/agent-terminal/frames/O03/03_walls.png",
+      "sha256": "37743fa9462a80a28e8291e84480ce661d129dcb93c9977a8044fa6adf094fb6"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/04_outline.png",
+      "srcSha256": "7336d84087e8cadab24f13a6bc5cfcc0413e947f837264a6af515055e1f05740",
+      "file": "public/videos/agent-terminal/frames/O03/04_outline.png",
+      "sha256": "7336d84087e8cadab24f13a6bc5cfcc0413e947f837264a6af515055e1f05740"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/05_rooms.png",
+      "srcSha256": "df6408198ef13aff7f5ec8f84d9e28673b518146cea2982d5563932f60fb2fd2",
+      "file": "public/videos/agent-terminal/frames/O03/05_rooms.png",
+      "sha256": "df6408198ef13aff7f5ec8f84d9e28673b518146cea2982d5563932f60fb2fd2"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O03/06_check.png",
+      "srcSha256": "0f55dd3753fecb7af969896358d36321ac91e323a252f498f1735ac3013dfb5a",
+      "file": "public/videos/agent-terminal/frames/O03/06_check.png",
+      "sha256": "0f55dd3753fecb7af969896358d36321ac91e323a252f498f1735ac3013dfb5a"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/01_input.png",
+      "srcSha256": "15ac9cec7803981856973d19890e3f5087db5e9fa6f1603d38a74f1468cb2fea",
+      "file": "public/videos/agent-terminal/frames/O04/01_input.png",
+      "sha256": "15ac9cec7803981856973d19890e3f5087db5e9fa6f1603d38a74f1468cb2fea"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/02_mark.png",
+      "srcSha256": "15ac9cec7803981856973d19890e3f5087db5e9fa6f1603d38a74f1468cb2fea",
+      "file": "public/videos/agent-terminal/frames/O04/02_mark.png",
+      "sha256": "15ac9cec7803981856973d19890e3f5087db5e9fa6f1603d38a74f1468cb2fea"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/03_walls.png",
+      "srcSha256": "66126df74bc493a4d5f2e275dde4b9a3dd4968507dee078f2bf22e13bba0cfef",
+      "file": "public/videos/agent-terminal/frames/O04/03_walls.png",
+      "sha256": "66126df74bc493a4d5f2e275dde4b9a3dd4968507dee078f2bf22e13bba0cfef"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/04_outline.png",
+      "srcSha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e",
+      "file": "public/videos/agent-terminal/frames/O04/04_outline.png",
+      "sha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/05_rooms.png",
+      "srcSha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e",
+      "file": "public/videos/agent-terminal/frames/O04/05_rooms.png",
+      "sha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O04/06_check.png",
+      "srcSha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e",
+      "file": "public/videos/agent-terminal/frames/O04/06_check.png",
+      "sha256": "52f7f602e6123d25b744d8f631620b692e0f604c7f63fb9d9f4a2b39badbdd1e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/01_input.png",
+      "srcSha256": "438e6d1a934c2c47fda1a7ad1b4e9a2c2ebd644cc0ce4e99b4d6995375ae4ada",
+      "file": "public/videos/agent-terminal/frames/O05/01_input.png",
+      "sha256": "438e6d1a934c2c47fda1a7ad1b4e9a2c2ebd644cc0ce4e99b4d6995375ae4ada"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/02_mark.png",
+      "srcSha256": "47d9646b081e884ad0a4640e483d743e9b6c6af19f6a0ab7803938970ed3cc11",
+      "file": "public/videos/agent-terminal/frames/O05/02_mark.png",
+      "sha256": "47d9646b081e884ad0a4640e483d743e9b6c6af19f6a0ab7803938970ed3cc11"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/03_walls.png",
+      "srcSha256": "69985c5699a417e2e42b098d40dad079380f1fa669e77ca0cd1dd5e9eac3b223",
+      "file": "public/videos/agent-terminal/frames/O05/03_walls.png",
+      "sha256": "69985c5699a417e2e42b098d40dad079380f1fa669e77ca0cd1dd5e9eac3b223"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/04_outline.png",
+      "srcSha256": "018409e73e4e0198ed64c375b49694c5e47871ae50763db00ffac009106f0abd",
+      "file": "public/videos/agent-terminal/frames/O05/04_outline.png",
+      "sha256": "018409e73e4e0198ed64c375b49694c5e47871ae50763db00ffac009106f0abd"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/05_rooms.png",
+      "srcSha256": "1fd0b782aade5f35a7958ed1e742a7876020591a7ce4590989b163a14cb96334",
+      "file": "public/videos/agent-terminal/frames/O05/05_rooms.png",
+      "sha256": "1fd0b782aade5f35a7958ed1e742a7876020591a7ce4590989b163a14cb96334"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O05/06_check.png",
+      "srcSha256": "1e66caeeddcef30ecacf2aaf8d1f7b729d928e711fcd6a50369396afe0ba3ebd",
+      "file": "public/videos/agent-terminal/frames/O05/06_check.png",
+      "sha256": "1e66caeeddcef30ecacf2aaf8d1f7b729d928e711fcd6a50369396afe0ba3ebd"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/01_input.png",
+      "srcSha256": "22d05ecead34bf61a8d0cc823b0af9c407b08353d877933867817bbd045c8845",
+      "file": "public/videos/agent-terminal/frames/O06/01_input.png",
+      "sha256": "22d05ecead34bf61a8d0cc823b0af9c407b08353d877933867817bbd045c8845"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/02_mark.png",
+      "srcSha256": "0ad5bddad321ad2092acb126e69cdab094d1ed37b7c4abf894586d880c647891",
+      "file": "public/videos/agent-terminal/frames/O06/02_mark.png",
+      "sha256": "0ad5bddad321ad2092acb126e69cdab094d1ed37b7c4abf894586d880c647891"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/03_walls.png",
+      "srcSha256": "eba8bb395198de2c8cade78251ba07f9389b8e3119e015b32f2a5d1702fb2ca7",
+      "file": "public/videos/agent-terminal/frames/O06/03_walls.png",
+      "sha256": "eba8bb395198de2c8cade78251ba07f9389b8e3119e015b32f2a5d1702fb2ca7"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/04_outline.png",
+      "srcSha256": "cb7c5bbf694013c44cb8b2182164c10380a26cf75b252e499b86bd3b99db0f6e",
+      "file": "public/videos/agent-terminal/frames/O06/04_outline.png",
+      "sha256": "cb7c5bbf694013c44cb8b2182164c10380a26cf75b252e499b86bd3b99db0f6e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/05_rooms.png",
+      "srcSha256": "f2bcff000db99dc7a4ffc3556974d3f2ada87b671ba78dfbfeeb2b6e65a0ca70",
+      "file": "public/videos/agent-terminal/frames/O06/05_rooms.png",
+      "sha256": "f2bcff000db99dc7a4ffc3556974d3f2ada87b671ba78dfbfeeb2b6e65a0ca70"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O06/06_check.png",
+      "srcSha256": "f51addbb17238568d3489bf372a24c8a714a3d2e5c7eec6ac71c9533b495306f",
+      "file": "public/videos/agent-terminal/frames/O06/06_check.png",
+      "sha256": "f51addbb17238568d3489bf372a24c8a714a3d2e5c7eec6ac71c9533b495306f"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/01_input.png",
+      "srcSha256": "7c21ac71fcb38abba98e7ce5b1b442b02b5f092bef15f2b1ea3a59d11ecd71c4",
+      "file": "public/videos/agent-terminal/frames/O07/01_input.png",
+      "sha256": "7c21ac71fcb38abba98e7ce5b1b442b02b5f092bef15f2b1ea3a59d11ecd71c4"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/02_mark.png",
+      "srcSha256": "289d173fb903515c00c83f54e92526e36a2374e168b1b012062a18d660812239",
+      "file": "public/videos/agent-terminal/frames/O07/02_mark.png",
+      "sha256": "289d173fb903515c00c83f54e92526e36a2374e168b1b012062a18d660812239"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/03_walls.png",
+      "srcSha256": "5a447fa93d53fa78781b2f00f9e7ee5ca9fbe27f1794bd151cc40a5b179ca9ed",
+      "file": "public/videos/agent-terminal/frames/O07/03_walls.png",
+      "sha256": "5a447fa93d53fa78781b2f00f9e7ee5ca9fbe27f1794bd151cc40a5b179ca9ed"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/04_outline.png",
+      "srcSha256": "bd57d010cbcdf82929de4fdc2bd23c248839e929e9f8e2aaf40423d3a5503a77",
+      "file": "public/videos/agent-terminal/frames/O07/04_outline.png",
+      "sha256": "bd57d010cbcdf82929de4fdc2bd23c248839e929e9f8e2aaf40423d3a5503a77"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/05_rooms.png",
+      "srcSha256": "a4d5dda84351de515f33398cb1e6a17ee6f479fb0415f399e6a27458d4fafa28",
+      "file": "public/videos/agent-terminal/frames/O07/05_rooms.png",
+      "sha256": "a4d5dda84351de515f33398cb1e6a17ee6f479fb0415f399e6a27458d4fafa28"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O07/06_check.png",
+      "srcSha256": "5367af00288ec5575e3d767d4ab05978caab589d90c30577dd657ad24ad23a29",
+      "file": "public/videos/agent-terminal/frames/O07/06_check.png",
+      "sha256": "5367af00288ec5575e3d767d4ab05978caab589d90c30577dd657ad24ad23a29"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/01_input.png",
+      "srcSha256": "e5c804750eddb5ba4ad5bfdd2fc3ae2d074904418703fd92651f42480e0e4fc4",
+      "file": "public/videos/agent-terminal/frames/O08/01_input.png",
+      "sha256": "e5c804750eddb5ba4ad5bfdd2fc3ae2d074904418703fd92651f42480e0e4fc4"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/02_mark.png",
+      "srcSha256": "28fb26c1b5942da4336ccb4406ff0be341435ac0eef10f8d77c333814ec12119",
+      "file": "public/videos/agent-terminal/frames/O08/02_mark.png",
+      "sha256": "28fb26c1b5942da4336ccb4406ff0be341435ac0eef10f8d77c333814ec12119"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/03_walls.png",
+      "srcSha256": "b1a89a6594da0fd2cc20b241ce2aa70ccffe5d5d4d3fe88d32e75968bdc9e4c3",
+      "file": "public/videos/agent-terminal/frames/O08/03_walls.png",
+      "sha256": "b1a89a6594da0fd2cc20b241ce2aa70ccffe5d5d4d3fe88d32e75968bdc9e4c3"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/04_outline.png",
+      "srcSha256": "f53b5f8fafb094ecf720f2ed8d45d460f79dc48318c52f709394b2840680ccce",
+      "file": "public/videos/agent-terminal/frames/O08/04_outline.png",
+      "sha256": "f53b5f8fafb094ecf720f2ed8d45d460f79dc48318c52f709394b2840680ccce"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/05_rooms.png",
+      "srcSha256": "7594580cf55db2ec18a1b254a7d65bcdf9c05cf04f7ded29faa8453b39eca8c7",
+      "file": "public/videos/agent-terminal/frames/O08/05_rooms.png",
+      "sha256": "7594580cf55db2ec18a1b254a7d65bcdf9c05cf04f7ded29faa8453b39eca8c7"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O08/06_check.png",
+      "srcSha256": "9b5459af5056baa1cc48b636e4fe67b52983c2c3df3a2c2ff1f5f365fae6bcf6",
+      "file": "public/videos/agent-terminal/frames/O08/06_check.png",
+      "sha256": "9b5459af5056baa1cc48b636e4fe67b52983c2c3df3a2c2ff1f5f365fae6bcf6"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/01_input.png",
+      "srcSha256": "9cb05cae61c4b6dd6833702b5705abe18c00756fb648319a449def9e79000de1",
+      "file": "public/videos/agent-terminal/frames/O09/01_input.png",
+      "sha256": "9cb05cae61c4b6dd6833702b5705abe18c00756fb648319a449def9e79000de1"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/02_mark.png",
+      "srcSha256": "6b6e5f278d15698102ca7f8854d404617f0193cfa007e74ab0ee9842100536f4",
+      "file": "public/videos/agent-terminal/frames/O09/02_mark.png",
+      "sha256": "6b6e5f278d15698102ca7f8854d404617f0193cfa007e74ab0ee9842100536f4"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/03_walls.png",
+      "srcSha256": "f4526bcebfbefe68ba0fa82434bd0e89641f42d8da8d6bdd36f153b54180d634",
+      "file": "public/videos/agent-terminal/frames/O09/03_walls.png",
+      "sha256": "f4526bcebfbefe68ba0fa82434bd0e89641f42d8da8d6bdd36f153b54180d634"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/04_outline.png",
+      "srcSha256": "2a710d91682f363a4bd85135e1cc8d42cd0b5160b3c63d347fd6fea8e2d3df4d",
+      "file": "public/videos/agent-terminal/frames/O09/04_outline.png",
+      "sha256": "2a710d91682f363a4bd85135e1cc8d42cd0b5160b3c63d347fd6fea8e2d3df4d"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/05_rooms.png",
+      "srcSha256": "407cb322a658bfb2103b69548fc7c126a6806484e8c0fb12154a0bce386b6456",
+      "file": "public/videos/agent-terminal/frames/O09/05_rooms.png",
+      "sha256": "407cb322a658bfb2103b69548fc7c126a6806484e8c0fb12154a0bce386b6456"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O09/06_check.png",
+      "srcSha256": "37c9c52995a27c4b92ac5269239bf9857493550ede8d6c44b2f04e59f0116a48",
+      "file": "public/videos/agent-terminal/frames/O09/06_check.png",
+      "sha256": "37c9c52995a27c4b92ac5269239bf9857493550ede8d6c44b2f04e59f0116a48"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/01_input.png",
+      "srcSha256": "8f3da22561a9f3972a5f5c5441a0fea22e07ee11ef187e536e9ca2d244b9f97b",
+      "file": "public/videos/agent-terminal/frames/O10/01_input.png",
+      "sha256": "8f3da22561a9f3972a5f5c5441a0fea22e07ee11ef187e536e9ca2d244b9f97b"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/02_mark.png",
+      "srcSha256": "5c0cce0ed43c04aa3b46ff326efbcad085f27f9aadd4078e04498b1d90230ed5",
+      "file": "public/videos/agent-terminal/frames/O10/02_mark.png",
+      "sha256": "5c0cce0ed43c04aa3b46ff326efbcad085f27f9aadd4078e04498b1d90230ed5"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/03_walls.png",
+      "srcSha256": "8ba32ea10ce3298e8e2982bbba7dad5d9b274a72a26309d1c57d77dd1a4b63f8",
+      "file": "public/videos/agent-terminal/frames/O10/03_walls.png",
+      "sha256": "8ba32ea10ce3298e8e2982bbba7dad5d9b274a72a26309d1c57d77dd1a4b63f8"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/04_outline.png",
+      "srcSha256": "7ed7ebfd5da9f98bc78aaace71092e2c955c4845a5fe88e3f3148ad9cccde6c9",
+      "file": "public/videos/agent-terminal/frames/O10/04_outline.png",
+      "sha256": "7ed7ebfd5da9f98bc78aaace71092e2c955c4845a5fe88e3f3148ad9cccde6c9"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/05_rooms.png",
+      "srcSha256": "65b44fe6111f456ab08f0d8522232b82ad79ae3c42088f6e4779c206e68eef0e",
+      "file": "public/videos/agent-terminal/frames/O10/05_rooms.png",
+      "sha256": "65b44fe6111f456ab08f0d8522232b82ad79ae3c42088f6e4779c206e68eef0e"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O10/06_check.png",
+      "srcSha256": "522c8631760d4167628e0c5793d95059ba4749055560348caf322e6b0016b343",
+      "file": "public/videos/agent-terminal/frames/O10/06_check.png",
+      "sha256": "522c8631760d4167628e0c5793d95059ba4749055560348caf322e6b0016b343"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/01_input.png",
+      "srcSha256": "4d942e4247edf3a803d9d09523cf289491734314210c9fbc5727d3dc08d0758a",
+      "file": "public/videos/agent-terminal/frames/O11/01_input.png",
+      "sha256": "4d942e4247edf3a803d9d09523cf289491734314210c9fbc5727d3dc08d0758a"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/02_mark.png",
+      "srcSha256": "4d942e4247edf3a803d9d09523cf289491734314210c9fbc5727d3dc08d0758a",
+      "file": "public/videos/agent-terminal/frames/O11/02_mark.png",
+      "sha256": "4d942e4247edf3a803d9d09523cf289491734314210c9fbc5727d3dc08d0758a"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/03_walls.png",
+      "srcSha256": "58513db72639352c6f72181a9be4654061b8ad77e53e61755de20a00ff7a94a9",
+      "file": "public/videos/agent-terminal/frames/O11/03_walls.png",
+      "sha256": "58513db72639352c6f72181a9be4654061b8ad77e53e61755de20a00ff7a94a9"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/04_outline.png",
+      "srcSha256": "9de7904f12e9d3faf1fd3731a04bcad6569532e7332dc113992f3605ec099c1a",
+      "file": "public/videos/agent-terminal/frames/O11/04_outline.png",
+      "sha256": "9de7904f12e9d3faf1fd3731a04bcad6569532e7332dc113992f3605ec099c1a"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/05_rooms.png",
+      "srcSha256": "9de7904f12e9d3faf1fd3731a04bcad6569532e7332dc113992f3605ec099c1a",
+      "file": "public/videos/agent-terminal/frames/O11/05_rooms.png",
+      "sha256": "9de7904f12e9d3faf1fd3731a04bcad6569532e7332dc113992f3605ec099c1a"
+    },
+    {
+      "kind": "frame",
+      "src": "frames/O11/06_check.png",
+      "srcSha256": "7e4ca1bd6f56f709e429181872323fd5afbb37e1e910691ed0df3782a4d01a64",
+      "file": "public/videos/agent-terminal/frames/O11/06_check.png",
+      "sha256": "7e4ca1bd6f56f709e429181872323fd5afbb37e1e910691ed0df3782a4d01a64"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O01/01_input.png",
+      "srcSha256": "242b9cbc28ab305de4e6f877af9cd39a93fa679e5202a4c67420d37c163dbbc8",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O01.png",
+      "sha256": "1bea22b49d331cbe9a0d80ca5e97bf72807471bf38a934f71e7191102060066e"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O02/01_input.png",
+      "srcSha256": "e4eb5d055d2252e72888c879cb17f0cf3ddda0d07efb6075bd9a9960969fd94b",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O02.png",
+      "sha256": "5cfd99daf9e126e071b4ffc5a88aaaf8c61ac1357e5807914582f39357ecf478"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O03/01_input.png",
+      "srcSha256": "2ab6df96e736b4d274158ede3733ac172f18b9325f70a4fb33de02beeed00be0",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O03.png",
+      "sha256": "0b131f138949663873123221ce38c4f853f4f008bc0463bbaa9d2f43f484a487"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O04/01_input.png",
+      "srcSha256": "15ac9cec7803981856973d19890e3f5087db5e9fa6f1603d38a74f1468cb2fea",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O04.png",
+      "sha256": "e12052ab0d333b7b6e87761062d6d9bb046f087aaf69f601a6236ef9b3ef1b68"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O05/01_input.png",
+      "srcSha256": "438e6d1a934c2c47fda1a7ad1b4e9a2c2ebd644cc0ce4e99b4d6995375ae4ada",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O05.png",
+      "sha256": "49539531d2111b49197d23de7ec3a5533f64bced6060be4c7b009936b7085557"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O06/01_input.png",
+      "srcSha256": "22d05ecead34bf61a8d0cc823b0af9c407b08353d877933867817bbd045c8845",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O06.png",
+      "sha256": "d53083b8c1e33312fef52788634f6175e8ca8d403de5bb6b5b4077c876943c43"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O07/01_input.png",
+      "srcSha256": "7c21ac71fcb38abba98e7ce5b1b442b02b5f092bef15f2b1ea3a59d11ecd71c4",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O07.png",
+      "sha256": "d1537a101f167f9f0cb8165f4ec509bfcc2d8f7489f8d15cc286619c1361b14d"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O08/01_input.png",
+      "srcSha256": "e5c804750eddb5ba4ad5bfdd2fc3ae2d074904418703fd92651f42480e0e4fc4",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O08.png",
+      "sha256": "65b166f763bb2b517ccee0f661343d08aacde871bf179c72e5d9d85780237ac7"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O09/01_input.png",
+      "srcSha256": "9cb05cae61c4b6dd6833702b5705abe18c00756fb648319a449def9e79000de1",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O09.png",
+      "sha256": "6622d278d99213702a0cc3c87bfb76fffa39c56f3a4fc9cb5c138f055f6ee93f"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O10/01_input.png",
+      "srcSha256": "8f3da22561a9f3972a5f5c5441a0fea22e07ee11ef187e536e9ca2d244b9f97b",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O10.png",
+      "sha256": "f1767cd07b12f459b1c2a14ba50530874a1897f1d38f3e5cfd81c21cc8af60bd"
+    },
+    {
+      "kind": "thumb",
+      "src": "frames/O11/01_input.png",
+      "srcSha256": "4d942e4247edf3a803d9d09523cf289491734314210c9fbc5727d3dc08d0758a",
+      "size": [
+        240,
+        168
+      ],
+      "file": "public/videos/agent-terminal/thumbs/O11.png",
+      "sha256": "ac1ddf6745f652ef32251d4745e75953b96f2595e02fd650f753286f02838585"
+    },
+    {
+      "kind": "bg",
+      "src": null,
+      "srcSha256": null,
+      "recipe": {
+        "w": 1920,
+        "h": 1080,
+        "color": "0x0b0f14",
+        "grid": 64,
+        "gridColor": "0x161d26@0.9",
+        "noiseSeed": 20,
+        "noiseStrength": 7
+      },
+      "file": "public/videos/agent-terminal/bg.png",
+      "sha256": "31d77639bd93e67a4e8427e170f55486b3142c8b99a5499bbab7903a49e16bd0"
+    }
+  ]
+}

@@ -16,7 +16,9 @@
     "sfx:collect": "node sfx/collect.mjs",
     "sfx:lab": "node sfx/lab/serve.mjs",
     "mia:prepare": "node --experimental-strip-types --no-warnings videos/mia-outro/prepare-assets.mjs",
-    "mia:zones": "node --experimental-strip-types --no-warnings videos/mia-outro/check-zones.mjs"
+    "mia:zones": "node --experimental-strip-types --no-warnings videos/mia-outro/check-zones.mjs",
+    "agent:prepare": "node videos/agent-terminal/prepare-assets.mjs",
+    "test:agent": "node --experimental-strip-types --no-warnings src/videos/agent-terminal/numbers.test.ts"
   },
   "dependencies": {
     "@paper-design/shaders": "0.0.81",

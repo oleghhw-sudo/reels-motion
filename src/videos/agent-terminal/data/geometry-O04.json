@@ -1,0 +1,115 @@
+{
+ "object": "O04",
+ "input": "O04.jpg",
+ "size": [
+  900,
+  1286
+ ],
+ "deskew_deg": 0.375,
+ "deskew_measured_deg": 0.375,
+ "M": [
+  [
+   0.999979,
+   0.006545,
+   -0.179208
+  ],
+  [
+   -0.006545,
+   0.999979,
+   5.93275
+  ]
+ ],
+ "open_kernel_px": 5,
+ "walls": {
+  "centers": [
+   14.64,
+   24.5
+  ],
+  "n_medial": 423,
+  "threshold_px": 19.57,
+  "thick_px": 24.5,
+  "thin_px": 14.64,
+  "share_thick": 0.699
+ },
+ "scale": {
+  "source": "primary scanline failed: 4.36 width of room 35"
+ },
+ "door_close_px": 45.0,
+ "mark": {
+  "families": {
+   "red": {
+    "n": 229,
+    "medS": 72.0,
+    "indark": 0.996,
+    "accepted": false
+   },
+   "blue": {
+    "n": 254,
+    "medS": 51.0,
+    "indark": 1.0,
+    "accepted": false
+   }
+  },
+  "type": "none"
+ },
+ "merge_k_px": 37,
+ "outline": {
+  "n_components": 0,
+  "closes": false
+ },
+ "rooms": [],
+ "rooms_found": 0,
+ "crop": [
+  328,
+  228,
+  640,
+  461
+ ],
+ "checks": {
+  "a_outline": {
+   "area_m2": null,
+   "truth_m2": 50.1,
+   "level": "n/a",
+   "why": "no scale"
+  },
+  "b_rooms": {
+   "found": 0,
+   "expected": 3,
+   "match": false
+  },
+  "c_rooms": [
+   {
+    "label": "34",
+    "truth_m2": 19.7,
+    "pos_norm": [
+     350,
+     350
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "35",
+    "truth_m2": 16.9,
+    "pos_norm": [
+     357,
+     548
+    ],
+    "room_id": null,
+    "status": "missed"
+   },
+   {
+    "label": "36",
+    "truth_m2": 13.5,
+    "pos_norm": [
+     350,
+     712
+    ],
+    "room_id": null,
+    "status": "missed"
+   }
+  ],
+  "d_closes": false,
+  "e_scale_check": null
+ }
+}
