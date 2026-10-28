@@ -1,6 +1,6 @@
 // src/matte/MatteLab.tsx — лаборатория маски (задача 025): композиция MatteLab, props { id }.
 // Показывает: градиентный фон → круг «за человеком», привязанный к лицу (face.json) → person.mov с альфой →
-// сверху рамка лица (QA). Длина — по face.json. Still: npm run still -- MatteLab 60 --props '{"id":"<id>"}'
+// сверху рамка лица (QA); faceAt = null (source none, человека нет) → ни круга, ни рамки. Длина — по face.json. Still: npm run still -- MatteLab 60 --props '{"id":"<id>"}'
 import React from 'react';
 import { AbsoluteFill, CalculateMetadataFunction, useCurrentFrame, useVideoConfig } from 'remotion';
 import { z } from 'zod';
@@ -28,14 +28,14 @@ export const MatteLab: React.FC<Props> = ({ id, face }) => {
   return (
     <AbsoluteFill style={{ background: 'linear-gradient(180deg, #1b2230 0%, #3a2f4a 100%)' }}>
       <BehindPerson person={src.person}>
-        {f && f.source !== 'none' ? (
+        {f ? (
           <div style={{ position: 'absolute', left: f.cx - r, top: f.cy - r, width: 2 * r, height: 2 * r, borderRadius: '50%', background: '#f2c94c' }} />
         ) : null}
       </BehindPerson>
-      {f && f.source !== 'none' ? (
+      {f ? (
         <div style={{ position: 'absolute', left: f.cx - f.w / 2, top: f.cy - f.w * 0.625, width: f.w, height: f.w * 1.25, border: `4px solid ${f.source === 'vision' ? '#2ee07a' : f.source === 'silhouette' ? '#ffd200' : '#aaaaaa'}` }} />
       ) : null}
-      <div style={{ position: 'absolute', left: 40, top: 60, fontFamily: 'monospace', fontSize: 36, color: '#fff' }}>{`${id} · ${t.toFixed(2)} s · ${f?.source ?? '—'}`}</div>
+      <div style={{ position: 'absolute', left: 40, top: 60, fontFamily: 'monospace', fontSize: 36, color: '#fff' }}>{`${id} · ${t.toFixed(2)} s · ${f?.source ?? 'none (человека нет)'}`}</div>
     </AbsoluteFill>
   );
 };

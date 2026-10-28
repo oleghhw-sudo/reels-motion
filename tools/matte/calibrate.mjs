@@ -2,7 +2,7 @@
 // tools/matte/calibrate.mjs — метрики маски против правды (задача 025, калибровка).
 //   npm run matte:calibrate -- --truth <id-правды> --test <id> [--band 8] [--still 0.02] [--hole 0.005]
 //       на кадр: IoU (порог 127); ошибка по краю — средняя |test − truth| в полосе ±band px вокруг контура правды;
-//       мерцание — средняя |m_t − m_{t−1}| в той же полосе на кадрах, где правда почти не меняется
+//       flickerEdge — средняя |m_t − m_{t−1}| в той же полосе по всем кадрам; flickerEdgeQuiet — то же на кадрах, где правда почти не меняется
 //       (доля изменившихся пикселей правды < still от её площади); дыра в торсе — компонента фона теста внутри его
 //       силуэта площадью > hole от кадра (на 360×640), где по правде человек; скорость — renderSecPerSec из matte.json.
 //       → MATTE_DIR/_calibration/<test>.json и строка таблицы.
@@ -100,22 +100,22 @@ const compare = (truthBuf, testBuf, label) => {
     label, frames: n,
     iouMean: mean(per.map((p) => p.iou)), iouMin: Math.min(...per.map((p) => p.iou)), iouP10: [...per.map((p) => p.iou)].sort((a, b) => a - b)[Math.floor(n * 0.1)],
     edgeMean: mean(per.map((p) => p.edge)),
-    flickerStill: mean(stillFrames.map((p) => p.flicker)), stillFrames: stillFrames.length,
-    flickerAll: mean(per.filter((p) => p.flicker !== null).map((p) => p.flicker)),
+    flickerEdgeQuiet: mean(stillFrames.map((p) => p.flicker)), quietFrames: stillFrames.length,
+    flickerEdge: mean(per.filter((p) => p.flicker !== null).map((p) => p.flicker)),
     holeFrames: per.filter((p) => p.holeFrame).length, holeFrac: per.filter((p) => p.holeFrame).length / n, holeMax: Math.max(...per.map((p) => p.hole)),
     params: { band: BAND, still: STILL, hole: HOLE },
   };
   return { summary: r, per };
 };
 const fmt = (x, d = 3) => (x === null || x === undefined ? '—' : Number(x).toFixed(d));
-const row = (s, extra = '') => `| ${s.label} | ${fmt(s.iouMean)} | ${fmt(s.iouMin)} | ${fmt(s.edgeMean)} | ${fmt(s.flickerStill, 4)} (${s.stillFrames} к.) | ${fmt(s.flickerAll, 4)} | ${s.holeFrames}/${s.frames} | ${extra} |`;
+const row = (s, extra = '') => `| ${s.label} | ${fmt(s.iouMean)} | ${fmt(s.iouMin)} | ${fmt(s.edgeMean)} | ${fmt(s.flickerEdgeQuiet, 4)} (${s.quietFrames} к.) | ${fmt(s.flickerEdge, 4)} | ${s.holeFrames}/${s.frames} | ${extra} |`;
 
 if (flag('--table')) {
   // сводная таблица по всем MATTE_DIR/_calibration/*.json (сортировка по имени теста)
   const dir = join(MATTE_DIR, '_calibration');
   const files = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).sort() : [];
-  console.log('| тест | движок | IoU ср. | IoU мин. | край | мерцание (тихие кадры) | мерцание (все) | дыры | с/с |');
-  for (const f of files) { const { summary: s } = JSON.parse(readFileSync(join(dir, f), 'utf8')); console.log(`| ${s.label} | ${s.engine} | ${fmt(s.iouMean)} | ${fmt(s.iouMin)} | ${fmt(s.edgeMean)} | ${fmt(s.flickerStill, 4)} (${s.stillFrames}) | ${fmt(s.flickerAll, 4)} | ${s.holeFrames}/${s.frames} | ${s.renderSecPerSec} |`); }
+  console.log('| тест | движок | IoU ср. | IoU мин. | край | flickerEdgeQuiet (тихих к.) | flickerEdge | дыры | с/с (справка) |');
+  for (const f of files) { const { summary: s } = JSON.parse(readFileSync(join(dir, f), 'utf8')); console.log(`| ${s.label} | ${s.engine} | ${fmt(s.iouMean)} | ${fmt(s.iouMin)} | ${fmt(s.edgeMean)} | ${fmt(s.flickerEdgeQuiet, 4)} (${s.quietFrames}) | ${fmt(s.flickerEdge, 4)} | ${s.holeFrames}/${s.frames} | ${s.renderSecPerSec} |`); }
   process.exit(0);
 }
 if (flag('--self-test')) {
@@ -137,8 +137,18 @@ if (opt('--empty')) {
   for (let i = 0; i < n; i++) { let area = 0; for (let p = 0; p < NPX; p++) { const v = buf[i * NPX + p]; if (v > maxV) maxV = v; if (v > 127) area++; } if (area > maxArea) maxArea = area; }
   const face = JSON.parse(readFileSync(join(MATTE_DIR, id, 'face.json'), 'utf8'));
   const src = {}; for (const f of face.frames) src[f.source] = (src[f.source] ?? 0) + 1;
-  const ok = maxArea / NPX < 0.005 && Object.keys(src).every((s) => s === 'hold' || s === 'none');
-  console.log(`${id}: кадров ${n}; максимум маски ${maxV}/255, максимальная площадь >127: ${(maxArea / NPX * 100).toFixed(3)} % кадра; лицо ${JSON.stringify(src)} → ${ok ? 'OK: пусто, ложной фигуры нет' : 'ПРОВАЛ: ложная фигура или лицо'}`);
+  // лицо не висит без человека (025-Б п. 2): hold допустим не дольше noneAfter кадров после каждой потери маски
+  const noneAfter = Math.round(0.5 * face.fps); // допуск по правилу (0,5 с), не из face.json — иначе подмена --none-after не ловится
+  let holdRun = 0, holdRunMax = 0;
+  for (const f of face.frames) { holdRun = f.source === 'hold' ? holdRun + 1 : 0; if (holdRun > holdRunMax) holdRunMax = holdRun; }
+  const holdOk = holdRunMax <= noneAfter;
+  const at = (i) => face.frames[i]?.source ?? '—';
+  const reasons = [];
+  if (maxArea / NPX >= 0.005) reasons.push('ложная фигура (маска > 0,5 % кадра)');
+  if (!Object.keys(src).every((s) => s === 'hold' || s === 'none')) reasons.push('ложное лицо (vision|silhouette)');
+  if (!holdOk) reasons.push(`лицо висит (hold ${holdRunMax} кадров > допуска ${noneAfter})`);
+  const ok = reasons.length === 0;
+  console.log(`${id}: кадров ${n}; максимум маски ${maxV}/255, максимальная площадь >127: ${(maxArea / NPX * 100).toFixed(3)} % кадра; лицо ${JSON.stringify(src)}; самый длинный hold ${holdRunMax} кадров (допуск ${noneAfter}); source на кадрах 31/106: ${at(31)}/${at(106)} → ${ok ? 'OK: пусто, ложной фигуры нет, лицо не висит' : `ПРОВАЛ: ${reasons.join('; ')}`}`);
   process.exit(ok ? 0 : 1);
 }
 const tid = opt('--truth'), sid = opt('--test');
@@ -146,8 +156,8 @@ if (!tid || !sid) die('использование: --truth <id> --test <id> | --
 const { summary, per } = compare(decode(tid), decode(sid), sid);
 const man = manifest(sid);
 summary.engine = man.engine; summary.params = { ...summary.params, ...man.params }; summary.renderSecPerSec = man.renderSecPerSec; summary.truth = tid;
-summary.pass = { iou: summary.iouMean >= IOU_MIN, holes: summary.holeFrames === 0, speed: man.renderSecPerSec <= 1 };
+summary.pass = { iou: summary.iouMean >= IOU_MIN, holes: summary.holeFrames === 0 }; // критерий скорости снят (025-Б п. 1), с/с — справка
 mkdirSync(join(MATTE_DIR, '_calibration'), { recursive: true });
 writeFileSync(join(MATTE_DIR, '_calibration', `${sid}.json`), JSON.stringify({ summary, per }, null, 1) + '\n');
-console.log('| тест | IoU ср. | IoU мин. | край | мерцание (тихие кадры) | мерцание (все) | дыры | с/с |');
+console.log('| тест | IoU ср. | IoU мин. | край | flickerEdgeQuiet (тихих к.) | flickerEdge | дыры | с/с (справка) |');
 console.log(row(summary, `${man.renderSecPerSec} (${man.engine})`));

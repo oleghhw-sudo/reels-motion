@@ -3,7 +3,7 @@
 //
 //   npm run matte -- <video> --id <id> [--engine vision|rvm] [--from S --to S]
 //       [--work 360x640] [--thr 0.35,0.65 | --no-thr] [--dilate 31 | --no-grow] [--blend 0.3] [--blur 1.4]
-//       [--variant resnet50|mobilenetv3] [--downsample 0.25] [--keep-work] [--no-link] [--prores-ks]
+//       [--variant resnet50|mobilenetv3] [--downsample 0.25] [--keep-work] [--no-link] [--prores-ks] [--none-after N]
 //
 // Выход — MATTE_DIR/<id>/ (env.manifest.json → data_dirs, большие файлы, не в git):
 //   person.mov  — вырезка человека с альфой (ProRes 4444, 30 fps, 1080×1920) → <OffthreadVideo transparent> поверх фона
@@ -120,6 +120,7 @@ const facePath = join(outDir, 'face.json');
 const smoothArgs = ['smooth', '--raw', join(workDir, 'raw.y8'), '--faces', join(workDir, 'faces.raw.json'), '--face-out', facePath, '--work', work, '--out', '1080x1920', '--blend', String(params.blend), '--blur', String(params.blur)];
 if (params.thr === 'off') smoothArgs.push('--no-thr'); else smoothArgs.push('--thr', params.thr);
 if (params.grow === 'off') smoothArgs.push('--no-grow'); else smoothArgs.push('--dilate', params.grow);
+if (opt('--none-after')) smoothArgs.push('--none-after', opt('--none-after')); // контроль гейта 4 (лицо не висит без человека)
 const tSm = Date.now();
 await new Promise((res) => {
   const sm = spawn(BIN, smoothArgs, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -158,9 +159,10 @@ let proresEncoder = flag('--prores-ks') ? 'prores_ks' : 'prores_videotoolbox';
 const personSec = (Date.now() - tP) / 1000;
 
 // 4. самопроверка без правды (правило переключения на запасной движок, калибровка 025 — гипотеза):
-//    по matte.mp4 в 270×480 считаем среднюю |m_t − m_{t−1}| по всем кадрам (‰ от полной) и максимальный скачок площади
-//    маски между соседними кадрами (% кадра). Порог: среднее > 25 ‰ или скачок > 10 % → ПРЕДУПРЕЖДЕНИЕ «проверь лист,
-//    перегнать --engine rvm». Автоматически не перегоняем. Склейка в отрезке тоже даёт скачок — это нормально.
+//    по matte.mp4 в 270×480: flickerFramePermille — средняя |m_t − m_{t−1}| по всему кадру (‰ от полной), areaJumpMax —
+//    максимальный скачок площади маски между соседними кадрами (доля кадра). Порог: flickerFramePermille > 25 или
+//    areaJumpMax > 0.10 → ПРЕДУПРЕЖДЕНИЕ «проверь лист, перегнать --engine rvm». Автоматически не перегоняем.
+//    Склейка в отрезке тоже даёт скачок — это нормально. (Метрика по полосе края против правды — flickerEdge в calibrate.mjs.)
 const selfCheck = (() => {
   const TW = 270, TH = 480;
   const r = spawnSync('ffmpeg', ['-v', 'error', '-i', mattePath, '-vf', `scale=${TW}:${TH}`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-'], { maxBuffer: 2 ** 31 });
@@ -175,9 +177,9 @@ const selfCheck = (() => {
   }
   const diffMean = n > 1 ? diffSum / (n - 1) : 0;
   const warn = [];
-  if (diffMean > 0.025) warn.push(`мерцание ${(diffMean * 1000).toFixed(1)} ‰ > 25 ‰`);
-  if (areaJumpMax > 0.10) warn.push(`скачок площади маски ${(areaJumpMax * 100).toFixed(1)} % кадра на кадре ${areaJumpAt} > 10 %`);
-  return { diffMeanPermille: Math.round(diffMean * 10000) / 10, diffMaxPermille: Math.round(diffMax * 10000) / 10, diffMaxFrame: diffMaxAt, areaJumpMaxPct: Math.round(areaJumpMax * 1000) / 10, areaJumpFrame: areaJumpAt, thresholds: { diffMeanPermille: 25, areaJumpPct: 10 }, warnings: warn };
+  if (diffMean > 0.025) warn.push(`flickerFramePermille ${(diffMean * 1000).toFixed(1)} > 25`);
+  if (areaJumpMax > 0.10) warn.push(`areaJumpMax ${areaJumpMax.toFixed(3)} (кадр ${areaJumpAt}) > 0.10`);
+  return { flickerFramePermille: Math.round(diffMean * 10000) / 10, flickerFrameMaxPermille: Math.round(diffMax * 10000) / 10, flickerFrameMaxAt: diffMaxAt, areaJumpMax: Math.round(areaJumpMax * 1000) / 1000, areaJumpMaxAt: areaJumpAt, thresholds: { flickerFramePermille: 25, areaJumpMax: 0.1 }, warnings: warn };
 })();
 if (selfCheck?.warnings.length) console.warn(`  ⚠ самопроверка: ${selfCheck.warnings.join('; ')} — проверь лист (npm run matte:sheet -- --id ${id})${engine === 'vision' ? ', возможно перегнать --engine rvm' : ''}`);
 
@@ -197,7 +199,7 @@ const manifest = {
   },
   selfCheck,
   generatedAt: new Date().toISOString(),
-  script: 'tools/matte/matte.mjs 1.0.0',
+  script: 'tools/matte/matte.mjs 1.1.0',
 };
 writeFileSync(join(outDir, 'matte.json'), JSON.stringify(manifest, null, 2) + '\n');
 if (!flag('--keep-work')) rmSync(workDir, { recursive: true, force: true });

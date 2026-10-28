@@ -56,6 +56,10 @@
 - `node scripts/readcheck.mjs <Composition> [--props JSON] [--step N] [--cps N] [--min-hold S]` — проверка читаемости текстов (`<Readable>`), stills не рендерит; отчёт `out/qa/readcheck-<Comp>.json`, exit 1 при нарушениях
 - `node scripts/readcheck.mjs --self-test` — позитивный контроль readcheck на `ReadcheckFixture` (обязан найти ровно SHORT, OUT_OF_FRAME, UNSAFE)
 - `npm run test:motion` — тесты `src/motion` (`-- --negative` — позитивный контроль, обязан упасть)
+- `npm run matte -- <video> --id <id> [--engine vision|rvm] [--from S --to S] [--no-thr]` — маска человека и лицо по кадрам → `MATTE_DIR/<id>/{person.mov, matte.mp4, face.json, matte.json}` (задача 025; `MATTE_DIR`, `RVM_DIR` — в `.env`)
+- `npm run matte:sheet -- --id <id>` — лист кадров маски → `out/<id>/matte/sheet.jpg` (проверка глазами до метрик)
+- `npm run matte:calibrate -- --truth <id> --test <id> | --table | --empty <id> | --self-test --truth <id>` — метрики маски против правды (IoU, край, flickerEdge, дыры); `--self-test` обязан упасть
+- `npm run test:matte` — тесты `src/matte` (`-- --negative` — позитивный контроль, обязан упасть)
 
 ## Читаемость (readcheck)
 

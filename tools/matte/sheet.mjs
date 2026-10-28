@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // tools/matte/sheet.mjs — лист кадров для проверки маски глазами (задача 025, п. 7).
 //   npm run matte:sheet -- --id <id> [--n 12] [--gain 2]
+//   npm run matte:sheet -- --compare <id1,id2,...> --out <name>   → листы каждого id, сложенные в столбик: out/<name>/compare.jpg
 // → out/<id>/matte/sheet.jpg: верхняя полоса — N кадров источника (кроп 9:16), маска поверх красным 40 %, рамка лица
 //   (зелёная — Vision, жёлтая — по силуэту, серая — hold); нижняя полоса — |m_t − m_{t−1}| (×gain) — мерцание видно глазом.
 //   Подписи: номер кадра, источник лицa, средняя разница с прошлым кадром (‰ от полной). Плюс sheet.json с числами по всем кадрам.
@@ -13,8 +14,19 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = process.argv.slice(2);
 const die = (m) => { console.error(`matte:sheet: ${m}`); process.exit(1); };
 const opt = (n, d) => { const i = args.indexOf(n); return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : d; };
+const compareIds = opt('--compare');
+if (compareIds) {
+  const outName = opt('--out'); if (!outName) die('--compare: нужен --out <name>');
+  const ids = compareIds.split(',').filter(Boolean);
+  const sheets = ids.map((cid) => { const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), '--id', cid, '--n', opt('--n', '12'), '--gain', opt('--gain', '2')], { encoding: 'utf8', env: process.env }); if (r.status !== 0) die(`лист ${cid}: ${r.stderr}`); process.stdout.write(r.stdout.split('\n')[0] + '\n'); return join(ROOT, 'out', cid, 'matte', 'sheet.jpg'); });
+  mkdirSync(join(ROOT, 'out', outName), { recursive: true });
+  const args = ['-v', 'error', '-y', ...sheets.flatMap((f) => ['-i', f]), '-filter_complex', `vstack=inputs=${sheets.length}`, '-q:v', '3', join(ROOT, 'out', outName, 'compare.jpg')];
+  const r = spawnSync('ffmpeg', args, { encoding: 'utf8' }); if (r.status !== 0) die(`ffmpeg vstack: ${r.stderr}`);
+  console.log(`✓ out/${outName}/compare.jpg: ${ids.join(' / ')} (сверху вниз; подпись каждого листа — в его первой строке)`);
+  process.exit(0);
+}
 const id = opt('--id');
-if (!id) die('использование: npm run matte:sheet -- --id <id> [--n 12] [--gain 2]');
+if (!id) die('использование: npm run matte:sheet -- --id <id> [--n 12] [--gain 2] | --compare id1,id2 --out name');
 const N = Number(opt('--n', '12'));
 const GAIN = Number(opt('--gain', '2'));
 const envText = existsSync(join(ROOT, '.env')) ? readFileSync(join(ROOT, '.env'), 'utf8') : '';
@@ -29,7 +41,7 @@ const run = (cmd, a) => {
   if (r.status !== 0) die(`${cmd} ${a.join(' ').slice(0, 200)}…\n${r.stderr.toString().slice(-1500)}`);
   return r.stdout;
 };
-const TW = 270, TH = 480, GAP = 4, LAB = 26;
+const TW = 270, TH = 480, GAP = 4, LAB = 26, TITLE = 26;
 const total = man.outputs['matte.mp4'].frames;
 // все кадры маски в 270×480 (разница соседних кадров — по всем кадрам)
 const masks = run('ffmpeg', ['-v', 'error', '-i', join(dir, 'matte.mp4'), '-vf', `scale=${TW}:${TH}`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-']);
@@ -48,12 +60,12 @@ srcArgs.push('-t', String(to - from), '-i', file, '-vf', `crop=${crop.w}:${crop.
 const src = run('ffmpeg', srcArgs);
 if (src.length < N * TW * TH * 3) die(`источник дал ${Math.floor(src.length / (TW * TH * 3))} кадров из ${N}`);
 
-const W = N * (TW + GAP) - GAP, H = TH * 2 + LAB * 2 + GAP;
+const W = N * (TW + GAP) - GAP, H = TITLE + TH * 2 + LAB * 2 + GAP;
 const img = Buffer.alloc(W * H * 3, 20);
 const put = (x, y, r, g, b) => { if (x < 0 || y < 0 || x >= W || y >= H) return; const o = (y * W + x) * 3; img[o] = r; img[o + 1] = g; img[o + 2] = b; };
 const rows = [];
 idx.forEach((i, k) => {
-  const x0 = k * (TW + GAP), y0 = LAB, y1 = LAB + TH + GAP + LAB;
+  const x0 = k * (TW + GAP), y0 = TITLE + LAB, y1 = TITLE + LAB + TH + GAP + LAB;
   const m = frameMask(i), mp = frameMask(i - 1);
   for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
     const p = y * TW + x, s = (k * TW * TH + p) * 3, a = (m[p] / 255) * 0.4;
@@ -87,6 +99,15 @@ const GL = {
   'h': ['10000', '10000', '10110', '11001', '10001', '10001', '10001'], 'u': ['00000', '00000', '10001', '10001', '10001', '10011', '01101'],
   'e': ['00000', '00000', '01110', '10001', '11111', '10000', '01110'], 't': ['01000', '01000', '11100', '01000', '01000', '01001', '00110'],
   'd': ['00001', '00001', '01101', '10011', '10001', '10001', '01111'], 'D': ['11110', '10001', '10001', '10001', '10001', '10001', '11110'],
+  'a': ['00000', '00000', '01110', '00001', '01111', '10001', '01111'], 'b': ['10000', '10000', '10110', '11001', '10001', '10001', '11110'],
+  'c': ['00000', '00000', '01110', '10000', '10000', '10001', '01110'], 'g': ['00000', '00000', '01111', '10001', '01111', '00001', '01110'],
+  'j': ['00010', '00000', '00110', '00010', '00010', '10010', '01100'], 'k': ['10000', '10000', '10010', '10100', '11000', '10100', '10010'],
+  'm': ['00000', '00000', '11010', '10101', '10101', '10001', '10001'], 'p': ['00000', '00000', '11110', '10001', '11110', '10000', '10000'],
+  'q': ['00000', '00000', '01111', '10001', '01111', '00001', '00001'], 'r': ['00000', '00000', '10110', '11001', '10000', '10000', '10000'],
+  'w': ['00000', '00000', '10001', '10001', '10101', '10101', '01010'], 'x': ['00000', '00000', '10001', '01010', '00100', '01010', '10001'],
+  'y': ['00000', '00000', '10001', '10001', '01111', '00001', '01110'], 'z': ['00000', '00000', '11111', '00010', '00100', '01000', '11111'],
+  '-': ['00000', '00000', '00000', '11111', '00000', '00000', '00000'], '_': ['00000', '00000', '00000', '00000', '00000', '00000', '11111'],
+  ':': ['00000', '01100', '01100', '00000', '01100', '01100', '00000'], ',': ['00000', '00000', '00000', '00000', '01100', '00100', '01000'],
 };
 const text = (x, y, str, sc = 2, col = [255, 255, 255]) => {
   let cx = x;
@@ -97,9 +118,11 @@ const text = (x, y, str, sc = 2, col = [255, 255, 255]) => {
   }
 };
 rows.forEach((r, k) => {
-  text(k * (TW + GAP) + 4, 5, `f${r.i} ${r.t.toFixed(2)}s ${r.source}`);
-  text(k * (TW + GAP) + 4, LAB + TH + GAP + 5, `D ${(r.diff * 1000).toFixed(1)} %o`);
+  text(k * (TW + GAP) + 4, TITLE + 5, `f${r.i} ${r.t.toFixed(2)}s ${r.source}`);
+  text(k * (TW + GAP) + 4, TITLE + LAB + TH + GAP + 5, `D ${(r.diff * 1000).toFixed(1)} %o`);
 });
+const paramStr = Object.entries(man.params ?? {}).map(([k, v]) => `${k} ${v}`).join(' ');
+text(4, 5, `${id} ${man.engine ?? ''} ${paramStr} ${man.selfCheck ? `flicker ${man.selfCheck.flickerFramePermille} jump ${man.selfCheck.areaJumpMax}` : ''}`.toLowerCase().replace(/[^0-9a-z .%,:_-]/g, ' '), 2, [255, 230, 120]);
 const outDir = join(ROOT, 'out', id, 'matte');
 mkdirSync(outDir, { recursive: true });
 const ppm = join(outDir, 'sheet.ppm');

@@ -7,11 +7,12 @@
 //       OneComponent8) → crop 9:16 (cover) → рабочий размер → <dir>/raw.y8 (uint8, W×H на кадр, без заголовка);
 //       VNDetectFaceRectanglesRequest на каждом кадре → <dir>/faces.raw.json (сырые прямоугольники в 1080×1920).
 //   smooth --raw <raw.y8> --faces <faces.raw.json> --work 360x640 --out 1080x1920 --face-out <face.json>
-//          [--thr 0.35,0.65 | --no-thr] [--dilate 31 | --no-grow] [--grow-min 0.005] [--blend 0.3] [--blur 1.4]
+//          [--thr 0.35,0.65 | --no-thr] [--dilate 31 | --no-grow] [--grow-min 0.005] [--blend 0.3] [--blur 1.4] [--none-after N]
 //       сглаживание во времени по рецепту EFFECTS_PANTRY §J (общее для Vision и RVM — одна реализация, Accelerate,
 //       без Python в основном пути): порог smoothstep → рост только в пределах dilate прошлой маски → ушедшее не тянется →
 //       смесь blend прошлого / (1−blend) текущего → апскейл → gaussian blur. Кадры 1080×1920 gray → stdout (для ffmpeg).
-//       Лицо: прямоугольник Vision, иначе по силуэту (макушка + ширина головы над плечами), иначе hold; сглаживание 0.7/0.3.
+//       Лицо: прямоугольник Vision, иначе по силуэту (макушка + ширина головы над плечами), иначе hold; сглаживание 0.7/0.3;
+//       маска пуста (< 0,5 % кадра) дольше 0,5 с → source none, cx/cy/w null (лицо не висит без человека).
 import Foundation
 import AVFoundation
 import Vision
@@ -208,6 +209,7 @@ if mode == "smooth" {
   let blend = Double(opt("--blend") ?? "0.3") ?? 0.3
   let blur = Double(opt("--blur") ?? "1.4") ?? 1.4
   let growMinArea = Double(opt("--grow-min") ?? "0.005") ?? 0.005 // доля кадра: меньше — ворота роста не применяются
+  let emptyArea = 0.005 // маска «пуста», если площадь (> 127) меньше 0,5 % кадра
   let faceAlpha = 0.3 // новое лицо 0.3, прошлое 0.7
 
   let raw = try FileHandle(forReadingFrom: URL(fileURLWithPath: rawPath))
@@ -215,6 +217,9 @@ if mode == "smooth" {
   let list = facesJSON["framesList"] as! [[String: Any]]
   let fps = facesJSON["fps"] as! Double
   let fromSec = facesJSON["from"] as? Double ?? 0
+  // лицо не висит без человека (025-Б п. 2): маска пуста дольше 0,5 с → source none, cx/cy/w null; --none-after N кадров (контроль)
+  let noneAfter = Int(opt("--none-after") ?? "") ?? max(1, Int((0.5 * fps).rounded()))
+  var emptyRun = 0
 
   let cur = Plane(W, H), prevBin = Plane(W, H), grow = Plane(W, H), outWork = Plane(W, H)
   let big = Plane(OW, OH), tmp = Plane(OW, OH), fin = Plane(OW, OH)
@@ -264,9 +269,12 @@ if mode == "smooth" {
     let t = (rec["t"] as? Double) ?? (fromSec + Double(n) / fps)
     var src = "hold"
     var ncx = 0.0, ncy = 0.0, nw = 0.0, found = false
+    var maskArea = 0
+    for i in 0..<(W * H) where outWork.data[i] > 127 { maskArea += 1 }
+    let maskEmpty = Double(maskArea) < emptyArea * Double(W * H)
     if let f = rec["face"] as? [String: Any], let cx = f["cx"] as? Double, let cy = f["cy"] as? Double, let w = f["w"] as? Double {
       ncx = cx; ncy = cy; nw = w; found = true; src = "vision"
-    } else {
+    } else if !maskEmpty { // силуэт только по настоящей маске (≥ 0,5 % кадра), не по пятнышкам
       // по силуэту: макушка + ширина головы над плечами (маска outWork, порог 0.5)
       var widths = [Int](repeating: 0, count: H), left = [Int](repeating: 0, count: H), right = [Int](repeating: 0, count: H)
       var top = -1
@@ -295,14 +303,19 @@ if mode == "smooth" {
         }
       }
     }
+    emptyRun = maskEmpty ? emptyRun + 1 : 0
     if found {
       if haveFace { fcx += (ncx - fcx) * faceAlpha; fcy += (ncy - fcy) * faceAlpha; fw += (nw - fw) * faceAlpha }
       else { fcx = ncx; fcy = ncy; fw = nw; haveFace = true }
-    } else if !haveFace { src = "none" }
-    faceFrames.append(["t": ((t - fromSec) * 10000).rounded() / 10000, "cx": (fcx * 10).rounded() / 10, "cy": (fcy * 10).rounded() / 10, "w": (fw * 10).rounded() / 10, "source": src])
+    } else if !haveFace || emptyRun >= noneAfter { src = "none"; haveFace = false }
+    if src == "none" {
+      faceFrames.append(["t": ((t - fromSec) * 10000).rounded() / 10000, "cx": NSNull(), "cy": NSNull(), "w": NSNull(), "source": src])
+    } else {
+      faceFrames.append(["t": ((t - fromSec) * 10000).rounded() / 10000, "cx": (fcx * 10).rounded() / 10, "cy": (fcy * 10).rounded() / 10, "w": (fw * 10).rounded() / 10, "source": src])
+    }
     n += 1
   }
-  let faceDoc: [String: Any] = ["fps": fps, "from": fromSec, "frames": faceFrames, "smoothing": ["prev": 1 - faceAlpha, "new": faceAlpha], "coords": "1080x1920, cx/cy центр, w ширина; t — секунды от начала отрезка (источник from + t)"]
+  let faceDoc: [String: Any] = ["fps": fps, "from": fromSec, "frames": faceFrames, "smoothing": ["prev": 1 - faceAlpha, "new": faceAlpha], "coords": "1080x1920, cx/cy центр, w ширина (null при source none); t — секунды от начала отрезка (источник from + t)", "noneAfterFrames": noneAfter]
   try JSONSerialization.data(withJSONObject: faceDoc, options: [.sortedKeys]).write(to: URL(fileURLWithPath: faceOut))
   let srcCounts = Dictionary(grouping: faceFrames, by: { $0["source"] as! String }).mapValues { $0.count }
   log("smooth: \(n) кадров; thr=\(useThr ? "\(thr[0])..\(thr[1])" : "off") grow=\(useGrow ? "\(dil)" : "off") blend=\(blend) blur=\(blur); лицо: \(srcCounts)")
