@@ -8,12 +8,14 @@
 //       → MATTE_DIR/_calibration/<test>.json и строка таблицы.
 //   npm run matte:calibrate -- --table              сводная таблица всех сравнений из MATTE_DIR/_calibration
 //   npm run matte:calibrate -- --empty <id>        видео без человека: маска пустая (площадь > 127 нигде не больше 0,5 % кадра), лицо hold|none
+//   npm run matte:calibrate -- --self-test-dup   позитивный контроль исключения дублей кадров 25→30 fps в selfCheck (026-А)
 //   npm run matte:calibrate -- --self-test --truth <id>   позитивный контроль (гейт 4): правда, сдвинутая на 20 px,
 //       как «тест» ОБЯЗАНА уронить IoU ниже 0.95 — процесс завершается кодом 1 (как и должен)
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { selfCheckFrom, sourceFrameOf } from './selfcheck.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = process.argv.slice(2);
@@ -117,6 +119,25 @@ if (flag('--table')) {
   console.log('| тест | движок | IoU ср. | IoU мин. | край | flickerEdgeQuiet (тихих к.) | flickerEdge | дыры | с/с (справка) |');
   for (const f of files) { const { summary: s } = JSON.parse(readFileSync(join(dir, f), 'utf8')); console.log(`| ${s.label} | ${s.engine} | ${fmt(s.iouMean)} | ${fmt(s.iouMin)} | ${fmt(s.edgeMean)} | ${fmt(s.flickerEdgeQuiet, 4)} (${s.quietFrames}) | ${fmt(s.flickerEdge, 4)} | ${s.holeFrames}/${s.frames} | ${s.renderSecPerSec} |`); }
   process.exit(0);
+}
+if (flag('--self-test-dup')) {
+  // Позитивный контроль (026-А п. 1): синтетика 25 fps из двух чередующихся масок → fps=30 → без исключения дублей есть
+  // «нулевые» пары (дубль кадра), с исключением по исходным кадрам — ни одной. Падает (exit 1), если исключение не работает.
+  const tmp = join(MATTE_DIR, '_cal', 'synthetic-dup.mp4');
+  mkdirSync(join(MATTE_DIR, '_cal'), { recursive: true });
+  const g = spawnSync('ffmpeg', ['-v', 'error', '-y', '-f', 'lavfi', '-i', 'nullsrc=s=270x480:r=25:d=2', '-vf', "format=gray,geq=lum='if(mod(N\\,2)\\,255*gt(X\\,W/2)\\,255*lt(X\\,W/2))',fps=30", '-c:v', 'libx264', '-crf', '10', '-pix_fmt', 'yuv420p', tmp], { encoding: 'utf8' });
+  if (g.status !== 0) die(`ffmpeg синтетика: ${g.stderr}`);
+  const r = spawnSync('ffmpeg', ['-v', 'error', '-i', tmp, '-f', 'rawvideo', '-pix_fmt', 'gray', '-'], { maxBuffer: 2 ** 31 });
+  const TW = 270, TH = 480, n = Math.floor(r.stdout.length / (TW * TH));
+  const zeroPairs = (srcFps) => { let z = 0, used = 0; for (let i = 1; i < n; i++) { if (sourceFrameOf(i, srcFps) === sourceFrameOf(i - 1, srcFps)) continue; used++; let d = 0; for (let p = 0; p < TW * TH; p++) d += Math.abs(r.stdout[i * TW * TH + p] - r.stdout[(i - 1) * TW * TH + p]); if (d / (TW * TH * 255) < 0.001) z++; } return { z, used }; };
+  const without = zeroPairs(30), withEx = zeroPairs(25);
+  const a = selfCheckFrom(r.stdout, TW, TH, 30), b = selfCheckFrom(r.stdout, TW, TH, 25);
+  console.log(`ПОЗИТИВНЫЙ КОНТРОЛЬ дублей: синтетика 25 fps (2 чередующиеся маски) → 30 fps, ${n} кадров.`);
+  console.log(`  без исключения (как 30 fps): нулевых пар ${without.z} из ${without.used}, flickerFramePermille ${a.flickerFramePermille}`);
+  console.log(`  с исключением по исходным кадрам (25 fps): нулевых пар ${withEx.z} из ${withEx.used} (пропущено дублей ${b.pairsSkipped}), flickerFramePermille ${b.flickerFramePermille}`);
+  const ok = without.z > 0 && withEx.z === 0 && b.flickerFramePermille > a.flickerFramePermille;
+  console.log(ok ? 'OK: дубли найдены без исключения и полностью исключены по исходным кадрам' : 'ПРОВАЛ: исключение дублей не работает');
+  process.exit(ok ? 0 : 1);
 }
 if (flag('--self-test')) {
   const tid = opt('--truth'); if (!tid) die('--self-test: нужен --truth <id>');

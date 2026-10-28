@@ -21,6 +21,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, statSync, symlinkSync, wri
 import { spawn, spawnSync } from 'node:child_process';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { selfCheckFile, warnText } from './selfcheck.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const args = process.argv.slice(2);
@@ -158,30 +159,9 @@ let proresEncoder = flag('--prores-ks') ? 'prores_ks' : 'prores_videotoolbox';
 }
 const personSec = (Date.now() - tP) / 1000;
 
-// 4. самопроверка без правды (правило переключения на запасной движок, калибровка 025 — гипотеза):
-//    по matte.mp4 в 270×480: flickerFramePermille — средняя |m_t − m_{t−1}| по всему кадру (‰ от полной), areaJumpMax —
-//    максимальный скачок площади маски между соседними кадрами (доля кадра). Порог: flickerFramePermille > 25 или
-//    areaJumpMax > 0.10 → ПРЕДУПРЕЖДЕНИЕ «проверь лист, перегнать --engine rvm». Автоматически не перегоняем.
-//    Склейка в отрезке тоже даёт скачок — это нормально. (Метрика по полосе края против правды — flickerEdge в calibrate.mjs.)
-const selfCheck = (() => {
-  const TW = 270, TH = 480;
-  const r = spawnSync('ffmpeg', ['-v', 'error', '-i', mattePath, '-vf', `scale=${TW}:${TH}`, '-f', 'rawvideo', '-pix_fmt', 'gray', '-'], { maxBuffer: 2 ** 31 });
-  if (r.status !== 0) return null;
-  const buf = r.stdout, n = Math.floor(buf.length / (TW * TH));
-  let diffSum = 0, diffMax = 0, diffMaxAt = 0, areaJumpMax = 0, areaJumpAt = 0, prevArea = 0;
-  for (let i = 0; i < n; i++) {
-    const o = i * TW * TH; let area = 0, d = 0;
-    for (let p = 0; p < TW * TH; p++) { const v = buf[o + p]; if (v > 127) area++; if (i) d += Math.abs(v - buf[o - TW * TH + p]); }
-    if (i) { const dm = d / (TW * TH * 255); diffSum += dm; if (dm > diffMax) { diffMax = dm; diffMaxAt = i; } const j = Math.abs(area - prevArea) / (TW * TH); if (j > areaJumpMax) { areaJumpMax = j; areaJumpAt = i; } }
-    prevArea = area;
-  }
-  const diffMean = n > 1 ? diffSum / (n - 1) : 0;
-  const warn = [];
-  if (diffMean > 0.025) warn.push(`flickerFramePermille ${(diffMean * 1000).toFixed(1)} > 25`);
-  if (areaJumpMax > 0.10) warn.push(`areaJumpMax ${areaJumpMax.toFixed(3)} (кадр ${areaJumpAt}) > 0.10`);
-  return { flickerFramePermille: Math.round(diffMean * 10000) / 10, flickerFrameMaxPermille: Math.round(diffMax * 10000) / 10, flickerFrameMaxAt: diffMaxAt, areaJumpMax: Math.round(areaJumpMax * 1000) / 1000, areaJumpMaxAt: areaJumpAt, thresholds: { flickerFramePermille: 25, areaJumpMax: 0.1 }, warnings: warn };
-})();
-if (selfCheck?.warnings.length) console.warn(`  ⚠ самопроверка: ${selfCheck.warnings.join('; ')} — проверь лист (npm run matte:sheet -- --id ${id})${engine === 'vision' ? ', возможно перегнать --engine rvm' : ''}`);
+// 4. самопроверка без правды — tools/matte/selfcheck.mjs (пороги SELF_CHECK там же; дубли кадров 25→30 fps исключены)
+const selfCheck = selfCheckFile(mattePath, fps);
+if (selfCheck?.warnings.length) console.warn(warnText(selfCheck, id, engine));
 
 // 5. манифест
 const nb = (f) => Number(JSON.parse(run('ffprobe', ['-v', 'error', '-select_streams', 'v:0', '-count_packets', '-show_entries', 'stream=nb_read_packets', '-of', 'json', f]).stdout).streams[0].nb_read_packets);
@@ -199,7 +179,7 @@ const manifest = {
   },
   selfCheck,
   generatedAt: new Date().toISOString(),
-  script: 'tools/matte/matte.mjs 1.1.0',
+  script: 'tools/matte/matte.mjs 1.2.0',
 };
 writeFileSync(join(outDir, 'matte.json'), JSON.stringify(manifest, null, 2) + '\n');
 if (!flag('--keep-work')) rmSync(workDir, { recursive: true, force: true });
@@ -211,6 +191,9 @@ if (!flag('--no-link')) {
   const link = join(pub, id);
   try { if (lstatSync(link).isSymbolicLink()) unlinkSync(link); } catch { /* нет */ }
   if (!existsSync(link)) symlinkSync(outDir, link);
+  // стоковые исходники (калибровка 025-Б, лаборатория TalkingFxLab): public/matte/_stock → MATTE_DIR/_stock
+  const stock = join(MATTE_DIR, '_stock'), stockLink = join(pub, '_stock');
+  if (existsSync(stock) && !existsSync(stockLink)) symlinkSync(stock, stockLink);
 }
 const face = JSON.parse(readFileSync(facePath, 'utf8'));
 const srcCounts = {};

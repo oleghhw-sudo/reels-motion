@@ -13,6 +13,7 @@ import { MOTION_LAB_KIT_FPS, MOTION_LAB_KIT_FRAMES, MotionLabKit } from './labs/
 import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
 import { AGENT_FPS, AGENT_FRAMES, AgentTerminal } from './videos/agent-terminal/AgentTerminal.tsx';
 import { MATTE_LAB_FPS, MatteLab, matteLabMetadata, matteLabSchema } from './matte/MatteLab.tsx';
+import { PILOT_PLAN, TALKING_FPS, TalkingFxLab, talkingLabMetadata, talkingLabSchema } from './fx/talking/TalkingFxLab.tsx';
 
 const FPS = 30;
 
@@ -83,5 +84,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="AgentTerminal" component={AgentTerminal} width={1920} height={1080} fps={AGENT_FPS} durationInFrames={AGENT_FRAMES} />
     {/* лаборатория маски человека (задача 025): props.id = каталог MATTE_DIR/<id> через public/matte/<id> */}
     <Composition id="MatteLab" component={MatteLab} schema={matteLabSchema} defaultProps={{ id: 'smoke-59' }} calculateMetadata={matteLabMetadata} width={1080} height={1920} fps={MATTE_LAB_FPS} durationInFrames={150} />
+    {/* лаборатория эффектов говорящей головы (задача 026-А): план videos/talking-fx-pilot/talking-fx.yaml */}
+    <Composition id="TalkingFxLab" component={TalkingFxLab} schema={talkingLabSchema} defaultProps={{ matteId: PILOT_PLAN.matteId, plan: PILOT_PLAN }} calculateMetadata={talkingLabMetadata} width={1080} height={1920} fps={TALKING_FPS} durationInFrames={282} />
   </>
 );

@@ -1,0 +1,33 @@
+# План эффектов говорящей головы — пилот 026-А (cinematic-fx §3 O). Отдельный файл, а не блок в scenes.yaml:
+# эффекты O — слой поверх живого видео с маской (matteId), у существующих роликов говорящей головы нет; читатель —
+# src/fx/talking/plan.ts (схема, громкий отказ), лаборатория — TalkingFxLab. Время — секунды исходника.
+# Звук — только подсказки-данные из §3 O (at — от t0, levelDb — относительно голоса), рендер их не читает (микс — 026-Б).
+matteId: talk-3-vision            # Pexels 8124136 (RDNE Stock project), женщина у окна, 30 fps, 9,4 с; маска Vision (025-Б)
+video:
+  file: _stock/pexels-8124136.mp4 # относительно MATTE_DIR (ссылка public/matte/_stock); кроп — из matte.json
+effects:
+  - fx: bignum                    # O9 цифра за головой: окно 1–5 с
+    t0: 1.0
+    t1: 3.4
+    text: "3"
+    sound:
+      - { at: 0.1, type: soft-hit, levelDb: -18 }
+      - { at: 0.2, type: whoosh, levelDb: -20 }
+  - fx: figma                     # O8 выделение как в Figma: окно 1.4–2.0 с
+    t0: 4.0
+    t1: 5.8
+    word: виділення
+    italic: л
+    badge: Олег
+    under:
+      - { at: 0.3, text: як у Фігмі }   # сразу после рамки: readcheck требует ≥ 1.17 с, при 1.0 держалось 0.53 с
+    sound:
+      - { at: 0.1, type: click, levelDb: -16 }
+      - { at: 0.35, type: whoosh, levelDb: -20 }
+      - { at: 0.99, type: tick, levelDb: -18 }   # растяжение ≈ 0.55 окна
+  - fx: lens                      # O7 жидкое стекло: окно 0.9–1.4 с, дуга (250,1290)→(830,1290), r 140, ×1.9
+    t0: 6.5
+    t1: 7.7
+    sound:
+      - { at: 0.08, type: ui-soft, levelDb: -16 }
+      - { at: 0.8, type: whoosh, levelDb: -20 }
