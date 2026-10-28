@@ -12,6 +12,7 @@ import { MOTION_LAB_FRAMES, MotionLab } from './labs/MotionLab.tsx';
 import { MOTION_LAB_KIT_FPS, MOTION_LAB_KIT_FRAMES, MotionLabKit } from './labs/MotionLabKit.tsx';
 import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
 import { AGENT_FPS, AGENT_FRAMES, AgentTerminal } from './videos/agent-terminal/AgentTerminal.tsx';
+import { MATTE_LAB_FPS, MatteLab, matteLabMetadata, matteLabSchema } from './matte/MatteLab.tsx';
 
 const FPS = 30;
 
@@ -80,5 +81,7 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="FxLab24" component={FxLab24} width={1080} height={1920} fps={FX_LAB_FPS} durationInFrames={FX_LAB_FRAMES} />
     {/* «Термінал помічника кресляра» (задача 020): 1920×1080, 30 fps, 32 с, петля */}
     <Composition id="AgentTerminal" component={AgentTerminal} width={1920} height={1080} fps={AGENT_FPS} durationInFrames={AGENT_FRAMES} />
+    {/* лаборатория маски человека (задача 025): props.id = каталог MATTE_DIR/<id> через public/matte/<id> */}
+    <Composition id="MatteLab" component={MatteLab} schema={matteLabSchema} defaultProps={{ id: 'smoke-59' }} calculateMetadata={matteLabMetadata} width={1080} height={1920} fps={MATTE_LAB_FPS} durationInFrames={150} />
   </>
 );

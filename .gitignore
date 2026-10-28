@@ -11,3 +11,4 @@ videos/*/assets/
 public/videos/
 .venv-asr/
 public/fixtures/
+public/matte/
