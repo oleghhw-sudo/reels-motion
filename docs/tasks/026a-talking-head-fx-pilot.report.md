@@ -57,7 +57,7 @@
 
    Позитивный контроль — в тесте: лицо на y 1300 → figma и lens отказывают («графика на лице»), дорожка из `none` → bignum отказывает («без головы»).
 5. readcheck `node scripts/readcheck.mjs TalkingFxLab --step 2` (141 кадр, 24 с) → `OK figma-4 «виділення» 9 симв., нужно 1.25 с, держит 1.33 с; OK figma-under-4-0 «як у Фігмі» нужно 1.17, держит 1.20; нарушений: 0`, exit 0. Первый прогон был красным: мелкое слово с `at: 1.0` держалось 0.53 с (SHORT) — в плане сдвинуто на `at: 0.3` (сразу после рамки); пороги cps 12 / minHold 1 с — гипотеза readcheck.
-6. `npm run check` → OK (scopes base, render). Запрещённого в `src/fx/talking` нет: `grep -n "Math.random\|Date.now\|setTimeout\|requestAnimationFrame\|backdrop-filter\|mask-image\|backgroundImage" src/fx/talking/*` → пусто.
+6. `npm run check` → OK (scopes base, render). Запрещённого в `src/fx/talking` нет: `grep -n "Math.random\|Date.now\|setTimeout\|requestAnimationFrame\|backdrop-filter\|mask-image\|backgroundImage" src/fx/talking/*` → 1 совпадение, и это комментарий в шапке `TalkingFx.tsx` («без backdrop-filter, mask-image…»), в коде — ничего.
 
 ## Что в §3 O не сходится с реальностью Remotion / материала
 - **`@remotion/effects` не установлен** — §3 O7 и §4 на него рассчитывают (`fisheye`/`barrelDistortion`/`chromaticAberration` на `<HtmlInCanvas>`). Линза собрана на SVG `feDisplacementMap` по встроенной карте; выглядит как «жидкое стекло» с радиальным смазом к краю, но это не настоящая рефракция `fisheye`. Пакеты — задача 012-Б (env.manifest + package.json + THIRD-PARTY).
