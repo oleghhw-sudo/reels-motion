@@ -24,7 +24,9 @@ if (scopeIdx >= 0 && args[scopeIdx + 1]) scopes.add(args[scopeIdx + 1]);
 const missing = [];
 const ok = [];
 const skipped = [];
-const need = (scope) => scope === undefined || scopes.has(scope);
+// required_for — строка или список: переменная нужна, если запрошен любой из её scope (ASR_PYTHON: voice и audio-analysis)
+const need = (scope) => scope === undefined || [].concat(scope).some((s) => scopes.has(s));
+const scopeOf = (scope) => [].concat(scope).join(' | ');
 
 if (selfTest) {
   console.log('SELF-TEST: подменяю бинарь на несуществующий и добавляю шрифт без кириллицы. Ожидаю ПРОВАЛ.\n');
@@ -120,7 +122,7 @@ for (const v of manifest.env.vars) {
 
 // 7. Внешние каталоги данных роликов (BEAUTY_HANDOFF_DIR и т.п.): из окружения процесса или .env.
 for (const v of manifest.data_dirs?.vars ?? []) {
-  if (!need(v.required_for)) { skipped.push(`${v.name} (нужен для ${v.required_for}; проверка: npm run check -- --scope ${v.required_for})`); continue; }
+  if (!need(v.required_for)) { skipped.push(`${v.name} (нужен для ${scopeOf(v.required_for)}; проверка: npm run check -- --scope ${[].concat(v.required_for)[0]})`); continue; }
   const m = envText.match(new RegExp(`^${v.name}=(.+)$`, 'm'));
   const val = process.env[v.name] ?? m?.[1]?.trim();
   if (!val) { missing.push(`${v.name} не задан (ни в окружении, ни в ${manifest.env.file}) — ${v.hint}`); continue; }

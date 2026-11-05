@@ -12,3 +12,4 @@ public/videos/
 .venv-asr/
 public/fixtures/
 public/matte/
+__pycache__/

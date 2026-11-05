@@ -23,7 +23,9 @@
     "matte:sheet": "node tools/matte/sheet.mjs",
     "matte:calibrate": "node tools/matte/calibrate.mjs",
     "test:matte": "node --experimental-strip-types --no-warnings src/matte/matte.test.ts",
-    "test:talking": "node --experimental-strip-types --no-warnings src/fx/talking/talking.test.ts"
+    "test:talking": "node --experimental-strip-types --no-warnings src/fx/talking/talking.test.ts",
+    "audio:analyze": "node audio/analyze/run.mjs",
+    "audio:selftest": "node audio/analyze/run.mjs --self-test"
   },
   "dependencies": {
     "@paper-design/shaders": "0.0.81",
