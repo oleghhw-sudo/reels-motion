@@ -1,0 +1,27 @@
+{
+  "video": "mia-outro",
+  "episode": "ep01",
+  "task": "030",
+  "date": "2026-11-06",
+  "chooser": "Олег",
+  "pickTimeMin": null,
+  "proposal": "videos/mia-outro/outro.v4-picks.yaml",
+  "base": "videos/mia-outro/outro.yaml (v3, 2f3856c + 018)",
+  "package": "П2 «чистый звук + живое отображение»",
+  "picks": [
+    {"layer": "card", "pick": "dossier", "from": "лист архитектора, вариант Б «Досье / скан»", "status": "port", "estMin": 60, "note": "замерший кадр-источник в монохроме + цветная вырезка + скан + рамки на лице + label + имя за фигурой + параллакс"},
+    {"layer": "card.freeze", "pick": "mix 2 кадра + наезд 3 %", "from": "практика стоп-кадров (Snatch, Art of the Title)", "status": "code", "note": "Freeze/кроссфейд и наезд есть"},
+    {"layer": "card.lock", "pick": "рамки на лице по Vision", "from": "задача 025 (tools/matte, лицо по кадрам)", "status": "code+spec", "estMin": 15},
+    {"layer": "card.name", "pick": "имя за фигурой", "from": "П2", "status": "port", "estMin": 10, "note": "альфа вырезок уже есть"},
+    {"layer": "prepare.upscale", "pick": "ROOK ×4 Real-ESRGAN anime", "from": "008 review-2 п. 2", "status": "port", "estMin": 20, "note": "внешний инструмент, замерить память"},
+    {"layer": "transition", "pick": "2 смаза → склейка (V10:97, V12:1)", "from": "П2", "status": "code"},
+    {"layer": "transition", "pick": "lockCarry в карточку ROOK", "from": "П2 + motion-video-kit «persistent actor»", "status": "port", "estMin": 15},
+    {"layer": "transition", "pick": "lightMatch: огонёк заряда → вспышка финала", "from": "motion-prompt #042 Match cut", "status": "spec", "estMin": 15},
+    {"layer": "final", "pick": "живой финал: наезд 5 %, MIA 1.0→1.15, строка ≥ 4.5 % H, штамп tail", "from": "008 review-2 п. 1", "status": "code"},
+    {"layer": "sound", "pick": "9 событий вместо 14, у каждого why {see, mix, gap}; хвосты обрезаются; лимитер до loudnorm", "from": "разбор практики 2026-11-06", "status": "code+spec", "estMin": 30}
+  ],
+  "portTotalMin": 135,
+  "openQuestions": [
+    "Порт ≈ 135 мин > порога 60 мин из 030 — Олег согласовал объём выбором П2 + «Досье» (2026-11-06); билдер стоп при > 240 мин всего."
+  ]
+}
