@@ -13,12 +13,15 @@
 //   - обрезка предками: overflow ≠ visible (по осям) и clip-path: inset(...) — пересечением прямоугольников
 //     с em-полосой строки (высота font-size по центру бокса строки: content area шрифта выше букв);
 //   - целиком ли в кадре; пересечение с safe zones Reels (src/labs/safe-zones.ts) — тоже по em-полосам строк.
-// Кадр «читаемый» = opacity ≥ 0.9, текст не обрезан предками (в пределах кадра) и целиком в кадре.
+//   - перекрытие: доля точек сетки 24×5 на em-полосе строки под непрозрачной альфой (≥ 128) слоёв <img data-occluder>,
+//     идущих в документе ПОСЛЕ текста (рисуются поверх; z-index не учитывается, mask-image слоя — тоже: строже реальности).
+// Кадр «читаемый» = opacity ≥ 0.9, текст не обрезан предками (в пределах кадра), целиком в кадре и закрыт ≤ 10 %.
 // Метрика: самый длинный непрерывный отрезок читаемости vs требуемое = max(minHold, символы/cps + 0.5 с).
 // Нарушения: SHORT (читаем, но меньше нужного), OUT_OF_FRAME (видимый текст режется краем кадра),
-//            UNSAFE (читаемый текст заходит в safe zone), NEVER (ни разу не читаем целиком и не OUT_OF_FRAME),
+//            UNSAFE (читаемый текст заходит в safe zone), OCCLUDED (виден, но слой data-occluder закрывает > 10 % букв),
+//            NEVER (ни разу не читаем целиком и не OUT_OF_FRAME / OCCLUDED),
 //            LATIN_ONLY (кириллица U+0400–U+04FF или ’ набрана шрифтом latinOnly из env.manifest.json — в <Readable> или вне его).
-// Не проверяется: перекрытие другими слоями (z-order), mask-image, clip-path кроме inset, контраст.
+// Не проверяется: перекрытие слоями без data-occluder (и z-index), mask-image, clip-path кроме inset, контраст.
 //
 // ПОРОГИ — ГИПОТЕЗА (калибруются на эталоне): cps=12 (украинский, медленнее латиницы 15), minHold=1.0 с, +0.5 с.
 // Выход: таблица + out/qa/readcheck-<Comp>.json. Код выхода: 0 — нарушений нет; 1 — есть нарушения
@@ -41,13 +44,14 @@ const ATTR = { id: 'data-readable-id', text: 'data-readable-text' }; // = READAB
 const OPACITY_MIN = 0.9;
 const PAD_SEC = 0.5;
 const TOL = 0.5; // px
+const OCC_MAX = 0.1; // доля букв (точек сетки по em-полосам строк), которую может закрыть data-occluder — ГИПОТЕЗА
 
 // Ожидание позитивного контроля (src/qa/ReadcheckFixture.tsx)
 // Шрифты без кириллицы (решение Олега 2026-10-18): семейства из env.manifest.json → fonts.files[] с latinOnly.
 const LATIN_FAMILIES = JSON.parse(readFileSync(join(ROOT, 'env.manifest.json'), 'utf8'))
   .fonts.files.filter((e) => typeof e === 'object' && e.latinOnly)
   .map((e) => e.family);
-const SELF_TEST = { comp: 'ReadcheckFixture', expect: { 'fx.short': ['SHORT'], 'fx.edge': ['OUT_OF_FRAME'], 'fx.bottom': ['UNSAFE'], 'fx.ok': [] } };
+const SELF_TEST = { comp: 'ReadcheckFixture', expect: { 'fx.short': ['SHORT'], 'fx.edge': ['OUT_OF_FRAME'], 'fx.bottom': ['UNSAFE'], 'fx.behind': ['OCCLUDED'], 'fx.front': [], 'fx.ok': [] } };
 
 // ---------------------------------------------------------------- аргументы
 const argv = process.argv.slice(2);
@@ -139,6 +143,48 @@ function collect(attrId, attrText, W, H, latinFamilies) {
     }
     return { clip, opacity, hidden };
   };
+  // перекрытие: слои <img data-occluder> ПОСЛЕ текста в документе (рисуются поверх; z-index не учитывается) — по альфе картинки
+  const occluders = [...document.querySelectorAll('img[data-occluder]')].filter((im) => im.complete && im.naturalWidth > 0);
+  window.__rcAlpha ??= new Map(); // src → { w, h, a: Uint8ClampedArray }
+  const alphaOf = (im) => {
+    let m = window.__rcAlpha.get(im.currentSrc || im.src);
+    if (!m) {
+      const cv = document.createElement('canvas');
+      cv.width = im.naturalWidth;
+      cv.height = im.naturalHeight;
+      const g = cv.getContext('2d', { willReadFrequently: true });
+      g.drawImage(im, 0, 0);
+      m = { w: cv.width, h: cv.height, a: g.getImageData(0, 0, cv.width, cv.height).data };
+      window.__rcAlpha.set(im.currentSrc || im.src, m);
+    }
+    return m;
+  };
+  const OCC_NX = 24;
+  const OCC_NY = 5;
+  const occlusion = (el, ems) => {
+    const above = occluders.filter((im) => el.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_FOLLOWING && !(el.compareDocumentPosition(im) & Node.DOCUMENT_POSITION_CONTAINED_BY));
+    if (!above.length) return 0;
+    const boxes = above.map((im) => {
+      const br = im.getBoundingClientRect();
+      const cs = getComputedStyle(im);
+      return { br, m: alphaOf(im), o: parseFloat(cs.opacity) };
+    });
+    let tot = 0;
+    let cov = 0;
+    for (const e of ems) for (let iy = 0; iy < OCC_NY; iy++) for (let ix = 0; ix < OCC_NX; ix++) {
+      const x = e.l + ((ix + 0.5) / OCC_NX) * (e.r - e.l);
+      const y = e.t + ((iy + 0.5) / OCC_NY) * (e.b - e.t);
+      if (x < 0 || y < 0 || x > W || y > H) continue;
+      tot++;
+      for (const { br, m, o } of boxes) {
+        if (x < br.left || x >= br.right || y < br.top || y >= br.bottom || o < 0.5) continue;
+        const u = Math.floor(((x - br.left) / br.width) * m.w);
+        const v = Math.floor(((y - br.top) / br.height) * m.h);
+        if (m.a[(v * m.w + u) * 4 + 3] >= 128) { cov++; break; }
+      }
+    }
+    return tot ? cov / tot : 0;
+  };
   const out = [];
   for (const el of document.querySelectorAll(`[${attrId}]`)) {
     const rects = [];
@@ -161,6 +207,7 @@ function collect(attrId, attrText, W, H, latinFamilies) {
     let contentOk = true; // не обрезан предками в пределах кадра
     let visibleArea = 0;
     const u = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
+    const ems = [];
     for (const x of rects) {
       minOpacity = Math.min(minOpacity, x.opacity);
       hidden ||= x.hidden;
@@ -169,6 +216,7 @@ function collect(attrId, attrText, W, H, latinFamilies) {
       // пустые поля, не трогая буквы
       const pad = Math.max(0, (x.r.b - x.r.t - x.fontPx) / 2);
       const em = { l: x.r.l, r: x.r.r, t: x.r.t + pad, b: x.r.b - pad };
+      ems.push(em);
       const inFrame = inter(em, FRAME);
       const shown = inter(inFrame, x.clip);
       visibleArea += area(shown);
@@ -179,7 +227,7 @@ function collect(attrId, attrText, W, H, latinFamilies) {
       u.r = Math.max(u.r, em.r);
       u.b = Math.max(u.b, em.b);
     }
-    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), present: true, minOpacity, hidden, contentOk, visibleArea, box: u });
+    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), present: true, minOpacity, hidden, contentOk, visibleArea, box: u, occluded: occlusion(el, ems) });
   }
   // LATIN_ONLY: каждый текстовый узел кадра (не только <Readable>), набранный семейством latinOnly, — без кириллицы и ’
   const latinBad = [];
@@ -318,10 +366,12 @@ try {
       const key = `${it.id}\u0000${it.text}`;
       // одинаковые id+text в одном кадре: считаем читаемым, если читаем хотя бы один экземпляр
       const st = (() => {
-        if (!it.present) return { readable: false, out: false, box: null };
+        if (!it.present) return { readable: false, out: false, occ: false, occFrac: 0, box: null };
         const opOk = it.minOpacity >= OPACITY_MIN && !it.hidden;
         const inFrame = it.box.l >= -TOL && it.box.t >= -TOL && it.box.r <= W + TOL && it.box.b <= H + TOL;
-        return { readable: opOk && it.contentOk && inFrame && it.visibleArea > 0, out: opOk && it.contentOk && !inFrame && it.visibleArea > 0, box: it.box };
+        const seen = opOk && it.contentOk && inFrame && it.visibleArea > 0;
+        const occ = seen && it.occluded > OCC_MAX;
+        return { readable: seen && !occ, out: opOk && it.contentOk && !inFrame && it.visibleArea > 0, occ, occFrac: it.occluded, box: it.box };
       })();
       const prev = seenNow.get(key);
       if (!prev || (st.readable && !prev.readable)) seenNow.set(key, { it, st });
@@ -353,6 +403,9 @@ try {
       let firstVisible = null;
       let outSec = 0;
       let outFrom = null;
+      let occSec = 0;
+      let occFrom = null;
+      let occMax = 0;
       const unsafe = new Map(); // zone → { sec, maxPx, from }
       for (const s of tr.samples) {
         const contiguous = lastF !== null && s.f === lastF + STEP;
@@ -379,11 +432,17 @@ try {
           outSec += s.span;
           outFrom ??= s.f;
         }
+        if (s.occ) {
+          occSec += s.span;
+          occFrom ??= s.f;
+          occMax = Math.max(occMax, s.occFrac);
+        }
         lastF = s.f;
       }
       const v = [];
       if (outSec > 0) v.push('OUT_OF_FRAME');
-      if (best === 0 && outSec === 0) v.push('NEVER');
+      if (occSec > 0) v.push('OCCLUDED');
+      if (best === 0 && outSec === 0 && occSec === 0) v.push('NEVER');
       if (best > 0 && best + 1e-9 < need) v.push('SHORT');
       if (unsafe.size) v.push('UNSAFE');
       if ([...latinBad.values()].some((b) => b.readableId === tr.id)) v.push('LATIN_ONLY');
@@ -398,6 +457,9 @@ try {
         firstReadableSec: firstVisible === null ? null : +(firstVisible / fps).toFixed(3),
         outOfFrameSec: +outSec.toFixed(3),
         outOfFrameFromSec: outFrom === null ? null : +(outFrom / fps).toFixed(3),
+        occludedSec: +occSec.toFixed(3),
+        occludedFromSec: occFrom === null ? null : +(occFrom / fps).toFixed(3),
+        occludedMaxFrac: +occMax.toFixed(3),
         unsafe: [...unsafe].map(([zone, u]) => ({ zone, sec: +u.sec.toFixed(3), maxPx: u.maxPx, fromSec: +(u.from / fps).toFixed(3) })),
         duplicateInstances: tr.dup,
         violations: v,
@@ -414,7 +476,7 @@ try {
     for (const x of texts) {
       const st = x.violations.length ? x.violations.join(',') : 'OK';
       const at = x.longestFromSec ?? x.outOfFrameFromSec ?? '—';
-      const extra = x.unsafe.map((u) => ` [${u.zone} +${u.maxPx}px ${u.sec.toFixed(2)}с]`).join('');
+      const extra = x.unsafe.map((u) => ` [${u.zone} +${u.maxPx}px ${u.sec.toFixed(2)}с]`).join('') + (x.occludedSec ? ` [закрыто до ${Math.round(x.occludedMaxFrac * 100)}% букв ${x.occludedSec.toFixed(2)}с]` : '');
       console.log(`${pad(st, 22)}${pad(x.id, 26)}${pad(at, 7)}${pad(x.chars, 6)}${pad(x.needSec.toFixed(2), 7)}${pad(x.longestSec.toFixed(2), 8)}${JSON.stringify(x.text.slice(0, 40))}${extra}`);
     }
     // LATIN_ONLY вне <Readable>: отдельной строкой, тоже нарушение
@@ -433,7 +495,8 @@ try {
       composition: compId,
       generatedAt: new Date().toISOString(),
       params: { step: STEP, fps, durationInFrames: D, cps: CPS, minHoldSec: MIN_HOLD, padSec: PAD_SEC, opacityMin: OPACITY_MIN, thresholdsAreHypothesis: thresholdsAreDefault, safe: SAFE },
-      notChecked: ['перекрытие другими слоями (z-order)', 'mask-image', 'clip-path кроме inset', 'контраст'],
+      notChecked: ['перекрытие слоями без data-occluder и z-index', 'mask-image', 'clip-path кроме inset', 'контраст'],
+      occlusion: { attr: 'img[data-occluder]', maxFrac: OCC_MAX, grid: '24×5 точек на строку', alphaMin: 128 },
       timing,
       summary: { texts: texts.length, violations: nViol, byType: counts },
       texts,
@@ -462,7 +525,7 @@ try {
         console.error(`\nSELF-TEST ПРОВАЛ (проверка сломана или фикстура изменена):\n  - ${problems.join('\n  - ')}`);
         exitCode = 1;
       } else {
-        console.log(`\nSELF-TEST OK: найдено ровно ожидаемое (SHORT, OUT_OF_FRAME, UNSAFE; fx.ok без нарушений)`);
+        console.log(`\nSELF-TEST OK: найдено ровно ожидаемое (SHORT, OUT_OF_FRAME, UNSAFE, OCCLUDED; fx.ok и fx.front без нарушений)`);
         exitCode = 0;
       }
     }

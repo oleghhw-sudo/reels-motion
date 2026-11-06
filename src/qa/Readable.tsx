@@ -11,6 +11,13 @@ import React from 'react';
 
 export const READABLE_ATTR = { id: 'data-readable-id', text: 'data-readable-text' } as const;
 
+/**
+ * Метка непрозрачного слоя, который может закрыть текст (вырезка героя и т.п.): ставится на <Img>.
+ * readcheck берёт альфу картинки и считает долю букв <Readable>, закрытых ею, если слой нарисован ПОВЕРХ текста
+ * (идёт после него в документе; z-index не учитывается). mask-image слоя не учитывается — оценка строже реальности.
+ */
+export const OCCLUDER_ATTR = { 'data-occluder': '' } as const;
+
 export const Readable: React.FC<{ id: string; text: string; children: React.ReactNode }> = ({ id, text, children }) => (
   <span {...{ [READABLE_ATTR.id]: id, [READABLE_ATTR.text]: text }} style={{ display: 'contents' }}>
     {children}

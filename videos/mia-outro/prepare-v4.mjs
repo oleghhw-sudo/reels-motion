@@ -141,6 +141,20 @@ const FONT_ANTON = join(ROOT, 'public', 'fonts', 'Anton', 'Anton-Regular.ttf');
 const fontkit = createRequire(import.meta.url)('fontkit');
 const anton = fontkit.openSync(FONT_ANTON);
 const em = (text) => anton.layout(text).glyphs.reduce((s, g) => s + g.advanceWidth, 0) / anton.unitsPerEm;
+// подпись: Oswald (переменный) при wght 500 — как в карточке (fontWeight 500)
+const oswald = fontkit.openSync(join(ROOT, 'public', 'fonts', 'Oswald', 'Oswald-VF.ttf')).getVariation({ wght: 500 });
+const tagEmOf = (text) => oswald.layout(text).glyphs.reduce((s, g) => s + g.advanceWidth, 0) / oswald.unitsPerEm;
+/** Подпись в две строки (для узкой зоны у крупного плана): разрыв по словам с наименьшей шириной длинной строки; одно слово → null. */
+const tag2Of = (text) => {
+  const w = text.split(' ');
+  let best = null;
+  for (let i = 1; i < w.length; i++) {
+    const lines = [w.slice(0, i).join(' '), w.slice(i).join(' ')];
+    const em = Math.max(...lines.map(tagEmOf));
+    if (!best || em < best.em) best = { lines, em: +em.toFixed(4) };
+  }
+  return best;
+};
 // «холодный монохром»: серый с холодным оттенком (R ×0.92, B ×1.06), затем затемнение darken; размытие blurPx при 1080p; сетка
 const coldMono = (darken) => ['-colorspace', 'Gray', '-colorspace', 'sRGB', '-channel', 'R', '-evaluate', 'multiply', '0.92', '-channel', 'B', '-evaluate', 'multiply', '1.06', '+channel', '-evaluate', 'multiply', String(1 - darken)];
 const gridMvg = (W, H, step, alpha) => {
@@ -170,7 +184,7 @@ for (const tl of Object.values(episodes)) {
     // вырезка в координатах источника: (x·k + ox, y·k + oy)
     const toSrc = (r) => ({ x: r.x * place.k + place.ox, y: r.y * place.k + place.oy, w: r.w * place.k, h: r.h * place.k });
     const faceSrc = toSrc(cutFace);
-    const entry = { hero: p.hero, nn, cutout: p.cutout, cutoutSha256: sha256(join(cutDir, p.cutout)), source: relative(DIR, srcImg), sourceSha256: sha256(srcImg), placement: place.how, faceConf: +cutFace.conf.toFixed(3), cleanup: CLEANUP[p.cutout]?.why ?? null, upscaled: !!upscale[p.hero], nameEm: +em(OUTRO_NAME(p)).toFixed(4), label: labelText(CARD.label.format, nn, OUTRO_NAME(p), p.tagline) };
+    const entry = { hero: p.hero, nn, cutout: p.cutout, cutoutSha256: sha256(join(cutDir, p.cutout)), source: relative(DIR, srcImg), sourceSha256: sha256(srcImg), placement: place.how, faceConf: +cutFace.conf.toFixed(3), cleanup: CLEANUP[p.cutout]?.why ?? null, upscaled: !!upscale[p.hero], nameEm: +em(OUTRO_NAME(p)).toFixed(4), tagline: p.tagline.toUpperCase(), tagEm: +tagEmOf(p.tagline.toUpperCase()).toFixed(4), tag2: tag2Of(p.tagline.toUpperCase()), label: labelText(CARD.label.format, nn, OUTRO_NAME(p), p.tagline) };
     const trimInfo = run('magick', [clean, '-format', '%@', 'info:']).trim().match(/(\d+)x(\d+)\+(\d+)\+(\d+)/).slice(1).map(Number);
     const [tw, th, tx, ty] = trimInfo;
     const touchesTop = ty === 0;

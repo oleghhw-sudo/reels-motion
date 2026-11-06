@@ -34,7 +34,9 @@ type DossierLayer = { bgColor: string; bgDossier: string; figure: string; fig: R
 export type ManifestV4 = {
   outroSha256: string;
   publicBase: string;
-  cards: Record<string, { hero: string; nn: number; nameEm: number; label: string; land: DossierLayer; port: DossierLayer }>;
+  /** nameEm — ширина имени Anton в em; tagline — подпись заглавными, tagEm — её ширина Oswald 500 в em (fontkit, prepare-v4);
+   *  tag2 — та же подпись в две строки (разрыв по словам, em длинной строки) или null для одного слова. */
+  cards: Record<string, { hero: string; nn: number; nameEm: number; tagline: string; tagEm: number; tag2: { lines: [string, string]; em: number } | null; label: string; land: DossierLayer; port: DossierLayer }>;
   carry: Record<string, { from: 'hand'; plan: string; land: (Rect & { pos: number })[]; port: (Rect & { pos: number })[] }>;
   light: { final?: { plan: string; land: { x: number; y: number; r: number }; port: { x: number; y: number; r: number } } };
   music: { mixes: Record<string, { file: string; durationSec: number }> };

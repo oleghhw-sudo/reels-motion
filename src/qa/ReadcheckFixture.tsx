@@ -3,13 +3,18 @@
 //   fx.short  → SHORT        (видна 9 кадров = 0.3 с через opacity, нужно ≥ 1.0 с)
 //   fx.edge   → OUT_OF_FRAME (правый край строки за пределом 1080)
 //   fx.bottom → UNSAFE       (лежит в нижней safe zone; входит шторкой clip-path inset)
+//   fx.behind → OCCLUDED     (непрозрачный слой data-occluder поверх ~половины строки)
+//   fx.front  → без нарушений (тот же слой под строкой)
 //   fx.ok     → без нарушений (входит из маски overflow:hidden за 6 кадров, держится до конца)
 // Всё — функция кадра; маска и шторка нарочно проверяют обработку overflow и clip-path.
 import React from 'react';
-import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Img, interpolate, useCurrentFrame } from 'remotion';
 import { loadAllFonts, fontStack } from '../theme/loadFonts.ts';
 import { SAFE } from '../labs/safe-zones.ts';
-import { Readable } from './Readable.tsx';
+import { OCCLUDER_ATTR, Readable } from './Readable.tsx';
+
+/** Непрозрачная картинка 4×4 (data URI — без файла и без сети). */
+const OPAQUE_PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAFUlEQVQI12O0ylv6nwEJMDGgAcICAJaDAlR+MXR5AAAAAElFTkSuQmCC';
 
 loadAllFonts();
 
@@ -40,6 +45,20 @@ export const ReadcheckFixture: React.FC = () => {
       <div style={{ ...font, position: 'absolute', left: SAFE.left, top: 1920 - SAFE.bottom + 120, clipPath: `inset(${curtain}% 0 0 0)` }}>
         <Readable id="fx.bottom" text="Під підписом">
           Під підписом
+        </Readable>
+      </div>
+      {/* fx.behind: непрозрачный слой data-occluder ПОСЛЕ текста закрывает ~половину строки → OCCLUDED;
+          fx.front: тот же слой ДО текста (текст поверх) → без нарушений */}
+      <div style={{ ...font, position: 'absolute', left: SAFE.left, top: 1250 }}>
+        <Readable id="fx.behind" text="За фігурою">
+          За фігурою
+        </Readable>
+      </div>
+      <Img {...OCCLUDER_ATTR} src={OPAQUE_PNG} style={{ position: 'absolute', left: SAFE.left + 160, top: 1230, width: 400, height: 140 }} />
+      <Img {...OCCLUDER_ATTR} src={OPAQUE_PNG} style={{ position: 'absolute', left: SAFE.left + 160, top: 1380, width: 400, height: 140 }} />
+      <div style={{ ...font, position: 'absolute', left: SAFE.left, top: 1400 }}>
+        <Readable id="fx.front" text="Перед фігурою">
+          Перед фігурою
         </Readable>
       </div>
       <div style={{ ...font, position: 'absolute', left: SAFE.left, top: 1000, overflow: 'hidden' }}>

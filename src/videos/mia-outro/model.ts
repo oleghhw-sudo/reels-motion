@@ -83,6 +83,8 @@ const cardDossier = z.object({
   lock: z.object({ target: z.literal('face'), snapFrames: z.number().int().min(1), strokePx: z.number().positive(), carryFrom: z.enum(['hand']).optional() }),
   label: z.object({ format: z.string().includes('{NAME}'), font: z.literal('JetBrainsMono'), typeOn: z.boolean(), charFrames: z.number().positive(), heightFrac: z.number().positive().max(0.1) }),
   name: z.object({ font: z.literal('Anton'), behindFigure: z.boolean(), heightFrac: z.number().positive().max(0.8) }),
+  // подпись героя (tagline пункта таймлайна) крупно под именем, на плашке; размер — доля меньшей стороны кадра
+  tagline: z.object({ font: z.literal('Oswald'), heightFrac: z.number().positive().max(0.2) }),
   accent: z.record(z.string(), hex),
   depth: z.object({ figure: z.number(), name: z.number(), bg: z.number(), push: z.number().min(0).max(0.2) }),
 });

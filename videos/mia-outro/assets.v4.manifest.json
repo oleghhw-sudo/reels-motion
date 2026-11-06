@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-11-05T23:53:03.128Z",
+  "generatedAt": "2026-11-06T10:01:06.222Z",
   "script": "videos/mia-outro/prepare-v4.mjs 1.0.0",
-  "outroSha256": "06911883384712ea09b4dfbb7cf864bff3267fa3d3c22e09f3a6f93d55099428",
+  "outroSha256": "b8dc62d0269e933018886ecf7b72e4c0167da32722713e26ccda287dd8228a83",
   "v3ManifestGeneratedAt": "2026-10-19T17:10:19.801Z",
   "publicBase": "videos/mia-outro-v4",
   "cards": {
@@ -17,6 +17,15 @@
       "cleanup": null,
       "upscaled": false,
       "nameEm": 1.458,
+      "tagline": "THE INVENTOR",
+      "tagEm": 5.5489,
+      "tag2": {
+        "lines": [
+          "THE",
+          "INVENTOR"
+        ],
+        "em": 3.8625
+      },
       "label": "SUBJECT 01 · MIA · THE INVENTOR",
       "land": {
         "bgColor": "cards/MIA.land.bg.color.jpg",
@@ -67,6 +76,15 @@
       "cleanup": "кусок руки MIA у правого края (как v3)",
       "upscaled": true,
       "nameEm": 1.9214,
+      "tagline": "THE HUNTER",
+      "tagEm": 4.8019,
+      "tag2": {
+        "lines": [
+          "THE",
+          "HUNTER"
+        ],
+        "em": 3.1155
+      },
       "label": "SUBJECT 02 · ROOK · THE HUNTER",
       "land": {
         "bgColor": "cards/DARK.land.bg.color.jpg",
@@ -117,6 +135,15 @@
       "cleanup": null,
       "upscaled": false,
       "nameEm": 1.4355,
+      "tagline": "FRIEND OR ENEMY?",
+      "tagEm": 7.4426,
+      "tag2": {
+        "lines": [
+          "FRIEND OR",
+          "ENEMY?"
+        ],
+        "em": 4.1465
+      },
       "label": "SUBJECT 03 · JAX · FRIEND OR ENEMY?",
       "land": {
         "bgColor": "cards/BLOND.land.bg.color.jpg",
@@ -167,6 +194,15 @@
       "cleanup": null,
       "upscaled": false,
       "nameEm": 1.7935,
+      "tagline": "THE LAW",
+      "tagEm": 3.3421,
+      "tag2": {
+        "lines": [
+          "THE",
+          "LAW"
+        ],
+        "em": 1.6557
+      },
       "label": "SUBJECT 04 · HALE · THE LAW",
       "land": {
         "bgColor": "cards/OFFICER.land.bg.color.jpg",
@@ -303,9 +339,9 @@
       "scale": 4,
       "from": "640×503",
       "to": "2560×2012",
-      "peakMemBytes": 1264829616,
-      "maxRssBytes": 187203584,
-      "realSec": 2.4,
+      "peakMemBytes": 1262355560,
+      "maxRssBytes": 182779904,
+      "realSec": 2.67,
       "binSha256": "c1c35d92079085de96b9d547fd7e4464bc8a2e9ccf28d7b8c712d72ade91b7cc"
     }
   },
@@ -636,7 +672,7 @@
     },
     {
       "file": "cards/MIA.land.figure.png",
-      "sha256": "49ba45b42d5b6900ac50cb847d46f25917f279732d606cfa7c941d1c42909685"
+      "sha256": "60a4b5103f5abe9179f8e05b2c3670e3867fc791bc32138bcfd30cc91ee1683a"
     },
     {
       "file": "cards/MIA.port.bg.color.jpg",
@@ -648,7 +684,7 @@
     },
     {
       "file": "cards/MIA.port.figure.png",
-      "sha256": "999006a9b54ea52c166e1d1bfff13c791d7e0666113fd0633a3f8fc0240e791e"
+      "sha256": "fed04ef4948696e74aba8943dc98881a1958ebba4afd06af794948ba5350cfe5"
     },
     {
       "file": "cards/DARK.cut.x4.png",
@@ -664,7 +700,7 @@
     },
     {
       "file": "cards/DARK.land.figure.png",
-      "sha256": "6010077fdce4800bd4575eff0916727b435ac49f3b690f63cb49009693776d95"
+      "sha256": "c8d8220c27d4f05a1dc89f4dca36047ac4cc2eb76bd59ec7227b83b36c2aab9c"
     },
     {
       "file": "cards/DARK.port.bg.color.jpg",
@@ -676,7 +712,7 @@
     },
     {
       "file": "cards/DARK.port.figure.png",
-      "sha256": "a030cd7b2aac5f9af8854b17589dfcc7638a57956a7ace333b3fb18f3d317b9b"
+      "sha256": "f7e5b15bbffb38190cd8fae4a7329d5a26eff3890b40ae6c88a322c0e783cb53"
     },
     {
       "file": "cards/BLOND.land.bg.color.jpg",
@@ -688,7 +724,7 @@
     },
     {
       "file": "cards/BLOND.land.figure.png",
-      "sha256": "0d5544070ebbb81a809dbe335322348ab6aa606483e4ac0cd8fc158caddfce28"
+      "sha256": "34f8ce98ddb7784290b006b0a5a616064d34351aecfc55c504dcf1e8c8a59a3b"
     },
     {
       "file": "cards/BLOND.port.bg.color.jpg",
@@ -700,7 +736,7 @@
     },
     {
       "file": "cards/BLOND.port.figure.png",
-      "sha256": "a98428c8cccd0cd72430fb41dfdc253e48505227c556227fa82d972bf3825a6f"
+      "sha256": "56a26d999296c9e780ff0851e6c383712e65ceb6fb2b9bf0abc5e0d71b21892a"
     },
     {
       "file": "cards/OFFICER.land.bg.color.jpg",
@@ -712,7 +748,7 @@
     },
     {
       "file": "cards/OFFICER.land.figure.png",
-      "sha256": "97ebe9d650805b3a540c55f472a6abfe89628b307e08f6bcd773810337ec453f"
+      "sha256": "05e3c58c8453363f7e06e32cbbf0690eec23fb86afc9810d7fddb554fba35169"
     },
     {
       "file": "cards/OFFICER.port.bg.color.jpg",
@@ -724,7 +760,7 @@
     },
     {
       "file": "cards/OFFICER.port.figure.png",
-      "sha256": "e9914b21bfbb46996311561a942bc9851ddb5a91b806cf5ead53dc043f1792ea"
+      "sha256": "bf924f8706f4f35676fbf5cea3a2557082375dd0fdb3872b2ead38bb61c0d28a"
     },
     {
       "file": "music.raw.wav",
