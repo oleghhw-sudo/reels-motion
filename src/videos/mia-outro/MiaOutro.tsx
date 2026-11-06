@@ -1,4 +1,6 @@
-// Аутро MIA «знакомство с героями», динамика v2 — 16:9 (MiaOutro) и 9:16 (MiaOutroVertical), props {episode}.
+// Аутро MIA «знакомство с героями», динамика v2 — 16:9 (MiaOutro) и 9:16 (MiaOutroVertical), props {episode, script}.
+// script: outro.yaml (v3, по умолчанию) | outro.v4-picks.yaml (v4, задача 030: карточка «досье», 2 склейки без смаза, lockCarry, lightMatch,
+// живой финал, звук v4) — приёмы v4 в dossier.tsx, ассеты — assets.v4.manifest.json.
 // Данные — videos/mia-outro/outro.yaml (таймлайн на ударах music.hits, in: whip, ramp) и assets.manifest.json.
 // Приёмы (удар, подвод, смаз-склейка, слэм/штамп/плашка, look) — src/fx (задача 012-А): пресеты HIT.L / BLAST / LEAD /
 // RECOIL / WHIP / LOOK с числами прототипа docs/tasks/data/008-proto-rook-card.py; сырых чисел приёмов в сцене нет.
@@ -13,14 +15,17 @@ import { clamp, seg } from '../../motion/index.ts';
 import { step } from '../../motion/spring.ts';
 import { E, rand } from '../../motion/tokens.ts';
 import { BLAST, Filters, HIT, HitLayer, LOOK, LeadFlash, LeadIn, Look, RECOIL, Rays, Slam, Stamp, TagPlate, WHIP, White, WhipCut, filterCss, lookFilter, shakeAt, useHit, type Cuts } from '../../fx/index.ts';
-import { livePos, type Placed, type Timeline, type Zone } from './model.ts';
-import { MANIFEST, OUTRO, asset, liveKey, timelineFor } from './script.ts';
+import { isDossier, livePos, type Outro, type Placed, type Timeline, type Zone } from './model.ts';
+import { MANIFEST, MANIFEST_V4, OUTRO, OUTROS, SCRIPTS, asset, assetV4, liveKey, timelineFor, type ScriptFile } from './script.ts';
+import { CarryOut, DossierCard, LightGrow, carryRectAt } from './dossier.tsx';
 import { CROP_VARIANTS, cropFor, type CropVariant } from './vertical.ts';
 
 loadAllFonts();
 
 export const miaOutroSchema = z.object({
   episode: z.string(),
+  /** Файл серии: outro.yaml (v3) по умолчанию; outro.v4-picks.yaml — предложение v4 (задача 030). */
+  script: z.enum(SCRIPTS).optional(),
   /** Вариант кропа ВСЕХ живых планов в 9:16 (стиллы для выбора); без него — outro.yaml vertical.crops, иначе B. */
   verticalCrop: z.enum(['A', 'B', 'C']).optional(),
   /** Только для позитивного контроля проверки зон: подложенный запретный интервал обязан уронить сборку. */
@@ -32,7 +37,8 @@ type Orient = 'land' | 'port';
 export const MIA_FPS = OUTRO.format.fps;
 const injected = (p: MiaOutroProps): Zone[] => (p.qaInjectForbidden ?? []).map((z) => ({ ...z, reason: 'ПОДЛОЖЕНО (props qaInjectForbidden)', origin: 'props' }));
 /** Длительность — из данных серии (музыка + holdAfter); здесь же проверка зон (нарушение → исключение → сборка падает). */
-export const miaOutroMetadata = ({ props }: { props: MiaOutroProps }) => ({ durationInFrames: timelineFor(props.episode, injected(props)).durationInFrames });
+const scriptOf = (p: MiaOutroProps): ScriptFile => p.script ?? 'outro.yaml';
+export const miaOutroMetadata = ({ props }: { props: MiaOutroProps }) => ({ durationInFrames: timelineFor(props.episode, injected(props), scriptOf(props)).durationInFrames });
 
 const INK = '#ffffff';
 /** Приём входа пункта (in: whip) — есть не у всех видов пунктов. */
@@ -40,7 +46,7 @@ const inOf = (p: Placed): string | undefined => ('in' in p ? p.in : undefined);
 /** Тайлы зерна серии (prepare-assets) для <Look>. */
 const grainTiles = () => MANIFEST.grain.map((g) => staticFile(asset(g)));
 
-type Ctx = { orient: Orient; crop: (key: string) => CropVariant; tl: Timeline };
+type Ctx = { orient: Orient; crop: (key: string) => CropVariant; tl: Timeline; outro: Outro };
 
 // ---------------------------------------------------------------- кадр исходника (Freeze на позиции, межкадровое смешивание #038)
 const SrcFrame: React.FC<{ k2: string; orient: Orient; crop: CropVariant; frame: number; opacity?: number }> = ({ k2, orient, crop, frame, opacity = 1 }) => {
@@ -80,7 +86,7 @@ const lastShown = (p: Placed, fps: number): { key: string; pos: number } | null 
 };
 
 // ---------------------------------------------------------------- живой план: ramp-подвод к удару (LEAD)
-const Live: React.FC<{ p: Placed & { kind: 'live' }; ctx: Ctx; toHit: boolean }> = ({ p, ctx, toHit }) => {
+const Live: React.FC<{ p: Placed & { kind: 'live' }; ctx: Ctx; toHit: boolean; carryTo: string | null }> = ({ p, ctx, toHit, carryTo }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   const n = p.endFrame - p.startFrame;
@@ -94,13 +100,17 @@ const Live: React.FC<{ p: Placed & { kind: 'live' }; ctx: Ctx; toHit: boolean }>
       </LeadIn>
       <Look preset={LOOK.film} tiles={grainTiles()} />
       {p.ramp && toHit ? <LeadFlash hitAt={n / fps} /> : null}
+      {carryTo && isDossier(ctx.outro.card) ? (
+        <CarryOut hero={carryTo} orient={ctx.orient} n={n} card={ctx.outro.card} accent={ctx.outro.card.accent[carryTo]} ramp={!!p.ramp} posAt={(k) => livePos(k, n, L.frames, !!p.ramp, fps)} />
+      ) : null}
     </AbsoluteFill>
   );
 };
 
 // ---------------------------------------------------------------- затишье: дверь, наезд push (outro.yaml), к последней доле — вибрация 0→4 px
-const Lull: React.FC<{ p: Placed & { kind: 'lull' }; ctx: Ctx }> = ({ p, ctx }) => {
+const Lull: React.FC<{ p: Placed & { kind: 'lull' }; ctx: Ctx; light: boolean }> = ({ p, ctx, light }) => {
   const f = useCurrentFrame();
+  const { fps } = useVideoConfig();
   const n = p.endFrame - p.startFrame;
   const key = liveKey(p.srcFrames!);
   const k = 1 + p.push * E.dolly(f / n);
@@ -111,6 +121,7 @@ const Lull: React.FC<{ p: Placed & { kind: 'lull' }; ctx: Ctx }> = ({ p, ctx }) 
     <AbsoluteFill style={{ backgroundColor: '#000', overflow: 'hidden' }}>
       <AbsoluteFill style={{ transform: `translate(${vx}px, ${vy}px) scale(${k})` }}>
         <SrcAt k2={key} orient={ctx.orient} crop={ctx.crop(key)} pos={Math.min(f, MANIFEST.live[key].frames - 1)} />
+        {light ? <LightGrow n={n} beatFrames={Math.round(ctx.tl.beat * fps)} orient={ctx.orient} /> : null}
       </AbsoluteFill>
       <Look preset={LOOK.film} tiles={grainTiles()} />
     </AbsoluteFill>
@@ -133,7 +144,9 @@ const Card: React.FC<{ p: Placed & { kind: 'card' }; ctx: Ctx; num: number; prev
   const C = MANIFEST.cards[p.hero];
   const lay = C.layout[orient];
   const T = TXT[orient];
-  const name = OUTRO.names[p.hero] ?? p.title;
+  const name = ctx.outro.names[p.hero] ?? p.title;
+  const pop = ctx.outro.card;
+  if (isDossier(pop)) throw new Error('Card (поп-арт v3) вызвана для card.style: dossier');
   const tag = p.tagline.toUpperCase();
   const left = p.side === 'left';
   const anchor: React.CSSProperties = left ? { left: T.left } : { right: T.right, textAlign: 'right' };
@@ -190,8 +203,8 @@ const Card: React.FC<{ p: Placed & { kind: 'card' }; ctx: Ctx; num: number; prev
       <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) scale(${camK})`, transformOrigin: '40% 50%', filter: filterCss(id, ca, 0) }}>
         {r < R * 0.98 ? <AbsoluteFill style={{ filter: lookFilter(LOOK.monoHit) }}>{under}</AbsoluteFill> : null}
         <AbsoluteFill style={{ clipPath: `circle(${r}px at ${cx}px ${cy}px)`, backgroundColor: C.bg }}>
-          <Rays cx={cx} cy={cy} n={OUTRO.card.bg.rays} color={C.rays} alpha={C.raysAlpha} rad={RECOIL.raysSpin * t} />
-          {OUTRO.card.bg.halftone ? <Img src={staticFile(asset(C.bgLayer[orient]))} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} /> : null}
+          <Rays cx={cx} cy={cy} n={pop.bg.rays} color={C.rays} alpha={C.raysAlpha} rad={RECOIL.raysSpin * t} />
+          {pop.bg.halftone ? <Img src={staticFile(asset(C.bgLayer[orient]))} style={{ position: 'absolute', left: 0, top: 0, width: W, height: H }} /> : null}
         </AbsoluteFill>
         {layers(figSc, fig.drift * t)}
         <Stamp t={t - RECOIL.stampAt} origin={left ? '0% 0%' : '100% 0%'} style={{ top: T.num.top, ...anchor, opacity: textO, fontFamily: fontFor('Oswald', `#${num}`), fontSize: T.num.size, color: C.bg.toLowerCase() === '#1e1e1e' ? INK : '#000', lineHeight: 1 }}>
@@ -220,27 +233,42 @@ const Final: React.FC<{ p: Placed & { kind: 'final' }; ctx: Ctx }> = ({ p, ctx }
   const env = useHit(BLAST, 'final');
   const [sx, sy] = shakeAt(t, fps, BLAST.shake, 'final'); // тряска взрыва тем же seed, что в финале ep01
   const lineQ = E.outSoft(seg(k, 3, 3 + 7));
-  const tailQ = E.outSoft(seg(k, 15, 15 + 10));
+  // v4 alive: «To be continued» — штамп на последней доле музыки; v3 — проявление с 15-го кадра
+  const A = p.alive;
+  const tailAt = A ? musicLocal - Math.round(ctx.tl.beat * fps) : 15;
+  const tailQ = A ? (k >= tailAt ? 1 : 0) : E.outSoft(seg(k, 15, 15 + 10));
   const grain = LOOK.film.grain * (1 - seg(k, musicLocal, n));
-  const S = ctx.orient === 'land' ? { title: 240, line: 56, tail: 36, y: 250, w: 1500, right: 0 } : { title: 260, line: 54, tail: 36, y: H * 0.28, w: 760, right: 140 };
+  const S0 = ctx.orient === 'land' ? { title: 240, line: 56, tail: 36, y: 250, w: 1500, right: 0 } : { title: 260, line: 54, tail: 36, y: H * 0.28, w: 760, right: 140 };
+  // v4: строка не меньше lineHeightFrac высоты кадра (9:16 — шире колонка под крупную строку), наезд alive.push, MIA растёт titleGrow
+  const S = A ? { ...S0, line: Math.max(S0.line, Math.ceil(A.lineHeightFrac * H)), w: ctx.orient === 'land' ? S0.w : 860 } : S0;
+  const push = A ? A.push : 0.03;
+  const grow = A ? A.titleGrow[0] + (A.titleGrow[1] - A.titleGrow[0]) * E.dolly(seg(k, 0, n)) : 1;
   const line = p.line;
   const tail = p.tail.toUpperCase();
   return (
     <AbsoluteFill style={{ backgroundColor: '#000', overflow: 'hidden' }}>
-      <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) scale(${1 + 0.03 * E.dolly(k / n)})`, filter: 'brightness(0.32) saturate(0.6)' }}>
+      <AbsoluteFill style={{ transform: `translate(${sx}px, ${sy}px) scale(${1 + push * E.dolly(k / n)})`, filter: 'brightness(0.32) saturate(0.6)' }}>
         <SrcAt k2={key} orient={ctx.orient} crop={ctx.crop(key)} pos={Math.min(k, MANIFEST.live[key].frames - 1)} />
       </AbsoluteFill>
       <Look preset={LOOK.film} grain={grain} tiles={grainTiles()} />
-      <div style={{ position: 'absolute', left: 0, right: S.right, top: S.y, height: S.title * 1.2, transform: `translate(${sx}px, ${sy}px)` }}>
+      <div style={{ position: 'absolute', left: 0, right: S.right, top: S.y, height: S.title * 1.2, transform: `translate(${sx}px, ${sy}px) scale(${grow})`, transformOrigin: '50% 50%' }}>
         <Slam id="final.title" text={p.title} size={S.title} t={t - RECOIL.nameAt} align={{ left: 0, right: 0, textAlign: 'center' }} top={0} origin="50% 50%" fontFamily={fontFor('Anton', p.title)} />
       </div>
       <div style={{ position: 'absolute', left: 0, right: S.right, top: S.y + S.title * 1.2 + 20, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
         <div style={{ maxWidth: S.w, opacity: lineQ, transform: `translateY(${(1 - lineQ) * 18}px)`, fontFamily: fontFor('Oswald', line), fontWeight: 500, fontSize: S.line, lineHeight: 1.25, color: INK, textWrap: 'balance' }}>
           <Readable id="final.line" text={line}>{line}</Readable>
         </div>
-        <div style={{ marginTop: 24, opacity: tailQ, transform: `translateY(${(1 - tailQ) * 14}px)`, fontFamily: fontFor('Oswald', tail), fontWeight: 400, fontSize: S.tail, letterSpacing: '0.24em', color: '#F7C600' }}>
-          <Readable id="final.tail" text={tail}>{tail}</Readable>
-        </div>
+        {A ? (
+          <div style={{ position: 'relative', marginTop: 24, height: S.tail * 1.3, width: '100%' }}>
+            <Stamp t={(k - tailAt) / fps} origin="50% 50%" style={{ left: 0, right: 0, top: 0, textAlign: 'center', fontFamily: fontFor('Oswald', tail), fontWeight: 400, fontSize: S.tail, letterSpacing: '0.24em', color: '#F7C600' }}>
+              <Readable id="final.tail" text={tail}>{tail}</Readable>
+            </Stamp>
+          </div>
+        ) : (
+          <div style={{ marginTop: 24, opacity: tailQ, transform: `translateY(${(1 - tailQ) * 14}px)`, fontFamily: fontFor('Oswald', tail), fontWeight: 400, fontSize: S.tail, letterSpacing: '0.24em', color: '#F7C600' }}>
+            <Readable id="final.tail" text={tail}>{tail}</Readable>
+          </div>
+        )}
       </div>
       <White a={p.flash ? env.flash : 0} />
     </AbsoluteFill>
@@ -251,9 +279,12 @@ const Final: React.FC<{ p: Placed & { kind: 'final' }; ctx: Ctx }> = ({ p, ctx }
 const MiaOutroBase: React.FC<MiaOutroProps & { orient: Orient }> = (props) => {
   const { orient } = props;
   const { fps } = useVideoConfig();
-  const tl = useMemo(() => timelineFor(props.episode, injected(props)), [props]);
-  const chosen = OUTRO.episodes[props.episode].vertical.crops;
-  const ctx: Ctx = { orient, tl, crop: (key) => cropFor(key, chosen, props.verticalCrop) };
+  const script = scriptOf(props);
+  const outro = OUTROS[script];
+  const tl = useMemo(() => timelineFor(props.episode, injected(props), script), [props, script]);
+  const chosen = outro.episodes[props.episode].vertical.crops;
+  const ctx: Ctx = { orient, tl, outro, crop: (key) => cropFor(key, chosen, props.verticalCrop) };
+  const { width: W, height: H } = useVideoConfig();
   // направление смаза — у склейки (вход следующего = выход предыдущего), чередуется по склейкам in: whip;
   // после карточки следующая склейка идёт в сторону, противоположную предыдущей, т. е. против входа в карточку
   const cuts = useMemo(() => {
@@ -273,10 +304,22 @@ const MiaOutroBase: React.FC<MiaOutroProps & { orient: Orient }> = (props) => {
         const label = `${p.index} ${p.kind}${p.kind === 'card' ? ` ${p.hero}` : p.srcFrames ? ` ${liveKey(p.srcFrames)}` : ''}${inOf(p) ? ` in:${inOf(p)}` : ''}${p.kind === 'live' && p.ramp ? ' ramp' : ''}`;
         const next = tl.items[i + 1];
         let body: React.ReactNode;
-        if (p.kind === 'card') body = <Card p={p} ctx={ctx} num={++cardNo} prev={i > 0 ? lastShown(tl.items[i - 1], fps) : null} outWhip={cuts[i].outDir !== 0} />;
-        else if (p.kind === 'lull') body = <Lull p={p} ctx={ctx} />;
+        if (p.kind === 'card' && isDossier(outro.card)) {
+          const prev = i > 0 ? lastShown(tl.items[i - 1], fps) : null;
+          const pi = tl.items[i - 1];
+          const carried = p.in === 'lockCarry' && pi?.kind === 'live';
+          const carryFrom = carried ? carryRectAt(p.hero, orient, prev!.pos, pi.ramp ? 1 : 0, W, H) : null;
+          const outWhip = cuts[i].outDir !== 0;
+          const nOut = Math.round(WHIP.outCard.dur * fps);
+          ++cardNo;
+          body = (
+            <DossierCard p={p} card={outro.card} orient={orient} name={outro.names[p.hero] ?? p.title} carryFrom={carryFrom} textO={(k) => (outWhip && k >= dur - nOut ? RECOIL.textOnSmear : 1)}
+              under={prev ? <SrcAt k2={prev.key} orient={orient} crop={ctx.crop(prev.key)} pos={prev.pos} /> : null} />
+          );
+        } else if (p.kind === 'card') body = <Card p={p} ctx={ctx} num={++cardNo} prev={i > 0 ? lastShown(tl.items[i - 1], fps) : null} outWhip={cuts[i].outDir !== 0} />;
+        else if (p.kind === 'lull') body = <Lull p={p} ctx={ctx} light={!!next && next.kind === 'final' && next.in === 'lightMatch'} />;
         else if (p.kind === 'final') body = <Final p={p} ctx={ctx} />;
-        else body = <Live p={p} ctx={ctx} toHit={!!next && next.kind === 'card'} />;
+        else body = <Live p={p} ctx={ctx} toHit={!!next && next.kind === 'card'} carryTo={next && next.kind === 'card' && next.in === 'lockCarry' ? next.hero : null} />;
         return (
           <Sequence key={p.index} from={p.startFrame} durationInFrames={dur} name={label}>
             <WhipCut id={`i${p.index}`} dur={dur / fps} cuts={cuts[i]}>
@@ -285,7 +328,7 @@ const MiaOutroBase: React.FC<MiaOutroProps & { orient: Orient }> = (props) => {
           </Sequence>
         );
       })}
-      <Audio src={staticFile(asset(MANIFEST.music.mixes[props.episode].file))} />
+      <Audio src={staticFile(script === 'outro.yaml' ? asset(MANIFEST.music.mixes[props.episode].file) : assetV4(MANIFEST_V4.music.mixes[props.episode].file))} />
     </AbsoluteFill>
   );
 };

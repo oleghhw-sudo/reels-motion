@@ -1,0 +1,762 @@
+{
+  "generatedAt": "2026-11-05T23:53:03.128Z",
+  "script": "videos/mia-outro/prepare-v4.mjs 1.0.0",
+  "outroSha256": "06911883384712ea09b4dfbb7cf864bff3267fa3d3c22e09f3a6f93d55099428",
+  "v3ManifestGeneratedAt": "2026-10-19T17:10:19.801Z",
+  "publicBase": "videos/mia-outro-v4",
+  "cards": {
+    "MIA": {
+      "hero": "MIA",
+      "nn": 1,
+      "cutout": "MIA_V5_f24_cut.png",
+      "cutoutSha256": "f02d79b1c0f0b084c1f5a2f8623ef31f28b382719fa69154f739a1beff756b6e",
+      "source": "_outro-analysis/cards/src/MIA_V5_f24.png",
+      "sourceSha256": "c43b39b09907aea3dd86aade913f0a2c2ff9be47f09de6e62d00d5a1f171f1fa",
+      "placement": "весь кадр, масштаб 1.000",
+      "faceConf": 0.763,
+      "cleanup": null,
+      "upscaled": false,
+      "nameEm": 1.458,
+      "label": "SUBJECT 01 · MIA · THE INVENTOR",
+      "land": {
+        "bgColor": "cards/MIA.land.bg.color.jpg",
+        "bgDossier": "cards/MIA.land.bg.dossier.jpg",
+        "figure": "cards/MIA.land.figure.png",
+        "fig": {
+          "x": 0,
+          "y": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "face": {
+          "x": 561,
+          "y": 167,
+          "w": 773,
+          "h": 773
+        },
+        "fadeTop": false
+      },
+      "port": {
+        "bgColor": "cards/MIA.port.bg.color.jpg",
+        "bgDossier": "cards/MIA.port.bg.dossier.jpg",
+        "figure": "cards/MIA.port.figure.png",
+        "fig": {
+          "x": -446,
+          "y": 806,
+          "w": 2052,
+          "h": 1154
+        },
+        "face": {
+          "x": 153,
+          "y": 984,
+          "w": 825,
+          "h": 825
+        },
+        "fadeTop": true
+      }
+    },
+    "DARK": {
+      "hero": "DARK",
+      "nn": 2,
+      "cutout": "DARK_new2_cut.png",
+      "cutoutSha256": "aba9b50b8c93e42db5476d4c4e08641ebb6130bb89eee6e9de0f064e0bf5a7ca",
+      "source": "_outro-analysis/cards/src/DARK_new2.jpg",
+      "sourceSha256": "1b59d6f4de37fb76506e2afd3157a528e705b33abc9995ea88aa33284599f9e1",
+      "placement": "кусок 1:1 со смещением (120, 0), RMSE окна лица 0.0196",
+      "faceConf": 0.766,
+      "cleanup": "кусок руки MIA у правого края (как v3)",
+      "upscaled": true,
+      "nameEm": 1.9214,
+      "label": "SUBJECT 02 · ROOK · THE HUNTER",
+      "land": {
+        "bgColor": "cards/DARK.land.bg.color.jpg",
+        "bgDossier": "cards/DARK.land.bg.dossier.jpg",
+        "figure": "cards/DARK.land.figure.png",
+        "fig": {
+          "x": 180,
+          "y": 0,
+          "w": 960,
+          "h": 755
+        },
+        "face": {
+          "x": 543,
+          "y": 222,
+          "w": 315,
+          "h": 315
+        },
+        "fadeTop": false
+      },
+      "port": {
+        "bgColor": "cards/DARK.port.bg.color.jpg",
+        "bgDossier": "cards/DARK.port.bg.dossier.jpg",
+        "figure": "cards/DARK.port.figure.png",
+        "fig": {
+          "x": -298,
+          "y": 580,
+          "w": 1756,
+          "h": 1380
+        },
+        "face": {
+          "x": 366,
+          "y": 986,
+          "w": 576,
+          "h": 576
+        },
+        "fadeTop": true
+      }
+    },
+    "BLOND": {
+      "hero": "BLOND",
+      "nn": 3,
+      "cutout": "BLOND_V9_f168_cut.png",
+      "cutoutSha256": "fe3c6a459a10369c3e63d623a2ba3a0243dfad2f92bfdc5dd667e54add03bca3",
+      "source": "_outro-analysis/cards/src/BLOND_V9_f168.png",
+      "sourceSha256": "50e1a78a2a78cc2ab7a44d519fbd2e416e795031a6aeeb6eab2629c75e708d41",
+      "placement": "весь кадр, масштаб 1.000",
+      "faceConf": 0.798,
+      "cleanup": null,
+      "upscaled": false,
+      "nameEm": 1.4355,
+      "label": "SUBJECT 03 · JAX · FRIEND OR ENEMY?",
+      "land": {
+        "bgColor": "cards/BLOND.land.bg.color.jpg",
+        "bgDossier": "cards/BLOND.land.bg.dossier.jpg",
+        "figure": "cards/BLOND.land.figure.png",
+        "fig": {
+          "x": 0,
+          "y": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "face": {
+          "x": 534,
+          "y": 119,
+          "w": 927,
+          "h": 927
+        },
+        "fadeTop": false
+      },
+      "port": {
+        "bgColor": "cards/BLOND.port.bg.color.jpg",
+        "bgDossier": "cards/BLOND.port.bg.dossier.jpg",
+        "figure": "cards/BLOND.port.figure.png",
+        "fig": {
+          "x": -526,
+          "y": 806,
+          "w": 2052,
+          "h": 1154
+        },
+        "face": {
+          "x": 45,
+          "y": 933,
+          "w": 991,
+          "h": 991
+        },
+        "fadeTop": true
+      }
+    },
+    "OFFICER": {
+      "hero": "OFFICER",
+      "nn": 4,
+      "cutout": "OFF_V12_f12_cut.png",
+      "cutoutSha256": "d1cb5b5968b20f0547ed39795ecbf2631762a1a4f40d5d757b70efc77660ab42",
+      "source": "_outro-analysis/cards/src/OFF_V12_f12.png",
+      "sourceSha256": "79552b44205f09794a588c9cb5d9bb6bd7a89dbf3fe1e3f86a606bf1e05fa4df",
+      "placement": "весь кадр, масштаб 2.133",
+      "faceConf": 0.702,
+      "cleanup": null,
+      "upscaled": false,
+      "nameEm": 1.7935,
+      "label": "SUBJECT 04 · HALE · THE LAW",
+      "land": {
+        "bgColor": "cards/OFFICER.land.bg.color.jpg",
+        "bgDossier": "cards/OFFICER.land.bg.dossier.jpg",
+        "figure": "cards/OFFICER.land.figure.png",
+        "fig": {
+          "x": 0,
+          "y": 0,
+          "w": 1920,
+          "h": 1080
+        },
+        "face": {
+          "x": 1115,
+          "y": 320,
+          "w": 363,
+          "h": 363
+        },
+        "fadeTop": false
+      },
+      "port": {
+        "bgColor": "cards/OFFICER.port.bg.color.jpg",
+        "bgDossier": "cards/OFFICER.port.bg.dossier.jpg",
+        "figure": "cards/OFFICER.port.figure.png",
+        "fig": {
+          "x": -113,
+          "y": 580,
+          "w": 1227,
+          "h": 1380
+        },
+        "face": {
+          "x": 85,
+          "y": 989,
+          "w": 464,
+          "h": 464
+        },
+        "fadeTop": true
+      }
+    }
+  },
+  "carry": {
+    "DARK": {
+      "from": "hand",
+      "plan": "V10_f150-193",
+      "crop": "B",
+      "land": [
+        {
+          "pos": 40,
+          "x": 1096,
+          "y": 265,
+          "w": 102,
+          "h": 150
+        },
+        {
+          "pos": 41,
+          "x": 1082,
+          "y": 247,
+          "w": 119,
+          "h": 168
+        },
+        {
+          "pos": 42,
+          "x": 1088,
+          "y": 247,
+          "w": 113,
+          "h": 167
+        },
+        {
+          "pos": 43,
+          "x": 1075,
+          "y": 247,
+          "w": 127,
+          "h": 161
+        }
+      ],
+      "port": [
+        {
+          "pos": 40,
+          "x": 782,
+          "y": 471,
+          "w": 181,
+          "h": 267
+        },
+        {
+          "pos": 41,
+          "x": 757,
+          "y": 439,
+          "w": 212,
+          "h": 299
+        },
+        {
+          "pos": 42,
+          "x": 768,
+          "y": 439,
+          "w": 201,
+          "h": 297
+        },
+        {
+          "pos": 43,
+          "x": 744,
+          "y": 439,
+          "w": 226,
+          "h": 286
+        }
+      ],
+      "facesFound": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "light": {
+    "final": {
+      "plan": "V12_f317-360",
+      "crop": "C",
+      "land": {
+        "x": 1363,
+        "y": 362,
+        "r": 25,
+        "pixels": 375
+      },
+      "port": {
+        "x": 574,
+        "y": 644,
+        "r": 44
+      }
+    }
+  },
+  "upscale": {
+    "DARK": {
+      "tool": "realesrgan-ncnn-vulkan",
+      "model": "realesrgan-x4plus-anime",
+      "scale": 4,
+      "from": "640×503",
+      "to": "2560×2012",
+      "peakMemBytes": 1264829616,
+      "maxRssBytes": 187203584,
+      "realSec": 2.4,
+      "binSha256": "c1c35d92079085de96b9d547fd7e4464bc8a2e9ccf28d7b8c712d72ade91b7cc"
+    }
+  },
+  "music": {
+    "mixes": {
+      "ep01": {
+        "file": "mix.ep01.wav",
+        "durationSec": 19.591,
+        "musicI": -15.2,
+        "cues": [
+          {
+            "event": "whip-flip",
+            "who": "V3:228",
+            "id": "need-02",
+            "peakAt": 1.834361058023087,
+            "gainDb": -7.5,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 0.7943610580230869,
+            "offset": 0,
+            "dur": 1.59,
+            "tailAfterPeak": 0.55,
+            "cut": "естественный конец",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "freeze-x4",
+            "who": "MIA",
+            "id": "remotion__shutter-modern",
+            "peakAt": 2.752,
+            "gainDb": 7,
+            "tailCap": 0.15,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 2.65,
+            "offset": 0,
+            "dur": 0.252,
+            "tailAfterPeak": 0.15,
+            "cut": "≤ 0.15 с после пика",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "lock-tick",
+            "who": "MIA",
+            "id": "kenney__tick-001",
+            "peakAt": 3.2103333333333333,
+            "gainDb": 3,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 3.208833333333333,
+            "offset": 0,
+            "dur": 0.045,
+            "tailAfterPeak": 0.043,
+            "cut": "естественный конец",
+            "fadeOut": 0.0225
+          },
+          {
+            "event": "whip-gun",
+            "who": "V10:150",
+            "id": "hook-03",
+            "peakAt": 4.597,
+            "gainDb": -8.5,
+            "tailCap": 0.35,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 3.4570000000000007,
+            "offset": 0,
+            "dur": 1.49,
+            "tailAfterPeak": 0.35,
+            "cut": "≤ 0.35 с после пика",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "freeze-x4",
+            "who": "DARK",
+            "id": "remotion__shutter-modern",
+            "peakAt": 6.432,
+            "gainDb": 7,
+            "tailCap": 0.15,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 6.33,
+            "offset": 0,
+            "dur": 0.252,
+            "tailAfterPeak": 0.15,
+            "cut": "≤ 0.15 с после пика",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "lock-tick",
+            "who": "DARK",
+            "id": "kenney__tick-001",
+            "peakAt": 6.598666666666667,
+            "gainDb": 3,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 6.597166666666667,
+            "offset": 0,
+            "dur": 0.045,
+            "tailAfterPeak": 0.043,
+            "cut": "естественный конец",
+            "fadeOut": 0.0225
+          },
+          {
+            "event": "freeze-x4",
+            "who": "BLOND",
+            "id": "remotion__shutter-modern",
+            "peakAt": 8.277,
+            "gainDb": 7,
+            "tailCap": 0.15,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 8.174999999999999,
+            "offset": 0,
+            "dur": 0.252,
+            "tailAfterPeak": 0.15,
+            "cut": "≤ 0.15 с после пика",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "lock-tick",
+            "who": "BLOND",
+            "id": "kenney__tick-001",
+            "peakAt": 8.735333333333333,
+            "gainDb": 3,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 8.733833333333333,
+            "offset": 0,
+            "dur": 0.045,
+            "tailAfterPeak": 0.043,
+            "cut": "естественный конец",
+            "fadeOut": 0.0225
+          },
+          {
+            "event": "freeze-x4",
+            "who": "OFFICER",
+            "id": "remotion__shutter-modern",
+            "peakAt": 10.112,
+            "gainDb": 7,
+            "tailCap": 0.15,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 10.01,
+            "offset": 0,
+            "dur": 0.252,
+            "tailAfterPeak": 0.15,
+            "cut": "≤ 0.15 с после пика",
+            "fadeOut": 0.06
+          },
+          {
+            "event": "riser-hale",
+            "who": "OFFICER",
+            "id": "epic4-06",
+            "peakAt": 10.112,
+            "gainDb": -3.3,
+            "tailCap": 0,
+            "fadeIn": 0.3,
+            "untilHold": false,
+            "at": 7.862,
+            "offset": 0,
+            "dur": 2.25,
+            "tailAfterPeak": 0,
+            "cut": "обрезан на пике",
+            "fadeOut": 0.01
+          },
+          {
+            "event": "lock-tick",
+            "who": "OFFICER",
+            "id": "kenney__tick-001",
+            "peakAt": 10.570333333333334,
+            "gainDb": 3,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": false,
+            "at": 10.568833333333334,
+            "offset": 0,
+            "dur": 0.045,
+            "tailAfterPeak": 0.043,
+            "cut": "естественный конец",
+            "fadeOut": 0.0225
+          },
+          {
+            "event": "blast",
+            "who": "h9",
+            "id": "epic4-08",
+            "peakAt": 15.616,
+            "gainDb": 5.8,
+            "tailCap": null,
+            "fadeIn": 0,
+            "untilHold": true,
+            "at": 15.235999999999999,
+            "offset": 0,
+            "dur": 3.105,
+            "tailAfterPeak": 2.725,
+            "cut": "до hold (обрыв музыки)",
+            "fadeOut": 0.06
+          }
+        ],
+        "ducks": [
+          {
+            "from": 15.216,
+            "to": 15.616,
+            "db": -6,
+            "why": "drop-final"
+          },
+          {
+            "from": 15.616,
+            "to": 16.074680529011545,
+            "db": -3,
+            "why": "blast (после взрыва)"
+          }
+        ],
+        "hpfHz": 100,
+        "limiter": {
+          "ceilingDbtp": -1,
+          "beforeLoudnorm": true
+        },
+        "loudness": {
+          "premix": {
+            "I": -14.8,
+            "TP": 3.4
+          },
+          "limited": {
+            "I": -14.2,
+            "TP": -1.28
+          },
+          "loudnormType": "linear",
+          "after": {
+            "I": -13.9,
+            "TP": -1.1
+          }
+        },
+        "ab": {
+          "v3": {
+            "I": -14,
+            "TP": -1.5
+          },
+          "v4": {
+            "I": -13.9,
+            "TP": -1.1
+          },
+          "v3GainDb": 0
+        }
+      }
+    }
+  },
+  "sfx": {
+    "need-02": {
+      "id": "need-02",
+      "file": "sfx/need-02.wav",
+      "lufs": -15.7,
+      "peak": 1.04,
+      "dur": 1.59,
+      "source": "sfx pack 1.rar («нужный звук») — неизвестно",
+      "license": "unknown",
+      "licenseWarning": true,
+      "srcSha256": "2c1b9d9e32974f6324f955c022393e89bee3e53b4a0961b8728f4e427b01c3a7"
+    },
+    "hook-03": {
+      "id": "hook-03",
+      "file": "sfx/hook-03.wav",
+      "lufs": -14.7,
+      "peak": 1.14,
+      "dur": 1.59,
+      "source": "sfx pack 2.rar («цепляющий звук») — неизвестно",
+      "license": "unknown",
+      "licenseWarning": true,
+      "srcSha256": "0db4fd124cb4c4bb813f785f5cfb998a7e37429e03a6acd58ea52189cc2b0ab0"
+    },
+    "remotion__shutter-modern": {
+      "id": "remotion__shutter-modern",
+      "file": "sfx/remotion__shutter-modern.wav",
+      "lufs": -28.2,
+      "peak": 0.102,
+      "dur": 0.3476,
+      "source": "remotion",
+      "license": "CC0",
+      "licenseWarning": false,
+      "srcSha256": "611d4d68f0f07f860627d5f9b8a83fcaeaf8ce58f3eaab2bda64c68429dd3cdb"
+    },
+    "kenney__tick-001": {
+      "id": "kenney__tick-001",
+      "file": "sfx/kenney__tick-001.wav",
+      "lufs": -32.2,
+      "peak": 0.0015,
+      "dur": 0.045,
+      "source": "kenney",
+      "license": "CC0",
+      "licenseWarning": false,
+      "srcSha256": "10acb726f81b45201a33f423fcc67c0e3f24093da6d09d6cb447a268ba960c37"
+    },
+    "epic4-06": {
+      "id": "epic4-06",
+      "file": "sfx/epic4-06.wav",
+      "lufs": -21.9,
+      "peak": 2.25,
+      "dur": 3.87,
+      "source": "sfx pack 4.rar («эпичный звук») — неизвестно",
+      "license": "unknown",
+      "licenseWarning": true,
+      "srcSha256": "0619c0f706613dd5fdb873f4feeabfb02ee5860097d2d733d92b4c356f4e190a"
+    },
+    "epic4-08": {
+      "id": "epic4-08",
+      "file": "sfx/epic4-08.wav",
+      "lufs": -21,
+      "peak": 0.38,
+      "dur": 5.59,
+      "source": "sfx pack 4.rar («эпичный звук») — неизвестно",
+      "license": "unknown",
+      "licenseWarning": true,
+      "srcSha256": "0a96e80f3087464563402efb837b8fbf1b766d1b24fd9913b4086ec0caa0d4f7"
+    }
+  },
+  "assets": [
+    {
+      "file": "cards/MIA.land.bg.color.jpg",
+      "sha256": "1590e14e6d6ccad0b68feb3bdbbe76b415a174706fe6e0f8d8947586cfc1168d"
+    },
+    {
+      "file": "cards/MIA.land.bg.dossier.jpg",
+      "sha256": "e0ca7ee3188542c5b41890fcde6e80dbf23abd3d6fec58fa0a01e19fc80aaf23"
+    },
+    {
+      "file": "cards/MIA.land.figure.png",
+      "sha256": "49ba45b42d5b6900ac50cb847d46f25917f279732d606cfa7c941d1c42909685"
+    },
+    {
+      "file": "cards/MIA.port.bg.color.jpg",
+      "sha256": "f37712b171d09ec58d572cedbbfab67825821b2db527aad5d7abf723356a6fbd"
+    },
+    {
+      "file": "cards/MIA.port.bg.dossier.jpg",
+      "sha256": "05db6fb536a9a7eac22f628ec1950347cbd635c3eca75c4bdadc4856d420d218"
+    },
+    {
+      "file": "cards/MIA.port.figure.png",
+      "sha256": "999006a9b54ea52c166e1d1bfff13c791d7e0666113fd0633a3f8fc0240e791e"
+    },
+    {
+      "file": "cards/DARK.cut.x4.png",
+      "sha256": "a5186cf49595e384ae99cfab4636a68436455eb56f05adcb6a092947511c5b05"
+    },
+    {
+      "file": "cards/DARK.land.bg.color.jpg",
+      "sha256": "c56287e49dd1720a004804a9abeb6141f9af26a144e33718bcf9c28e91c9598d"
+    },
+    {
+      "file": "cards/DARK.land.bg.dossier.jpg",
+      "sha256": "2e6b0a54dd87710f87f98f559c7bc02ce6f391f243073233ffb1c15ebf696e39"
+    },
+    {
+      "file": "cards/DARK.land.figure.png",
+      "sha256": "6010077fdce4800bd4575eff0916727b435ac49f3b690f63cb49009693776d95"
+    },
+    {
+      "file": "cards/DARK.port.bg.color.jpg",
+      "sha256": "69e6b2e8b0d697ccf6336c664104818a6f5058a3a09fbfe9ffafd35e2b695376"
+    },
+    {
+      "file": "cards/DARK.port.bg.dossier.jpg",
+      "sha256": "7fc38842f4384c941cdac216641e28924764a73d88280a7d02ecc2c3760782b3"
+    },
+    {
+      "file": "cards/DARK.port.figure.png",
+      "sha256": "a030cd7b2aac5f9af8854b17589dfcc7638a57956a7ace333b3fb18f3d317b9b"
+    },
+    {
+      "file": "cards/BLOND.land.bg.color.jpg",
+      "sha256": "59a3802af48ba84f610a93d900e6e23bc291c5af3d0f9abd899dafba05f50377"
+    },
+    {
+      "file": "cards/BLOND.land.bg.dossier.jpg",
+      "sha256": "766dac6ba9502dfef2b52aea48de7f7a767d6549ad8e7672d1b1aeaae6140db7"
+    },
+    {
+      "file": "cards/BLOND.land.figure.png",
+      "sha256": "0d5544070ebbb81a809dbe335322348ab6aa606483e4ac0cd8fc158caddfce28"
+    },
+    {
+      "file": "cards/BLOND.port.bg.color.jpg",
+      "sha256": "6f8099cad5a6e7678d79bf533c268a8b0f0fa1a2466900aa49b2c3255727bb8d"
+    },
+    {
+      "file": "cards/BLOND.port.bg.dossier.jpg",
+      "sha256": "b182f640e6ea44d040207cd678508d2ffa3233a0d2be74da77b29160461f06b8"
+    },
+    {
+      "file": "cards/BLOND.port.figure.png",
+      "sha256": "a98428c8cccd0cd72430fb41dfdc253e48505227c556227fa82d972bf3825a6f"
+    },
+    {
+      "file": "cards/OFFICER.land.bg.color.jpg",
+      "sha256": "3caa4bc25b30b480058f90b7eea2b22969c341d90cf805a9b96d3b8bc7c7b2f9"
+    },
+    {
+      "file": "cards/OFFICER.land.bg.dossier.jpg",
+      "sha256": "77ef33b5c05d47dddab4e95c2578fcc5ddd3ee8db14eb611b2d8f68a99a42d53"
+    },
+    {
+      "file": "cards/OFFICER.land.figure.png",
+      "sha256": "97ebe9d650805b3a540c55f472a6abfe89628b307e08f6bcd773810337ec453f"
+    },
+    {
+      "file": "cards/OFFICER.port.bg.color.jpg",
+      "sha256": "a14f0efb0cca7530645cccfeab578952475059ba79781050d303ab68f3ee592b"
+    },
+    {
+      "file": "cards/OFFICER.port.bg.dossier.jpg",
+      "sha256": "4e77d43deb930953d5b5c45a4b4231b0899a46352306d8b8d19f7da1b5ee0db1"
+    },
+    {
+      "file": "cards/OFFICER.port.figure.png",
+      "sha256": "e9914b21bfbb46996311561a942bc9851ddb5a91b806cf5ead53dc043f1792ea"
+    },
+    {
+      "file": "music.raw.wav",
+      "sha256": "d88b569db7e98a7c2457d92c779da5a3a847c4b1636a0780f894092514349e00"
+    },
+    {
+      "file": "sfx/need-02.wav",
+      "sha256": "eb20a2defbeb632bfc7793e07a79c2a9527353206857b3f52f8cb2f38c78f8e7"
+    },
+    {
+      "file": "sfx/hook-03.wav",
+      "sha256": "be7a785f183e2e87afb5e7089d4d389ce3af35be1e88114f6bd3d6af98b682b4"
+    },
+    {
+      "file": "sfx/remotion__shutter-modern.wav",
+      "sha256": "14ab0f6f10c13a28adc837dde1058c4ba5c46b67f9709ac9562351bde342f0b4"
+    },
+    {
+      "file": "sfx/kenney__tick-001.wav",
+      "sha256": "94da5bfec3a3c393396b6c5ec0eb648b5c691236c83d1321d7d02cf1ecc04071"
+    },
+    {
+      "file": "sfx/epic4-06.wav",
+      "sha256": "d66c0d68dbd62ec3a284f5ce576346faf62fcd32f67b9d74c4fdda0c7c84a3e5"
+    },
+    {
+      "file": "sfx/epic4-08.wav",
+      "sha256": "d1ba965ee9b41c78786b612d2ec53a131d0cc851501b85f8af967a384bce96ec"
+    },
+    {
+      "file": "mix.ep01.wav",
+      "sha256": "f111cd8ad780b621739c926417f21f00b1d979d4a10ec80a1f3ae9fafa131b05"
+    }
+  ]
+}

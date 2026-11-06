@@ -8,7 +8,9 @@ import { RAMP, remapSpeed } from '../../fx/core.ts';
 const hex = z.string().regex(/^#[0-9A-Fa-f]{6}$/);
 const on = z.union([z.literal('start'), z.string().regex(/^h\d+$/)]);
 const src = z.string().regex(/^V\d+$/);
-const inFx = z.enum(['whip']);
+// in: whip — смаз-склейка (#043); cut — прямая склейка (v4: «2 смаза → склейка»); lockCarry — рамка переезжает с живого плана на
+// карточку (только card после live); lightMatch — огонёк растёт кругом в последнюю долю затишья и переходит во вспышку (только final после lull).
+const inFx = z.enum(['whip', 'cut', 'lockCarry', 'lightMatch']);
 const live = z.object({ kind: z.literal('live'), src, from: z.number().int().min(0), to: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), in: inFx.optional(), ramp: z.boolean().optional(), note: z.string().optional() });
 const card = z.object({
   kind: z.literal('card'),
@@ -21,17 +23,20 @@ const card = z.object({
   side: z.enum(['left', 'right']),
   on: on.optional(),
   beats: z.number().positive(),
+  in: inFx.optional(),
   note: z.string().optional(),
 });
 const lull = z.object({ kind: z.literal('lull'), src, from: z.number().int().min(0), on: on.optional(), beats: z.number().positive(), push: z.number().min(0).max(0.2), in: inFx.optional(), note: z.string().optional() });
-const final = z.object({ kind: z.literal('final'), src, on: on.optional(), flash: z.boolean(), title: z.string(), line: z.string(), tail: z.string(), note: z.string().optional() });
+// alive (v4, «живой финал»): наезд push за финал, MIA растёт titleGrow, строка ≥ lineHeightFrac высоты кадра, tail — штамп на последней доле
+const alive = z.object({ push: z.number().min(0).max(0.2), titleGrow: z.tuple([z.number().positive(), z.number().positive()]), lineHeightFrac: z.number().positive().max(0.1), tailStamp: z.literal('lastBeat') });
+const final = z.object({ kind: z.literal('final'), src, on: on.optional(), flash: z.boolean(), in: inFx.optional(), alive: alive.optional(), title: z.string(), line: z.string(), tail: z.string(), note: z.string().optional() });
 const item = z.discriminatedUnion('kind', [live, card, lull, final]);
 // sfx: внешние звуки (папка + список имён на выбор) и наш CC0-щелчок; путь папки — относительно SFX_EXTERNAL_DIR (env.manifest).
 // v3 «звуковой бюджет» (задача 018): whip.on — на каких смаз-склейках свист («src:from» пункта с in: whip), riser.heroes —
 // перед какими карточками нарастание, card — щелчок затвора (нет поля — не ставится). Нет on/heroes — как в v2: на всех.
 // Ссылки проверяет sfxPlan() при разборе (parseOutro): не та ссылка → громкий отказ до работы с медиа.
 const pick = z.object({ dir: z.string(), pick: z.array(z.string()).min(1), note: z.string().optional() });
-const sfx = z.object({
+const sfxV3 = z.object({
   whip: pick.extend({ on: z.array(z.string().regex(/^V\d+:\d+$/, 'ожидалось «V3:228» (src:from пункта с in: whip)')).min(1).optional() }),
   riser: pick.extend({ heroes: z.array(z.string()).min(1).optional() }),
   impact: pick,
@@ -41,19 +46,55 @@ const sfx = z.object({
   gainVsMusic: z.number().min(0).max(1),
   note: z.string().optional(),
 });
+// v4 «каждый звук обоснован» (задача 030): события с why {see, mix, gap}; громкость — первое «−N дБ» в why.mix (относительно
+// громкости музыки по LUFS); без числа — громкий отказ (dbIn). at: «V3:228» (пункт timeline src:from), «card.freeze» / «card.lock»
+// (каждая карточка из heroes), «card:OFFICER», «h9», «h9 − 0.4 с».
+const why = z.object({ see: z.string().min(1), mix: z.string().min(1), gap: z.string().min(1) });
+const sfxEvent = z.object({ id: z.string(), sound: z.enum(['whip', 'freeze', 'tick', 'riser', 'silence', 'final']), at: z.string(), heroes: z.array(z.string()).min(1).optional(), why });
+const sfxV4 = z.object({
+  events: z.array(sfxEvent).min(1),
+  sources: z.record(z.string(), z.string()),
+  mix: z.object({ tailTrim: z.string(), hpfHz: z.number().positive(), limiter: z.object({ ceilingDbtp: z.number().max(0), beforeLoudnorm: z.literal(true) }), target: z.object({ lufs: z.number(), tp: z.number().max(0) }) }),
+  license: z.string(),
+});
+const sfx = z.union([sfxV3, sfxV4]);
+export type SfxV3 = z.infer<typeof sfxV3>;
+export type SfxV4 = z.infer<typeof sfxV4>;
+export const isSfxV4 = (x: SfxV3 | SfxV4): x is SfxV4 => 'events' in x;
 const vertical = z.object({ crops: z.record(z.string(), z.enum(['A', 'B', 'C'])), cards: z.string().optional() });
 const forbidden = z.object({ src, from: z.number().min(0), to: z.union([z.number(), z.literal('end')]), reason: z.string() });
+// карточка v3 — поп-арт (style нет или popart); v4 — «Досье / скан» (задача 030): фон = кадр-источник вырезки в монохроме,
+// фигура в цвете, скан, рамки на лице, label, имя за фигурой, параллакс. В схеме — только поля, которые читает сборка (гейт 3).
+const cardPopart = z.object({
+  style: z.literal('popart').optional(),
+  cutouts: z.string(),
+  concept: z.string(),
+  outline: z.object({ white: z.number(), black: z.number(), shadow: z.tuple([z.number(), z.number()]) }),
+  bg: z.object({ halftone: z.boolean(), rays: z.number().int().positive() }),
+  font: z.object({ name: z.string(), tagline: z.string() }),
+});
+const cardDossier = z.object({
+  style: z.literal('dossier'),
+  cutouts: z.string(),
+  freeze: z.object({ mixFrames: z.number().int().min(1), punchIn: z.number().min(0).max(0.2) }),
+  bg: z.object({ source: z.literal('cutoutSource'), mono: z.boolean(), darken: z.number().min(0).max(1), blurPx: z.number().min(0), grid: z.object({ alpha: z.number().min(0).max(1), stepPx: z.number().positive() }) }),
+  hero: z.object({ color: z.boolean(), outline: z.literal('none') }),
+  scan: z.object({ durFrames: z.number().int().min(1), dir: z.literal('down'), alpha: z.number().min(0).max(1), glowPx: z.number().min(0) }),
+  lock: z.object({ target: z.literal('face'), snapFrames: z.number().int().min(1), strokePx: z.number().positive(), carryFrom: z.enum(['hand']).optional() }),
+  label: z.object({ format: z.string().includes('{NAME}'), font: z.literal('JetBrainsMono'), typeOn: z.boolean(), charFrames: z.number().positive(), heightFrac: z.number().positive().max(0.1) }),
+  name: z.object({ font: z.literal('Anton'), behindFigure: z.boolean(), heightFrac: z.number().positive().max(0.8) }),
+  accent: z.record(z.string(), hex),
+  depth: z.object({ figure: z.number(), name: z.number(), bg: z.number(), push: z.number().min(0).max(0.2) }),
+});
+export type CardDossier = z.infer<typeof cardDossier>;
+export const isDossier = (c: z.infer<typeof cardPopart> | CardDossier): c is CardDossier => c.style === 'dossier';
+
 export const outroSchema = z.object({
   music: z.object({ file: z.string(), from: z.number().min(0), to: z.number(), holdAfter: z.number().min(0).default(0), bpm: z.number().positive(), hits: z.array(z.number().min(0)).min(1), license: z.string() }),
   format: z.object({ landscape: z.object({ w: z.number(), h: z.number() }), portrait: z.object({ w: z.number(), h: z.number() }), fps: z.number().int().positive() }),
   names: z.record(z.string(), z.string()),
-  card: z.object({
-    cutouts: z.string(),
-    concept: z.string(),
-    outline: z.object({ white: z.number(), black: z.number(), shadow: z.tuple([z.number(), z.number()]) }),
-    bg: z.object({ halftone: z.boolean(), rays: z.number().int().positive() }),
-    font: z.object({ name: z.string(), tagline: z.string() }),
-  }),
+  card: z.union([cardPopart, cardDossier]),
+  prepare: z.object({ upscale: z.record(z.string(), z.object({ tool: z.literal('realesrgan-ncnn-vulkan'), model: z.string(), scale: z.number().int().min(2).max(4) })) }).optional(),
   episodes: z.record(z.string(), z.object({ timeline: z.array(item).min(1), sfx, vertical })),
   forbidden: z.array(forbidden),
 });
@@ -63,7 +104,7 @@ export type Item = z.infer<typeof item>;
 export function parseOutro(data: unknown): Outro {
   const r = outroSchema.safeParse(data);
   if (!r.success) throw new Error(`outro.yaml не по схеме:\n  ${r.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n  ')}`);
-  const errors = Object.keys(r.data.episodes).flatMap((ep) => sfxPlan(r.data, ep).errors);
+  const errors = Object.keys(r.data.episodes).flatMap((ep) => [...(isSfxV4(r.data.episodes[ep].sfx) ? sfxEventsCheck(r.data, ep) : sfxPlan(r.data, ep).errors), ...inChecks(r.data, ep)]);
   if (errors.length) throw new Error(`outro.yaml: ссылки звука не сходятся с timeline (${errors.length}):\n  ✗ ${errors.join('\n  ✗ ')}`);
   return r.data;
 }
@@ -78,7 +119,9 @@ const whipKey = (it: Item): string | null => ('in' in it && it.in === 'whip' && 
  * errors: ссылка whip.on совпала не ровно с одним пунктом in: whip; повтор ссылки; герой riser.heroes не встречается среди карточек серии.
  */
 export function sfxPlan(outro: Outro, episode: string): { whip: number[]; riser: string[]; errors: string[] } {
-  const ep = outro.episodes[episode];
+  const ep0 = outro.episodes[episode];
+  if (isSfxV4(ep0.sfx)) throw new Error(`sfxPlan: ${episode}.sfx — схема v4 (events), план v3 к ней не применяется`);
+  const ep = { ...ep0, sfx: ep0.sfx };
   const where = `${episode}.sfx`;
   const whips = ep.timeline.map((it, index) => ({ index, key: whipKey(it) })).filter((x): x is { index: number; key: string } => x.key !== null);
   const heroes = ep.timeline.flatMap((it) => (it.kind === 'card' ? [it.hero] : []));
@@ -257,3 +300,82 @@ export function livePos(i: number, n: number, L: number, ramp: boolean, fps: num
   if (!ramp) return Math.min(i, L - 1);
   return remapSpeed(i, n, L, Math.round(RAMP.slowDur * fps), RAMP.slow);
 }
+
+// ---------------------------------------------------------------- v4 (задача 030): проверки приёмов входа и ссылок звука
+/** in: lockCarry — только у карточки сразу после живого плана; lightMatch — только у финала сразу после затишья; приёмы v4 требуют card.style: dossier. */
+export function inChecks(outro: Outro, episode: string): string[] {
+  const tl = outro.episodes[episode].timeline;
+  const errors: string[] = [];
+  tl.forEach((it, i) => {
+    const v = 'in' in it ? it.in : undefined;
+    const prev = tl[i - 1];
+    if (v === 'lockCarry' && (it.kind !== 'card' || prev?.kind !== 'live' || !isDossier(outro.card)))
+      errors.push(`${episode}.timeline[${i}] in: lockCarry — только карточка «досье» сразу после live`);
+    if (v === 'lightMatch' && (it.kind !== 'final' || prev?.kind !== 'lull')) errors.push(`${episode}.timeline[${i}] in: lightMatch — только final сразу после lull`);
+    if ((v === 'whip' || v === 'cut') && it.kind === 'card') errors.push(`${episode}.timeline[${i}] in: ${v} у карточки не поддержан (вход карточки — удар/фриз)`);
+    if (it.kind === 'final' && it.alive && !isDossier(outro.card)) errors.push(`${episode}.timeline[${i}] alive — приём v4, нужен card.style: dossier`);
+  });
+  if (isDossier(outro.card)) for (const it of tl) if (it.kind === 'card' && !outro.card.accent[it.hero]) errors.push(`card.accent: нет цвета героя ${it.hero}`);
+  return errors;
+}
+
+/** Первое «−N дБ» / «-N дБ» / «+N дБ» в тексте (why.mix). null — числа нет. */
+export function dbIn(text: string): number | null {
+  const m = text.match(/([−\-+]?\d+(?:[.,]\d+)?)\s*дБ/u);
+  return m ? Number(m[1].replace('−', '-').replace(',', '.')) : null;
+}
+
+export type SfxEvent = SfxV4['events'][number];
+/** Ссылка at события v4 → вид. Разбор строгий: неизвестная форма — ошибка. */
+export type AtRef = { kind: 'item'; src: string; from: number } | { kind: 'cardFreeze' } | { kind: 'cardLock' } | { kind: 'card'; hero: string } | { kind: 'hit'; hit: number; minusSec: number };
+export function parseAt(at: string): AtRef | null {
+  let m = at.match(/^(V\d+):(\d+)$/);
+  if (m) return { kind: 'item', src: m[1], from: Number(m[2]) };
+  if (at === 'card.freeze') return { kind: 'cardFreeze' };
+  if (at === 'card.lock') return { kind: 'cardLock' };
+  m = at.match(/^card:([A-Z]+)$/);
+  if (m) return { kind: 'card', hero: m[1] };
+  m = at.match(/^h(\d+)(?:\s*[−\-]\s*([\d.,]+)\s*с)?$/u);
+  if (m) return { kind: 'hit', hit: Number(m[1]), minusSec: m[2] ? Number(m[2].replace(',', '.')) : 0 };
+  return null;
+}
+
+function sfxEventsCheck(outro: Outro, episode: string): string[] {
+  const ep = outro.episodes[episode];
+  const sfx = ep.sfx as SfxV4;
+  const heroes = ep.timeline.flatMap((it) => (it.kind === 'card' ? [it.hero] : []));
+  const errors: string[] = [];
+  sfx.events.forEach((e, i) => {
+    const w = `${episode}.sfx.events[${i}] ${e.id}`;
+    const a = parseAt(e.at);
+    if (!a) errors.push(`${w}: at «${e.at}» — ожидалось V3:228 | card.freeze | card.lock | card:HERO | h9 | h9 − 0.4 с`);
+    else if (a.kind === 'item' && ep.timeline.filter((it) => 'src' in it && 'from' in it && it.src === a.src && it.from === a.from).length !== 1) errors.push(`${w}: at «${e.at}» не указывает ровно на один пункт timeline`);
+    else if (a.kind === 'card' && !heroes.includes(a.hero)) errors.push(`${w}: героя ${a.hero} нет среди карточек`);
+    else if (a.kind === 'hit' && !(a.hit >= 1 && a.hit <= outro.music.hits.length)) errors.push(`${w}: удара h${a.hit} нет`);
+    else if ((a.kind === 'cardFreeze' || a.kind === 'cardLock') && !e.heroes) errors.push(`${w}: at «${e.at}» требует heroes`);
+    for (const h of e.heroes ?? []) if (!heroes.includes(h)) errors.push(`${w}: heroes — ${h} нет среди карточек`);
+    if (dbIn(e.why.mix) === null && e.sound !== 'final') errors.push(`${w}: в why.mix нет громкости «−N дБ» («${e.why.mix}»)`);
+  });
+  return errors;
+}
+
+// ---------------------------------------------------------------- часы карточки «досье» (общие для кадра и звука)
+/**
+ * Кадры (от начала карточки) фаз «досье»: фриз (микс mixFrames), скан durFrames сразу после фриза, рамка защёлкивается за snapFrames
+ * с середины скана (при lockCarry — сразу, с переезда от живого плана), label печатается после защёлкивания по charFrames на символ.
+ * Не зависит от ориентации: звук один на обе версии.
+ */
+export function dossierClock(c: CardDossier, carried: boolean, labelLen: number) {
+  const mixEnd = c.freeze.mixFrames;
+  const scanStart = mixEnd;
+  const scanEnd = scanStart + c.scan.durFrames;
+  const lockStart = carried ? 0 : scanStart + Math.floor(c.scan.durFrames / 2);
+  const lockEnd = lockStart + c.lock.snapFrames;
+  const labelStart = lockEnd;
+  const labelEnd = labelStart + Math.ceil(labelLen * c.label.charFrames);
+  return { mixEnd, scanStart, scanEnd, lockStart, lockEnd, labelStart, labelEnd };
+}
+
+/** Текст label карточки: format с {nn} (номер карточки, 2 знака), {NAME}, {TAGLINE} — заглавными. */
+export const labelText = (format: string, nn: number, name: string, tagline: string): string =>
+  format.replace('{nn}', String(nn).padStart(2, '0')).replace('{NAME}', name.toUpperCase()).replace('{TAGLINE}', tagline.toUpperCase());

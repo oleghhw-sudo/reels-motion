@@ -43,7 +43,8 @@ card:           # NEW v4: стоп-кадр героя «Досье / скан»
     target: face                         # лицо — по Vision (tools/matte, задача 025) на кадре-источнике вырезки
     snapFrames: 4
     strokePx: 3
-  label: {format: "SUBJECT {nn} · {NAME} · {TAGLINE}", font: JetBrainsMono, typeOn: true, charFrames: 1, heightFrac: 0.022}   # NEW v4: печатается после защёлкивания; nn: MIA 01, ROOK 02, JAX 03, HALE 04
+    carryFrom: hand                      # NEW v4 (решение Олега 2026-11-06, 030 этап В): в последних 4 кадрах V10:150 лица ROOK нет (Vision: 0 лиц) — lockCarry стартует с рамки кисти с пистолетом (Vision hand pose)
+  label: {format: "SUBJECT {nn} · {NAME} · {TAGLINE}", font: JetBrainsMono, typeOn: true, charFrames: 0.3333, heightFrac: 0.022}   # charFrames 1 → 0.3333 (3 символа за кадр): решение Олега 2026-11-06, 030 этап В — при 1 строка в 31–35 символов не допечатывается за 33 кадра карточки   # NEW v4: печатается после защёлкивания; nn: MIA 01, ROOK 02, JAX 03, HALE 04
   name: {font: Anton, behindFigure: true, heightFrac: 0.42}   # NEW v4: огромное имя ЗА фигурой (альфа вырезки); tagline входит в label
   accent: {MIA: "#D62828", DARK: "#F7C600", BLOND: "#00AAC8", OFFICER: "#F7C600"}   # NEW v4: цвет героя (из bg v3) — только уголки рамок, линия скана и подчёркивание label
   depth: {figure: 1.0, name: 0.6, bg: 0.3, push: 0.04}   # NEW v4: параллакс трёх слоёв при наезде 4 % за длительность карточки
