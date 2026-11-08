@@ -39,17 +39,17 @@ async function fail(res, what) {
   if (s === 400) throw new GeminiError(s, `${what}: 400 — неверный запрос (модель/голос/тело)${d}`);
   if (s === 401) throw new GeminiError(s, `${what}: 401 — ключ не принят (GEMINI_API_KEY)${d}`);
   if (s === 403) throw new GeminiError(s, `${what}: 403 — нет доступа (ключ без прав на API, регион или модель недоступна на тарифе)${d}`);
-  if (s === 429) throw new GeminiError(s, `${what}: 429 — лимит бесплатного тарифа (запросы/мин или в сутки)${d}`);
+  if (s === 429) throw new GeminiError(s, `${what}: 429 — лимит тарифа (запросы/мин или в сутки)${d}`);
   if (s >= 500) throw new GeminiError(s, `${what}: ${s} — ошибка сервера Google, не повторяю${d}`);
   throw new GeminiError(s, `${what}: HTTP ${s}${d}`);
 }
 
-async function withRetry429(fn, label) {
+async function withRetry429(fn, label, retry = true) {
   for (let attempt = 0; ; attempt++) {
     try {
       return await fn();
     } catch (e) {
-      if (e instanceof GeminiError && e.status === 429 && attempt < RETRY_429.length) {
+      if (retry && e instanceof GeminiError && e.status === 429 && attempt < RETRY_429.length) {
         console.log(`  ${label}: 429, повтор через ${RETRY_429[attempt]} с`);
         await new Promise((r) => setTimeout(r, RETRY_429[attempt] * 1000));
         continue;
@@ -117,9 +117,10 @@ export function resampleTo48k(wav) {
 /**
  * TTS. model, voice — обязательны. style — необязателен (Google советует начинать с пустого).
  * Ответ по документации — WAV (RIFF) 24 кГц; если пришёл сырой PCM (audio/L16) — оборачиваем по rate из mimeType.
+ * retry429: false — при 429 не повторять, сразу ошибка (videos/yurkontur/voice-full.mjs, решение Олега 09.11).
  * @returns {{ wav: Buffer, sampleRate: 48000, durationSec: number, meta: object }}
  */
-export async function tts({ text, voice, model, style }) {
+export async function tts({ text, voice, model, style, retry429 = true }) {
   if (!model) throw new Error('tts: model обязателен (без значения по умолчанию)');
   if (!voice) throw new Error('tts: voice обязателен');
   if (!text) throw new Error('tts: text обязателен');
@@ -134,7 +135,7 @@ export async function tts({ text, voice, model, style }) {
     });
     if (!r.ok) await fail(r, `POST ${model}:generateContent`);
     return r;
-  }, `tts ${voice}`);
+  }, `tts ${voice}`, retry429);
   const j = await res.json();
   const inline = j.candidates?.[0]?.content?.parts?.find((p) => p.inlineData || p.inline_data);
   const data = inline?.inlineData ?? inline?.inline_data;

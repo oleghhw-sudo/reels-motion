@@ -75,7 +75,7 @@ for (const blk of BLOCK_SCRIPT) {
   if (!want) continue;
   const text = ttsText(blk.voice);
   const style = ttsHint(blk.voice);
-  const r = await tts({ text, voice, model, style });
+  const r = await tts({ text, voice, model, style, retry429: false }); // 429 — стоп без повторов (решение Олега 09.11)
   writeFileSync(raw, r.wav);
   meta.fragments[blk.id] = { voice, model, modelVersion: r.meta.modelVersion, textSha: sha(blk.voice), ttsText: text, ttsHint: style ?? null, generatedAt: new Date().toISOString(), rawSec: +r.durationSec.toFixed(3) };
   writeFileSync(META, JSON.stringify(meta, null, 1)); // сразу: при 429 на следующем фрагменте готовые не теряются
