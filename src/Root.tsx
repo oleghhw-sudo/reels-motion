@@ -14,7 +14,7 @@ import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
 import { AGENT_FPS, AGENT_FRAMES, AgentTerminal } from './videos/agent-terminal/AgentTerminal.tsx';
 import { MATTE_LAB_FPS, MatteLab, matteLabMetadata, matteLabSchema } from './matte/MatteLab.tsx';
 import { PILOT_PLAN, TALKING_FPS, TalkingFxLab, talkingLabMetadata, talkingLabSchema } from './fx/talking/TalkingFxLab.tsx';
-import { ANIMATIC_FPS, SCHEMA_FPS, SCHEMA_FRAMES, YurkonturAnimatic, YurkonturSchema, animaticMetadata, animaticSchema, schemaSchema } from './videos/yurkontur/YurkonturSchema.tsx';
+import { ANIMATIC_FPS, SCHEMA_FPS, SCHEMA_FRAMES, YurkonturAnimatic, YurkonturSchema, animaticMetadata, animaticSchema } from './videos/yurkontur/YurkonturSchema.tsx';
 
 const FPS = 30;
 
@@ -88,7 +88,7 @@ export const RemotionRoot: React.FC = () => (
     {/* лаборатория эффектов говорящей головы (задача 026-А): план videos/talking-fx-pilot/talking-fx.yaml */}
     <Composition id="TalkingFxLab" component={TalkingFxLab} schema={talkingLabSchema} defaultProps={{ matteId: PILOT_PLAN.matteId, plan: PILOT_PLAN }} calculateMetadata={talkingLabMetadata} width={1080} height={1920} fps={TALKING_FPS} durationInFrames={282} />
     {/* задача 031: схема «Юридичний контур» на всю длину (150 с, 1920×1080@60) и черновой аниматик 960×540@30 */}
-    <Composition id="YurkonturSchema" component={YurkonturSchema} schema={schemaSchema} defaultProps={{ subStyle: 'B' as const }} width={1920} height={1080} fps={SCHEMA_FPS} durationInFrames={SCHEMA_FRAMES} />
-    <Composition id="YurkonturAnimatic" component={YurkonturAnimatic} schema={animaticSchema} defaultProps={{ fromSec: 20, toSec: 53, subStyle: 'B' as const }} calculateMetadata={animaticMetadata} width={960} height={540} fps={ANIMATIC_FPS} durationInFrames={990} />
+    <Composition id="YurkonturSchema" component={YurkonturSchema} width={1920} height={1080} fps={SCHEMA_FPS} durationInFrames={SCHEMA_FRAMES} />
+    <Composition id="YurkonturAnimatic" component={YurkonturAnimatic} schema={animaticSchema} defaultProps={{ fromSec: 20, toSec: 53 }} calculateMetadata={animaticMetadata} width={960} height={540} fps={ANIMATIC_FPS} durationInFrames={990} />
   </>
 );

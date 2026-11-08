@@ -1,0 +1,96 @@
+{
+ "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
+ "generatedAt": "2026-11-08T20:58:03.536Z",
+ "items": [
+  {
+   "file": "public/videos/yurkontur/s5_crop_1.png",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_crop_1.png",
+   "how": "копия",
+   "sha256": "ea7d9e84c5d0aafabe3c4abb251e1fced67dea3e3cd1054e498dc553fafbd598"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_crop_2.png",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_crop_2.png",
+   "how": "копия",
+   "sha256": "930f689b92ac040673c75806e7608652e6e520784b8a7778e8a3b5d58a6a6ddf"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_crop_3.png",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_crop_3.png",
+   "how": "копия",
+   "sha256": "870f0103ca008cd035ad978057679962eb72d240d54056c1072afabff89e001a"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_crop_4.png",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_crop_4.png",
+   "how": "копия",
+   "sha256": "86398585457d3f3c1a8610fd9ace2d0626ff4787040970872df2ef18500d7b69"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_ctx_1.jpg",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_ctx_1.jpg",
+   "how": "копия",
+   "sha256": "2ca93af33eb8ac30a9e1e18558b63c5a0bb42ee198f251ceacce0a03344a34d1"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_ctx_2.jpg",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_ctx_2.jpg",
+   "how": "копия",
+   "sha256": "eab1a3588cc1bb37b6dd624ffd6805030ab353c8b5c50f15b6360c2295ce91e8"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_ctx_3.jpg",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_ctx_3.jpg",
+   "how": "копия",
+   "sha256": "930ed2e5d75c71680a50c6346703868921d04771d6a4840403e514c490018ad4"
+  },
+  {
+   "file": "public/videos/yurkontur/s5_ctx_4.jpg",
+   "source": "YURKONTUR_DIR/presentation-mvp/assets/real/s5_ctx_4.jpg",
+   "how": "копия",
+   "sha256": "79dd807edb167534ef39be9a1ec29ef071a1b6793b0740f02ba79355136fc29c"
+  },
+  {
+   "file": "public/videos/yurkontur/legacy2-files.png",
+   "source": "YURKONTUR_LEGACY_DIR/legacy_2.png",
+   "how": "crop=900:906:748:620 (столбец «Название файла», 25 строк)",
+   "sha256": "4be4e1b590d79b6ffd4b62004baa28f99e31ce94e43a53010910b8656d19f3a7"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-queue-card.png",
+   "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
+   "how": "карточка задачи «Орендна плата за договором · doc3» до решения, CSS-клип ×1.5",
+   "sha256": "afa6e0941b4719cb6413a9f4d9b36d4bd93ef4bcf029e252a7b5ae4ddf6e737c"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-readings-match.png",
+   "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
+   "how": "блок «Два незалежних читання»: A и B совпали (та же задача), ×1.5",
+   "sha256": "fcfa57349ad066bf16adf688a0e2a60a1a9b1d31d4e2af4a67fdbeed0f8310ce"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-readings-diff.png",
+   "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
+   "how": "блок «Два незалежних читання» следующей задачи «Комунальні · doc3»: значення розійшлися, ×1.5",
+   "sha256": "f9c131e9558308897408e90cd81bccd46a2dfdbb668cf626817d4ca085d18687"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-b2-plan.png",
+   "source": "YURKONTUR_STAND",
+   "how": "#/card/ANC-0412/plan — вкладка «План» (план з ALI, на стенде помечен «приклад»)",
+   "sha256": "bca986ce1340e9d2cf7e8d5dde517e429b552ee8dbccd850cedbcb4fe006d51e"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-b2-contract.png",
+   "source": "YURKONTUR_STAND",
+   "how": "#/card/doc1/contract — вкладка «Договір»: Ставка чинна, Діє до, Останній день заяви",
+   "sha256": "9c89f283dfc914894a0c7d92bd0d46ca95c527035302721bbef701c484bf82f3"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-b2-scan.png",
+   "source": "YURKONTUR_STAND",
+   "how": "#/card/doc1/contract + клик «Показати в скані» — лайтбокс скана с рамкой",
+   "sha256": "525f4f05413ccc611de97cd77dc6831d0d6547b7506f9412de097fe1a9ff3382"
+  }
+ ]
+}

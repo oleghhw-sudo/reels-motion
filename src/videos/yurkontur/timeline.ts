@@ -26,7 +26,7 @@ export const BLOCKS: Block[] = [
     id: 'b3a',
     from: 32,
     to: 53,
-    // 81 % / 29 % — NUMBERS_CHECK стр. 32–33 (сверено архитектором, таблица «Числа» задачи)
+    // 81 % / 29 % — YURKONTUR_DIR/presentation-mvp/NUMBERS_CHECK.md стр. 34–35 (в задаче указаны 32–33; сверено билдером 08.11)
     title: '81 % — читання збіглися · 29 % — юристу',
     voice:
       'Спершу система читає скан. Те, що звичайне розпізнавання пропускає, вона збирає й показує людині: печатку поверх суми, бліду сторінку, рукописну правку. Далі договір читають два незалежні агенти, і другий не бачить відповіді першого. Код перевіряє ЄДРПОУ, дати й суми. Критичні значення підтверджує юрист або відділ оренди.',
@@ -146,7 +146,8 @@ export function densityAt(t: number): number {
 export type CamKey = { at: number; ids: string[] | 'all' };
 export const CAMERA: CamKey[] = [
   { at: 0, ids: ['scans'] },
-  { at: FLASH.at - 0.2, ids: 'all' },
+  // блок 2: силуэт всей схемы целиком в кадре — камера выходит на общий план до вспышки
+  { at: block('b1').to - 1.4, ids: 'all' },
   { at: APPEAR.ocr - 0.5, ids: ['scans', 'ocr', 'read2'] },
   { at: APPEAR.read2 - 0.5, ids: ['ocr', 'read2', 'code'] },
   { at: APPEAR.code - 0.5, ids: ['read2', 'code', 'queue'] },

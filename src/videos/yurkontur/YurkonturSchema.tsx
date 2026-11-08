@@ -12,32 +12,27 @@ loadAllFonts();
 export const SCHEMA_FPS = 60;
 export const SCHEMA_FRAMES = DURATION * SCHEMA_FPS;
 
-/** subStyle — вариант субтитров Олега (A Source Serif 4 42 / B Inter 38 / C JetBrains Mono 32), tokens.ts SUB_STYLES. */
-const subStyleEnum = z.enum(['A', 'B', 'C']);
-export const schemaSchema = z.object({ subStyle: subStyleEnum });
-export type SchemaProps = z.infer<typeof schemaSchema>;
-
-export const YurkonturSchema: React.FC<SchemaProps> = ({ subStyle }) => {
+export const YurkonturSchema: React.FC = () => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
     <AbsoluteFill>
-      <Scheme t={f / fps} subStyle={subStyle} />
+      <Scheme t={f / fps} />
     </AbsoluteFill>
   );
 };
 
-export const animaticSchema = z.object({ fromSec: z.number().min(0), toSec: z.number().positive(), subStyle: subStyleEnum });
+export const animaticSchema = z.object({ fromSec: z.number().min(0), toSec: z.number().positive() });
 export type AnimaticProps = z.infer<typeof animaticSchema>;
 export const ANIMATIC_FPS = 30;
 
-export const YurkonturAnimatic: React.FC<AnimaticProps> = ({ fromSec, subStyle }) => {
+export const YurkonturAnimatic: React.FC<AnimaticProps> = ({ fromSec }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, transformOrigin: '0 0', transform: 'scale(0.5)' }}>
-        <Scheme t={fromSec + f / fps} subStyle={subStyle} />
+        <Scheme t={fromSec + f / fps} />
       </div>
     </AbsoluteFill>
   );

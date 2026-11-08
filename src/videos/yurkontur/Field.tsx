@@ -1,6 +1,6 @@
 // Движение по связям схемы (режим hud, правки Олега 08.11 по кадру блока 5): фон чистый, без фактуры и штриховки.
 // Вдоль каждой включённой связи бегут 6–10 трасс: головка-точка охрой r 3 px + графитовый хвост 200–450 px с затуханием
-// прозрачности к нулю, толщина 1.4–1.8 px; скорость и фаза у каждой своя. Петля — те же трассы цветом loopTrace.
+// прозрачности к нулю, толщина 1.4–1.8 px; скорость и фаза у каждой своя. Петля — те же трассы цветом C.green (#3E7163).
 // Бледная нить самой связи рисуется в SVG (Scheme.tsx). Canvas лежит под узлами: подложки --paper закрывают трассы под
 // карточками и текстом. Размеры — в экранных px (не зависят от наезда). Всё — функция (t, cam, связи); псевдослучай — hash.
 import React, { useLayoutEffect, useRef } from 'react';
@@ -110,8 +110,8 @@ export function drawField(ctx: CanvasRenderingContext2D, p: FieldProps): void {
       return;
     }
     if (tr.on === null || t < tr.on) return;
-    const tailCol = tr.kind === 'loop' ? C.loopTrace : C.ink;
-    const headCol = tr.kind === 'loop' ? C.loopTrace : C.tight;
+    const tailCol = tr.kind === 'loop' ? C.green : C.ink;
+    const headCol = tr.kind === 'loop' ? C.green : C.tight;
     const n = p.perChannel;
     for (let j = 0; j < n; j++) {
       const seed = ti * 7919 + j * 104729;

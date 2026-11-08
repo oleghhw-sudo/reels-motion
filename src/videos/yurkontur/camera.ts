@@ -7,8 +7,8 @@ import { CAMERA, CAM_MOVE_SEC, type CamKey } from './timeline.ts';
 /** Зоны экрана 1920×1080 (правила композиции brief.md): поля 6 %, заголовок сверху, субтитры в нижних 16 %. */
 export const ZONE = {
   marginX: 116,
-  title: { y0: 56, y1: 150 },
-  work: { x0: 116, x1: 1804, y0: 172, y1: 890 },
+  title: { y0: 56, y1: 190 },
+  work: { x0: 116, x1: 1804, y0: 200, y1: 890 },
   subs: { y0: 908, y1: 1040 },
 } as const;
 export const S_MIN = 0.9;
