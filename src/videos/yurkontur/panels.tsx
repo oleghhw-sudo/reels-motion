@@ -129,7 +129,8 @@ const OcrPanel: React.FC<{ t: number }> = ({ t }) => {
               <Img src={A(c.crop)} style={{ width: '100%', height: '100%', display: 'block', border: `1px solid ${C.line2}` }} />
               <Outline r={{ x: 0, y: 0, w: c.w * sc, h: c.h * sc }} p={outline} color={rgba(C.tight, 0.9)} a={1 - fly} />
             </div>
-            {t < next && fly < 0.2 ? <Caption id={`ocr.cause.${i}`} text={c.cause} x={0} y={30 + bh + 18} a={appear * (1 - fly * 5)} color={C.tight} /> : null}
+            {/* решение Олега (031/032): причина держится до следующей вырезки, а не пропадает вместе с улётом в лоток */}
+            {t < next ? <Caption id={`ocr.cause.${i}`} text={c.cause} x={0} y={30 + bh + 18} a={appear * (1 - seg(t, next - 0.15, next))} color={C.tight} /> : null}
           </React.Fragment>
         );
       })}
@@ -378,7 +379,13 @@ const CardPanel: React.FC<{ t: number }> = ({ t }) => {
   const resolved = smoother(seg(t, e.resolve, e.resolve + 0.6));
   const ak = STAND_K;
   const aH = GEO.area.h * ak;
-  const aW = CONTENT.w - 360;
+  // 032 п. 0.2: вырезка площади целиком — три значения, «підтверджено» и «БТІ відрізняється від договору»
+  // (x 410…1430 картинки ≈ 714 px кадра); карточки полей 3–5 (под окном) сужаются, освобождая место слева
+  const AREA_X0 = 410;
+  const AREA_X1 = 1440;
+  const aW = Math.ceil((AREA_X1 - AREA_X0) * ak);
+  const aLeft = CONTENT.w - aW;
+  const FIELD_NARROW = aLeft - 20;
   const entries = [0, 0, 0, 0, 0, 0];
   const entryIdx = FIELDS.map((f) => entries[f.doc]++);
   return (
@@ -387,7 +394,9 @@ const CardPanel: React.FC<{ t: number }> = ({ t }) => {
         const at = APPEAR[`field:${f.name}`] ?? Infinity;
         const a = expoOut(seg(t, at, at + 0.4));
         if (a <= 0) return null;
-        const r = field(i);
+        const r0 = field(i);
+        // поля под окном площади (строки 3–5) сужаются вместе с его появлением; подписи короткие и помещаются
+        const r = i >= 3 ? { ...r0, w: lerp(r0.w, FIELD_NARROW, area) } : r0;
         const isArea = f.name === 'Площа';
         const b = isArea && conflict > 0 ? mixBorder(BORDER.normal, BORDER.conflict, conflict) : isArea && resolved > 0 ? mixBorder(BORDER.normal, BORDER.human, resolved) : BORDER.normal;
         return (
@@ -430,8 +439,8 @@ const CardPanel: React.FC<{ t: number }> = ({ t }) => {
       })}
       {/* площа тричі (стенд ANC-0412): договір · план БТІ · ліцензія — «БТІ відрізняється від договору» → конфлікт */}
       {area > 0 ? (
-        <div style={frameBox(aW, aH, { left: 360, top: 3 * 72 + 30, opacity: area, borderColor: bcolor(mixBorder(BORDER.normal, BORDER.conflict, conflict)) })}>
-          <PanView t={t} src={A('card-area.png')} imgW={GEO.area.w} imgH={GEO.area.h} k={ak} w={aW} h={aH} keys={[{ at: 0, x: GEO.area.bti.x - 330, y: 0 }, { at: e.conflict + 0.8, x: GEO.area.note.x + GEO.area.note.w + 24 - aW / ak, y: 0, dur: 0.8 }]}>
+        <div style={frameBox(aW, aH, { left: aLeft, top: 3 * 72 + 30, opacity: area, borderColor: bcolor(mixBorder(BORDER.normal, BORDER.conflict, conflict)) })}>
+          <PanView t={t} src={A('card-area.png')} imgW={GEO.area.w} imgH={GEO.area.h} k={ak} w={aW} h={aH} keys={[{ at: 0, x: AREA_X0, y: 0 }]}>
             {(S) => (
               <>
                 <Outline r={S(GEO.area.bti)} p={smoother(seg(t, e.conflict, e.conflict + 0.4))} color={resolved > 0.5 ? rgba(C.green, 0.9) : rgba(C.crit, 0.9)} width={3.5} />
@@ -454,8 +463,9 @@ const DeadlinesPanel: React.FC<{ t: number }> = ({ t }) => {
   const rowY = (i: number) => clamp(g.rows[i].y - 140, 0, g.h - vh);
   const vw = CONTENT.w / k;
   const windowsBox = { x: 40, y: 70, w: Math.min(vw - 80, 1300), h: 110 };
-  // проезд вправо: от «Подія» к «Дата · Залишилось · Кому» (крупно не помещаются вместе с «Аптека»)
-  const colX = clamp(g.cols.who.x + g.cols.who.w + 20 - vw, 0, g.w - vw);
+  // проезд вправо: от «Подія» к «Дата · Залишилось · Кому» (крупно не помещаются вместе с «Аптека»).
+  // 032 п. 0.3: левый край кадра — по границе колонки «Дата» (названия событий кончаются раньше), без обрубков слов
+  const colX = clamp(g.cols.date.x - 40, 0, g.w - vw);
   // заголовок группы «≤ 30 днів» — над первой строкой
   const groupBox = { x: 6, y: g.rows[0].y - 96, w: 620, h: 84 };
   const rowBox = (i: number) => ({ x: 6, y: g.rows[i].y + 6, w: g.cols.who.x + g.cols.who.w - 12, h: g.rows[i].h - 12 });

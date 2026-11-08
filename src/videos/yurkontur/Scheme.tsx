@@ -195,7 +195,8 @@ const TITLE_FROM: Record<string, number> = {
   b2: FLASH.ghostBy + 0.3,
   b3a: APPEAR.read2,
   b3b: APPEAR.chain + 0.6,
-  b3c: APPEAR.deviations,
+  // 032 п. 0.4: заголовок вердиктов — в момент раскрытия «Відхилення від еталона», не на панели «Строки»
+  b3c: EV.deviations.stand,
   b4: block('b4').from + 0.8,
 };
 

@@ -117,7 +117,7 @@ export const EV = {
   ],
   /** «Два читання»: пары A/B — совпавшие сливаются, расхождение (реальный пример стенда: різні пункти 6.1 і 6.14) уходит в чергу */
   read2: { streams: open('read2'), pairs: [open('read2') + 0.8, open('read2') + 1.9] as const, diverge: open('read2') + 2.9, toQueue: open('read2') + 3.7 },
-  code: { rows: [open('code'), open('code') + 0.4, open('code') + 0.8, open('code') + 1.2] as const, failRow: 2, out: open('code') + 1.5 },
+  code: { rows: [open('code'), open('code') + 0.4, open('code') + 0.8, open('code') + 1.2] as const, failRow: 2, out: Math.max(open('code') + 1.5, APPEAR.queue - 0.7) }, // «сума прописом = цифрами» держится до появления «Черги» (решение Олега)
   /** Черга: камера на значения → проезд к «Підтвердити» → клик → назад к значениям → зеленеет → Людина №1 заливается */
   queue: { toButton: open('queue') + 0.1, cursor: [open('queue') + 0.3, open('queue') + 0.75] as const, click: open('queue') + 0.8, back: open('queue') + 0.95, green: open('queue') + 1.4, human: open('queue') + 1.75 },
   /** Розбір ланцюга: шкала «Чинна редакція на дату» — три редакции doc1 (24 700 → 43 155 → 48 355), рамка на значении */

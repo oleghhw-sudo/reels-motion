@@ -15,3 +15,5 @@ public/matte/
 __pycache__/
 videos/*/assets-*/
 videos/*/voice/probe/
+videos/*/voice/full/
+videos/*/voice/*.wav
