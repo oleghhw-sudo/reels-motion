@@ -43,15 +43,25 @@ export const TYPE = {
   chip: { fontFamily: FONT.mono, fontSize: 24, fontWeight: 400 },
 } as const;
 
-/** Границы карточек и панелей (px кадра 1920×1080). Скругление 8. Заливка — --paper непрозрачная. */
+/** Граница: цвет, прозрачность, толщина (px кадра 1920×1080). */
+export type Border = { hex: string; a: number; width: number };
+/** Границы карточек и панелей. Скругление 8. Заливка — --paper непрозрачная. */
 export const BORDER = {
-  normal: { color: rgba(C.ink, 0.38), width: 2.2 },
-  active: { color: rgba(C.tight, 0.8), width: 2.8 },
-  human: { color: rgba(C.green, 0.8), width: 2.4 },
-  conflict: { color: rgba(C.crit, 0.8), width: 2.4 },
-  ghost: { color: rgba(C.ink, 0.22), width: 1.6 },
+  normal: { hex: C.ink, a: 0.38, width: 2.2 },
+  active: { hex: C.tight, a: 0.8, width: 2.8 },
+  human: { hex: C.green, a: 0.8, width: 2.4 },
+  conflict: { hex: C.crit, a: 0.8, width: 2.4 },
+  ghost: { hex: C.ink, a: 0.22, width: 1.6 },
   radius: 8,
 } as const;
+export const bcolor = (b: Border): string => rgba(b.hex, b.a);
+/** Плавная смена обводки (цвет, прозрачность, толщина) — при смене активного узла без скачка. */
+export function mixBorder(a: Border, b: Border, u: number): Border {
+  const k = Math.max(0, Math.min(1, u));
+  const ch = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
+  const hex = '#' + [0, 1, 2].map((i) => Math.round(ch(a.hex, i) + (ch(b.hex, i) - ch(a.hex, i)) * k).toString(16).padStart(2, '0')).join('');
+  return { hex, a: a.a + (b.a - a.a) * k, width: a.width + (b.width - a.width) * k };
+}
 
 /** Метка фактуры: мелкий текст, который readcheck не меряет (в <Readable> не оборачивается). */
 export const TEXTURE_ATTR = { 'data-texture': '' } as const;

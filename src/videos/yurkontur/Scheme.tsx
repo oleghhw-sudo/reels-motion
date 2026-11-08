@@ -3,26 +3,21 @@
 // Правила (brief.md): типографика по ролям (tokens.ts TYPE), границы карточек (BORDER), заливка --paper непрозрачная;
 // живые панели в блоках 1 и 3а (stage.ts, panels.tsx), в остальных блоках — мировые координаты с камерой; заголовок сцены —
 // в своей зоне сверху, субтитры — в нижних 16 %; трассы ортогональные со скруглёнными углами, по каналам едут чипы-значения.
+// Раскладка карточек — layout.ts (одна функция и для кадра, и для проверки скачков jumps.test.ts).
 // Всё — функция времени t (секунды), которое обёртки получают из useCurrentFrame() (гейт 1).
 import React from 'react';
 import { clamp, expoOut, seg, smoother, type Pt } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import { camAt, ZONE, type Cam } from './camera.ts';
-import { along, Field, type Track } from './Field.tsx';
-import { CARD_FIELDS, CHIP, CONTRACT_HUMAN_K, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES, type Node } from './schema.ts';
-import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, STAGES, block, blockAt, densityAt, subtitleAt } from './timeline.ts';
-import { CH_IN, CH_OUT, STAGE_LIST, stageAt, stageMix, stageRectOf, type Rect } from './stage.ts';
+import { Field, type Track } from './Field.tsx';
+import { along } from './geom.ts';
+import { cardLayout, contractAt, frameAmt, visOf, type CardLayout } from './layout.ts';
+import { CARD_FIELDS, CHIP, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES } from './schema.ts';
+import { CH_IN, CH_OUT, EV, STAGE_LIST, stageAt, stageMix, windowStart } from './stage.ts';
+import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, block, blockAt, densityAt, subtitleAt } from './timeline.ts';
 import { Block2Stand, CONTENT, PANEL_CONTENT, ValueChip } from './panels.tsx';
-import { BORDER, C, TEXTURE_ATTR, TYPE, fitLetterSpacing, rgba } from './tokens.ts';
+import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, fitLetterSpacing, mixBorder } from './tokens.ts';
 
-/** Мировой режим: название 20 px мира (≥ 32 px экрана при s ≥ 1.6), пояснение 18 px мира (≥ 24 px при s ≥ 1.34). */
-const WORLD_LABEL = 20;
-const WORLD_DETAIL = 18;
-export const READ_S = Math.max(32 / WORLD_LABEL, 24 / WORLD_DETAIL);
-/** Сцена панелей: название в карточке-соседе 32 px, в заголовке панели 36 px; пояснение 24 px. */
-const STAGE_LABEL = 32;
-const PANEL_LABEL = 36;
-const PANEL_DETAIL = 24;
 /** Подпись станции петли: Inter 30 px мира · s ≥ 24 px. */
 const CHIP_READ_S = 24 / CHIP.font;
 
@@ -61,66 +56,24 @@ export function subPolyline(P: readonly Pt[], a: number, b: number): Pt[] {
   return out;
 }
 
-// ---------------------------------------------------------------- состояние элементов
-type Vis = { live: number; ghost: number; flash: number; fresh: number; dim: number };
-function visOf(id: string, t: number, ghostable: boolean): Vis {
-  const at = APPEAR[id];
-  const live = at === undefined ? 0 : expoOut(seg(t, at, at + 0.55));
-  const ghost = ghostable && t >= FLASH.at ? 1 : 0;
-  const flash = ghostable ? (t < FLASH.peak ? seg(t, FLASH.at, FLASH.peak) : 1 - smoother(seg(t, FLASH.peak, FLASH.ghostBy))) : 0;
-  const fresh = at === undefined ? 0 : 1 - smoother(seg(t, at + 2.2, at + 3.2));
-  // блок 6: приглушение и пересборка по этапам
-  const b6 = block('b6').from;
-  let dim = 1;
-  if (t >= b6) {
-    const stage = STAGES.find((s) => s.ids.includes(id) || (id.startsWith('chip:') && s.ids.includes('chips')));
-    const down = smoother(seg(t, b6, b6 + 0.8));
-    const up = stage ? smoother(seg(t, stage.at, stage.at + 0.6)) : 0;
-    dim = 1 - 0.65 * down * (1 - up);
-  }
-  return { live: t >= at! ? live : 0, ghost, flash, fresh, dim };
-}
-
-// ---------------------------------------------------------------- в кадре ли элемент
-/** 'in' — целиком в рабочей зоне (текст читаемый), 'edge' — в кадре, но задевает зоны/край (только фактура), 'cut' — обрезан краем (без текста). */
-type Frame = 'in' | 'edge' | 'cut';
-function frameOf(x0: number, y0: number, x1: number, y1: number, cam: Cam): Frame {
-  const X0 = x0 * cam.s + cam.ox;
-  const X1 = x1 * cam.s + cam.ox;
-  const Y0 = y0 * cam.s + cam.oy;
-  const Y1 = y1 * cam.s + cam.oy;
-  if (X0 < 4 || X1 > 1916 || Y0 < 4 || Y1 > 1076) return 'cut';
-  if (X0 < ZONE.marginX - 40 || X1 > 1920 - ZONE.marginX + 40 || Y0 < ZONE.title.y1 || Y1 > ZONE.subs.y0) return 'edge';
-  return 'in';
-}
-
 // ---------------------------------------------------------------- карточка узла (экранные координаты)
-type CardProps = {
-  n: Node;
-  t: number;
-  rect: Rect;
-  /** 0 — карточка, 1 — раскрытая панель */
-  open: number;
-  labelPx: number;
-  detailPx: number | null;
-  readable: boolean;
-  cut: boolean;
-  opacity: number;
-  active: number;
-  conflict: number;
-  greenFill: number;
-};
-const Card: React.FC<CardProps> = ({ n, t, rect, open, labelPx, detailPx, readable, cut, opacity, active, conflict, greenFill }) => {
+const Card: React.FC<{ c: CardLayout; t: number }> = ({ c, t }) => {
+  const { n, rect, open, labelPx, detailPx, textA, readA, detailA, opacity, active, conflict, greenFill } = c;
   const v = visOf(n.id, t, true);
   if ((v.live <= 0 && v.ghost <= 0) || opacity <= 0.01) return null;
   const human = n.kind === 'human';
   const live = v.live > 0;
-  const b = !live ? BORDER.ghost : conflict > 0.5 ? BORDER.conflict : active > 0.5 ? BORDER.active : human ? BORDER.human : BORDER.normal;
+  // обводка: призрак → обычная/«Людина» → активная → конфлікт, всё плавно
+  let b = mixBorder(BORDER.ghost, human ? BORDER.human : BORDER.normal, v.live);
+  b = mixBorder(b, BORDER.active, active);
+  b = mixBorder(b, BORDER.conflict, conflict);
+  const flashB = v.flash > 0.05 && !live ? { ...BORDER.normal, a: 0.3 + 0.6 * v.flash, width: BORDER.normal.width + 2 * v.flash } : b;
   const pad = Math.max(8, Math.min(28, rect.w * 0.05));
   const ls = fitLetterSpacing(n.label, labelPx, rect.w - pad * 2 - 4);
   const Content = open > 0.01 ? PANEL_CONTENT[n.id] : undefined;
   const fields = n.id === 'card';
-  const labelStyle: React.CSSProperties = { fontFamily: TYPE.node.fontFamily, fontWeight: TYPE.node.fontWeight, textTransform: TYPE.node.textTransform, letterSpacing: `${ls}em`, lineHeight: TYPE.node.lineHeight, fontSize: labelPx, color: human ? C.green : C.ink, opacity: readable ? 1 : 0.4 };
+  const readable = readA > 0.5;
+  const labelStyle: React.CSSProperties = { fontFamily: TYPE.node.fontFamily, fontWeight: TYPE.node.fontWeight, textTransform: TYPE.node.textTransform, letterSpacing: `${ls}em`, lineHeight: TYPE.node.lineHeight, fontSize: labelPx, color: human ? C.green : C.ink, opacity: (0.4 + 0.6 * readA) * textA };
   return (
     <div
       style={{
@@ -133,14 +86,13 @@ const Card: React.FC<CardProps> = ({ n, t, rect, open, labelPx, detailPx, readab
         transform: `scale(${live ? 0.94 + 0.06 * v.live : 1})`,
         boxSizing: 'border-box',
         borderRadius: BORDER.radius,
-        border: `${b.width + (v.flash > 0 ? 2 * v.flash : 0)}px ${live || v.flash > 0.2 ? 'solid' : 'dashed'} ${v.flash > 0.05 && !live ? rgba(C.ink, 0.3 + 0.6 * v.flash) : b.color}`,
+        border: `${flashB.width}px ${live || v.flash > 0.2 ? 'solid' : 'dashed'} ${bcolor(flashB)}`,
         background: C.paper,
         overflow: 'hidden',
       }}
     >
-      {/* «Людина» заливается зелёным после подтверждения */}
       {greenFill > 0 ? <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${greenFill * 100}%`, background: C.green }} /> : null}
-      {live && !cut ? (
+      {live && textA > 0.01 ? (
         <div style={{ position: 'absolute', left: pad, top: Math.min(pad, 18), right: pad }}>
           <div style={labelStyle} {...(readable ? {} : TEXTURE_ATTR)}>
             {readable ? (
@@ -151,22 +103,26 @@ const Card: React.FC<CardProps> = ({ n, t, rect, open, labelPx, detailPx, readab
               n.label
             )}
           </div>
-          {detailPx && readable && !fields ? (
-            <div style={{ marginTop: 6, fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: detailPx, lineHeight: TYPE.detail.lineHeight, color: greenFill > 0.5 ? C.paper : C.muted }}>
-              <Readable id={`node.${n.id}.detail`} text={n.detail}>
-                {n.detail}
-              </Readable>
+          {detailA > 0.01 && !fields ? (
+            <div style={{ marginTop: 6, fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: detailPx, lineHeight: TYPE.detail.lineHeight, color: C.muted, opacity: detailA * textA }}>
+              {detailA > 0.5 ? (
+                <Readable id={`node.${n.id}.detail`} text={n.detail}>
+                  {n.detail}
+                </Readable>
+              ) : (
+                n.detail
+              )}
             </div>
           ) : null}
-          {fields && detailPx && readable ? (
-            <div style={{ marginTop: 8 }}>
+          {fields && detailA > 0.01 ? (
+            <div style={{ marginTop: 8, opacity: detailA * textA }}>
               {CARD_FIELDS.map((f) => {
                 const at = APPEAR[`field:${f}`];
                 const a = at === undefined ? 0 : expoOut(seg(t, at, at + 0.4));
                 return (
                   <div key={f} style={{ fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: detailPx, lineHeight: 1.35, color: C.ink, opacity: a, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ width: 7, height: 7, borderRadius: 2, background: C.tight }} />
-                    {a > 0.5 ? (
+                    {a > 0.5 && detailA > 0.5 ? (
                       <Readable id={`card.${f}`} text={f}>
                         {f}
                       </Readable>
@@ -181,13 +137,13 @@ const Card: React.FC<CardProps> = ({ n, t, rect, open, labelPx, detailPx, readab
         </div>
       ) : null}
       {/* подпись на зелёной заливке — та же строка цветом бумаги, обрезанная по краю заливки */}
-      {greenFill > 0 && live && !cut ? (
+      {greenFill > 0 && live && textA > 0.01 ? (
         <div {...TEXTURE_ATTR} style={{ position: 'absolute', inset: 0, clipPath: `inset(0 ${(1 - greenFill) * 100}% 0 0)` }}>
           <div style={{ position: 'absolute', left: pad, top: Math.min(pad, 18), right: pad, ...labelStyle, color: C.paper }}>{n.label}</div>
         </div>
       ) : null}
       {Content && live ? (
-        <div style={{ position: 'absolute', left: CONTENT.x, top: CONTENT.y, width: CONTENT.w, height: CONTENT.h, opacity: seg(open, 0.75, 1) }}>
+        <div style={{ position: 'absolute', left: CONTENT.x, top: CONTENT.y, width: CONTENT.w, height: CONTENT.h, opacity: smoother(seg(open, 0.75, 1)) }}>
           <Content t={t} />
         </div>
       ) : null}
@@ -200,23 +156,21 @@ const LoopStation: React.FC<{ i: number; t: number; cam: Cam }> = ({ i, t, cam }
   const v = visOf(`chip:${i}`, t, false);
   if (v.live <= 0) return null;
   const [x, y] = LOOP_CHIPS[i];
-  const fr = frameOf(x - CHIP.w / 2, y - CHIP.h / 2, x + CHIP.w / 2, y + CHIP.h / 2, cam);
-  const readable = cam.s >= CHIP_READ_S && v.live > 0.5 && fr === 'in';
+  const fa = frameAmt(x - CHIP.w / 2, y - CHIP.h / 2, x + CHIP.w / 2, y + CHIP.h / 2, cam);
+  const readA = smoother(seg(cam.s, CHIP_READ_S - 0.2, CHIP_READ_S)) * fa.inA * v.live;
   const text = LOOP_STEPS[i];
-  const b = v.fresh > 0.3 ? BORDER.active : BORDER.human;
+  const b = mixBorder(BORDER.human, BORDER.active, v.fresh);
   return (
-    <div style={{ position: 'absolute', left: x - CHIP.w / 2, top: y - CHIP.h / 2, width: CHIP.w, height: CHIP.h, boxSizing: 'border-box', borderRadius: 42, border: `${b.width / cam.s}px solid ${b.color}`, background: C.paper, opacity: v.live * v.dim, transform: `scale(${0.9 + 0.1 * v.live})`, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 16px' }}>
-      {fr === 'cut' ? null : (
-        <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: CHIP.font, fontWeight: 400, lineHeight: 1.1, color: C.green, opacity: readable ? 1 : 0.4 }} {...(readable ? {} : TEXTURE_ATTR)}>
-          {readable ? (
-            <Readable id={`loop.${i}`} text={text}>
-              {text}
-            </Readable>
-          ) : (
-            text
-          )}
-        </div>
-      )}
+    <div style={{ position: 'absolute', left: x - CHIP.w / 2, top: y - CHIP.h / 2, width: CHIP.w, height: CHIP.h, boxSizing: 'border-box', borderRadius: 42, border: `${b.width / cam.s}px solid ${bcolor(b)}`, background: C.paper, opacity: v.live * v.dim, transform: `scale(${0.9 + 0.1 * v.live})`, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '0 16px' }}>
+      <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: CHIP.font, fontWeight: 400, lineHeight: 1.1, color: C.green, opacity: (0.4 + 0.6 * readA) * fa.shownA }} {...(readA > 0.5 ? {} : TEXTURE_ATTR)}>
+        {readA > 0.5 ? (
+          <Readable id={`loop.${i}`} text={text}>
+            {text}
+          </Readable>
+        ) : (
+          text
+        )}
+      </div>
     </div>
   );
 };
@@ -235,11 +189,11 @@ function stageChips(t: number): { text: string; pts: Pt[]; k: number }[] {
   const { cur } = stageAt(t);
   const vals = STAGE_VALUES[cur.center];
   if (!vals) return [];
-  const next = STAGE_LIST[STAGE_LIST.indexOf(cur) + 1]?.from ?? block('b3b').from;
+  const next = STAGE_LIST[STAGE_LIST.indexOf(cur) + 1]?.from ?? block('b3b').from + 0.6;
   const out: { text: string; pts: Pt[]; k: number }[] = [];
   if (vals.in) out.push({ text: vals.in, pts: CH_IN, k: seg(t, cur.from + 0.6, cur.from + 0.6 + CHIP_TRAVEL) });
   (vals.out ?? []).forEach((v, i) => {
-    const at = next - CHIP_TRAVEL - 0.2 - (vals.out!.length - 1 - i) * 1.1;
+    const at = next - CHIP_TRAVEL - 0.3 - (vals.out!.length - 1 - i) * 1.1;
     out.push({ text: v, pts: CH_OUT, k: seg(t, at, at + CHIP_TRAVEL) });
   });
   return out.filter((c) => c.k > 0 && c.k < 1);
@@ -258,9 +212,9 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
   const cam = camAt(t);
   const s = cam.s;
   const b = blockAt(t);
-  const b5 = t >= block('b5').from && t < block('b6').from;
   const mix = stageMix(t);
-  const { u: stageU } = stageAt(t);
+  const { cur, prev, u: stageU } = stageAt(t);
+  const ct = contractAt(t);
 
   // рёбра мира: канал включается при появлении узла `to`
   const edges = EDGES.map((e) => {
@@ -272,50 +226,23 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
   const loopP = smoother(seg(t, LOOP_DRAW.from, LOOP_DRAW.to));
   const loopPts = subPolyline(LOOP_PTS, 0, loopP);
   const rollP = smoother(seg(t, APPEAR['chip:5'] + 0.2, APPEAR['chip:5'] + 0.8));
-
-  // договор блока 5
-  const ck = smoother(seg(t, CONTRACT.from, CONTRACT.to));
-  const contractOn = b5 && t >= CONTRACT.from;
-  const cPos = along(CONTRACT_ROUTE, ck);
-  const conflict = contractOn ? clamp(1 - Math.abs(ck - CONTRACT_HUMAN_K) / 0.05) : 0;
-  const insideNode = NODES.some((n) => Math.abs(cPos[0] - n.x) <= n.w / 2 + 16 && Math.abs(cPos[1] - n.y) <= n.h / 2 + 16);
-  const hotNode = contractOn ? NODES.find((n) => Math.abs(cPos[0] - n.x) <= n.w / 2 && Math.abs(cPos[1] - n.y) <= n.h / 2)?.id ?? null : null;
+  const insideNode = NODES.some((n) => Math.abs(ct.pos[0] - n.x) <= n.w / 2 + 16 && Math.abs(ct.pos[1] - n.y) <= n.h / 2 + 16);
 
   const perChannel = 6 + Math.round(4 * clamp((densityAt(t) - 0.25) / 0.75));
   const worldTracks: Track[] = [
     ...edges.map(({ e, dim }): Track => ({ pts: e.pts, on: APPEAR[e.to] === undefined ? null : APPEAR[e.to] - 0.35, kind: 'flow', alpha: dim })),
     { pts: LOOP_PTS, on: LOOP_DRAW.from, kind: 'loop', maxK: loopP, alpha: visOf('chip:0', t, false).dim },
     { pts: LOOP_ROLLBACK, on: APPEAR['chip:5'] + 0.2, kind: 'loop', alpha: visOf('chip:5', t, false).dim },
-    ...(contractOn ? [{ pts: CONTRACT_ROUTE, on: CONTRACT.from, kind: 'contract', headK: ck } as Track] : []),
+    ...(ct.on ? [{ pts: CONTRACT_ROUTE, on: CONTRACT.from, kind: 'contract', headK: ct.k } as Track] : []),
   ];
-  // каналы сцены панелей (экранные координаты): вход и выход текущей панели
-  const { cur } = stageAt(t);
-  const chOn = mix * smoother(seg(stageU, 0.6, 1));
-  const stageTracks: Track[] = [
-    ...(cur.left ? [{ pts: CH_IN, on: cur.from + 0.3, kind: 'flow' } as Track] : []),
-    ...(cur.right ? [{ pts: CH_OUT, on: cur.from + 0.3, kind: 'flow' } as Track] : []),
-  ];
+  // каналы сцены панелей (экранные координаты): трассы идут непрерывно с начала окна; канал виден, если есть сосед —
+  // при смене панели видимость канала интерполируется вместе с раскладкой
+  const has = (side: 'left' | 'right') => (cur[side] ? 1 : 0) * stageU + (prev ? (prev[side] ? 1 : 0) : cur[side] ? 1 : 0) * (1 - stageU);
+  const inA = mix * has('left');
+  const outA = mix * has('right');
+  const won = windowStart(t) + 0.3;
   const identity: Cam = { s: 1, ox: 0, oy: 0 };
-
-  // прямоугольники узлов: мир (камера) ↔ сцена панелей
-  const cards = NODES.map((n) => {
-    const wr: Rect = { x: (n.x - n.w / 2) * s + cam.ox, y: (n.y - n.h / 2) * s + cam.oy, w: n.w * s, h: n.h * s };
-    const fr = frameOf(n.x - n.w / 2, n.y - n.h / 2, n.x + n.w / 2, n.y + n.h / 2, cam);
-    const st = mix > 0 ? stageRectOf(n.id, t) : null;
-    const m = st ? mix : 0;
-    const rect: Rect = st ? { x: wr.x + (st.rect.x - wr.x) * m, y: wr.y + (st.rect.y - wr.y) * m, w: wr.w + (st.rect.w - wr.w) * m, h: wr.h + (st.rect.h - wr.h) * m } : wr;
-    const open = st ? st.open * m : 0;
-    const stagePx = st ? STAGE_LABEL + (PANEL_LABEL - STAGE_LABEL) * st.open : STAGE_LABEL;
-    const labelPx = WORLD_LABEL * s + (stagePx - WORLD_LABEL * s) * m;
-    const worldReadable = s >= READ_S && fr === 'in';
-    const stageVisible = st && st.slot !== 'offL' && st.slot !== 'offR';
-    const readable = m > 0.5 ? Boolean(stageVisible) : worldReadable;
-    const detailPx = m > 0.5 ? (st && st.open > 0.5 ? PANEL_DETAIL : null) : worldReadable ? WORLD_DETAIL * s : null;
-    const opacity = mix > 0 && !st ? 1 - mix : st && !stageVisible ? 1 - m : 1;
-    const active = st ? (st.open > 0.5 ? 1 : 0) : visOf(n.id, t, true).fresh > 0.3 || hotNode === n.id ? 1 : 0;
-    const greenFill = n.id === 'human1' ? smoother(seg(t, STAGE_EV_HUMAN, STAGE_EV_HUMAN + 0.6)) * (t < block('b3b').from ? 1 : 0) : 0;
-    return { n, rect, open, labelPx, detailPx, readable, cut: m > 0.5 ? false : fr === 'cut', opacity, active, conflict: n.id === 'human2' ? conflict : 0, greenFill, z: st && st.open > 0.1 ? 2 : 1 };
-  });
+  const cards = cardLayout(t, { humanFillAt: EV.queue.human });
 
   const subtitle = subtitleAt(t);
   const titleFrom = TITLE_FROM[b.id];
@@ -347,38 +274,43 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
           ))}
         </div>
       </div>
-      {/* сцена панелей: каналы входа/выхода с трассами */}
+      {/* сцена панелей: каналы входа/выхода — бледная нить и трассы */}
       {mix > 0 ? (
-        <div style={{ position: 'absolute', inset: 0, opacity: chOn }}>
-          <Field t={t} cam={identity} tracks={stageTracks} perChannel={8} width={1920} height={1080} />
+        <>
+          <div style={{ position: 'absolute', inset: 0, opacity: inA }}>
+            <Field t={t} cam={identity} tracks={[{ pts: CH_IN, on: won, kind: 'flow' }]} perChannel={8} width={1920} height={1080} />
+          </div>
+          <div style={{ position: 'absolute', inset: 0, opacity: outA }}>
+            <Field t={t} cam={identity} tracks={[{ pts: CH_OUT, on: won, kind: 'flow' }]} perChannel={8} width={1920} height={1080} />
+          </div>
           <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1920} height={1080}>
-            {cur.left ? <path d={roundedPath(CH_IN)} fill="none" stroke={C.ink} strokeWidth={1.4} opacity={0.06} /> : null}
-            {cur.right ? <path d={roundedPath(CH_OUT)} fill="none" stroke={C.ink} strokeWidth={1.4} opacity={0.06} /> : null}
+            <path d={roundedPath(CH_IN)} fill="none" stroke={C.ink} strokeWidth={1.4} opacity={0.06 * inA} />
+            <path d={roundedPath(CH_OUT)} fill="none" stroke={C.ink} strokeWidth={1.4} opacity={0.06 * outA} />
           </svg>
-        </div>
+        </>
       ) : null}
       {/* чипы-значения на каналах панелей — под карточками (не перекрывают текст и карточки) */}
       {mix > 0.5
         ? stageChips(t).map((ch, i) => {
             const p = along(ch.pts, smoother(ch.k));
-            return <ValueChip key={`${ch.text}-${i}`} text={ch.text} x={p[0]} y={p[1]} a={chOn * seg(ch.k, 0.1, 0.2) * (1 - seg(ch.k, 0.85, 0.95))} />;
+            return <ValueChip key={`${ch.text}-${i}`} text={ch.text} x={p[0]} y={p[1]} a={mix * seg(ch.k, 0.1, 0.2) * (1 - seg(ch.k, 0.85, 0.95))} />;
           })
         : null}
       {/* карточки узлов (панель — поверх соседей) */}
       {[...cards].sort((a, z) => a.z - z.z).map((c) => (
-        <Card key={c.n.id} n={c.n} t={t} rect={c.rect} open={c.open} labelPx={c.labelPx} detailPx={c.detailPx} readable={c.readable} cut={c.cut} opacity={c.opacity} active={c.active} conflict={c.conflict} greenFill={c.greenFill} />
+        <Card key={c.n.id} c={c} t={t} />
       ))}
       {/* бусина договора блока 5 (мир → экран), только вне узлов */}
-      {contractOn && !insideNode ? (
+      {ct.on && !insideNode ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1920} height={1080}>
-          <circle cx={cPos[0] * s + cam.ox} cy={cPos[1] * s + cam.oy} r={12} fill={C.tight} />
-          <circle cx={cPos[0] * s + cam.ox} cy={cPos[1] * s + cam.oy} r={4.5} fill={C.paper} />
-          {conflict > 0 ? <circle cx={cPos[0] * s + cam.ox} cy={cPos[1] * s + cam.oy} r={17 + 9 * conflict} fill="none" stroke={C.crit} strokeWidth={2.4} opacity={conflict} /> : null}
+          <circle cx={ct.pos[0] * s + cam.ox} cy={ct.pos[1] * s + cam.oy} r={12} fill={C.tight} />
+          <circle cx={ct.pos[0] * s + cam.ox} cy={ct.pos[1] * s + cam.oy} r={4.5} fill={C.paper} />
+          {ct.conflict > 0 ? <circle cx={ct.pos[0] * s + cam.ox} cy={ct.pos[1] * s + cam.oy} r={17 + 9 * ct.conflict} fill="none" stroke={C.crit} strokeWidth={2.4} opacity={ct.conflict} /> : null}
         </svg>
       ) : null}
 
-      {/* блок 2: картка аптеки на стенде — план → договір → скан, охровые рамки по словам (запись видео — шаг 6) */}
-      {b.id === 'b2' ? <Block2Stand t={t} x={960} y={ZONE.work.y0 + 30} h={600} /> : null}
+      {/* блок 2: окно стенда — крупные фрагменты (план → «Договір» → скан), охровые рамки по словам; уходит вместе с появлением «Скани» */}
+      {t >= EV.b2.open && t < EV.b2.close + 1 ? <Block2Stand t={t} /> : null}
 
       {/* зона заголовка: подложка, индикатор прогресса по блокам, заголовок сцены (Source Serif 4) */}
       <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 205, background: 'linear-gradient(rgba(249,243,232,1) 0%, rgba(249,243,232,1) 88%, rgba(249,243,232,0) 100%)' }} />
@@ -421,4 +353,3 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
     </div>
   );
 };
-const STAGE_EV_HUMAN = APPEAR.human1 + 0.35;

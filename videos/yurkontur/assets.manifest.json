@@ -1,6 +1,6 @@
 {
  "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
- "generatedAt": "2026-11-08T20:58:03.536Z",
+ "generatedAt": "2026-11-08T21:19:25.065Z",
  "items": [
   {
    "file": "public/videos/yurkontur/s5_crop_1.png",
@@ -59,38 +59,38 @@
   {
    "file": "public/videos/yurkontur/stand-queue-card.png",
    "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
-   "how": "карточка задачи «Орендна плата за договором · doc3» до решения, CSS-клип ×1.5",
-   "sha256": "afa6e0941b4719cb6413a9f4d9b36d4bd93ef4bcf029e252a7b5ae4ddf6e737c"
+   "how": "карточка задачи «Орендна плата за договором · doc3» до решения, DPR 3",
+   "sha256": "c73998a50955e8da790cb42f0786b4e5cfdee0501f998df6f4bd3bca4baa61e3"
   },
   {
    "file": "public/videos/yurkontur/stand-readings-match.png",
    "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
-   "how": "блок «Два незалежних читання»: A и B совпали (та же задача), ×1.5",
-   "sha256": "fcfa57349ad066bf16adf688a0e2a60a1a9b1d31d4e2af4a67fdbeed0f8310ce"
+   "how": "«Два незалежних читання»: A и B совпали, DPR 3",
+   "sha256": "20ff27a7f34fa8d53af7cd0f2d58f4acdf15b69009d5081d43abb2ceae711e64"
   },
   {
    "file": "public/videos/yurkontur/stand-readings-diff.png",
    "source": "YURKONTUR_STAND#/queue/T-doc3-rent",
-   "how": "блок «Два незалежних читання» следующей задачи «Комунальні · doc3»: значення розійшлися, ×1.5",
-   "sha256": "f9c131e9558308897408e90cd81bccd46a2dfdbb668cf626817d4ca085d18687"
-  },
-  {
-   "file": "public/videos/yurkontur/stand-b2-plan.png",
-   "source": "YURKONTUR_STAND",
-   "how": "#/card/ANC-0412/plan — вкладка «План» (план з ALI, на стенде помечен «приклад»)",
-   "sha256": "bca986ce1340e9d2cf7e8d5dde517e429b552ee8dbccd850cedbcb4fe006d51e"
+   "how": "«Два незалежних читання» следующей задачи «Комунальні · doc3»: розійшлися, DPR 3",
+   "sha256": "4353b0f2bebd0a853e2fcf769b81393609bf8e45a2bb89f64e2c448bd1c10975"
   },
   {
    "file": "public/videos/yurkontur/stand-b2-contract.png",
-   "source": "YURKONTUR_STAND",
-   "how": "#/card/doc1/contract — вкладка «Договір»: Ставка чинна, Діє до, Останній день заяви",
-   "sha256": "9c89f283dfc914894a0c7d92bd0d46ca95c527035302721bbef701c484bf82f3"
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "вкладка «Договір» без меню ALI, DPR 3",
+   "sha256": "3f556137dd3393acecea5d305b9bf2d5229cf17186f17089599a530a42ccd629"
   },
   {
-   "file": "public/videos/yurkontur/stand-b2-scan.png",
-   "source": "YURKONTUR_STAND",
-   "how": "#/card/doc1/contract + клик «Показати в скані» — лайтбокс скана с рамкой",
-   "sha256": "525f4f05413ccc611de97cd77dc6831d0d6547b7506f9412de097fe1a9ff3382"
+   "file": "public/videos/yurkontur/stand-b2-scan.jpg",
+   "source": "YURKONTUR_STAND#/card/doc1/contract → «Показати в скані» (Ставка за договором)",
+   "how": "исходные байты скана из стенда, без перекодирования",
+   "sha256": "3e08279ee6d6baa5c193b1d551f5d81a07ba444c0390f432647462a3d5e58210"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-b2-plan.png",
+   "source": "YURKONTUR_STAND#/card/ANC-0412/plan (встроенная картинка 2400×1197)",
+   "how": "crop=648:862:896:110 → PNG (без пережатия)",
+   "sha256": "0bb0067dc362a27fd5a7aaf8b3dc09bcb720817c1f1e2318308ca045c120e62d"
   }
  ]
 }

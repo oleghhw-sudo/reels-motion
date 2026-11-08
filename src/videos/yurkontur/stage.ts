@@ -1,7 +1,8 @@
 // Живые панели (правки Олега 08.11): активный узел раскрывается в панель на 55 % ширины кадра, соседи — компактные карточки
 // по краям (слева сверху — откуда пришло, справа снизу — куда уходит). Раскладка в экранных px 1920×1080; время — секунды.
-// Сцена «панели» работает в блоке 1 (Скани) и в блоке 3а (Розпізнавання → Два читання → Перевірки кодом → Черга перевірки);
-// в остальных блоках схема живёт в мировых координатах с камерой (camera.ts). Переход — интерполяция прямоугольников.
+// Смена активного узла: следующий узел появляется карточкой справа (на свои слова), через 0.3 с раскрывается из неё в панель,
+// панель сжимается в левую карточку — позиция, размер и обводка интерполируются за STAGE_MOVE с easing (без скачков).
+// Окна сцены: блок 1 (Скани) и блок 3а (Скани → Розпізнавання → Два читання → Перевірки кодом → Черга перевірки).
 import { clamp, seg, smoother, type Pt } from '../../motion/index.ts';
 import { APPEAR, FLASH, block, wordAt } from './timeline.ts';
 
@@ -22,32 +23,43 @@ export const CH_OUT: Pt[] = [[PANEL.x + PANEL.w, midY], [RIGHT.x + RIGHT.w / 2, 
 /** Порядок цепочки (для «ушёл влево / ещё справа»). */
 const ORDER = ['scans', 'ocr', 'read2', 'code', 'queue', 'human1'];
 
-export type Stage = { from: number; center: string; left: string | null; right: string | null };
-export const STAGE_LIST: Stage[] = [
-  { from: APPEAR.scans - 0.2, center: 'scans', left: null, right: null },
-  { from: APPEAR.ocr - 0.4, center: 'ocr', left: 'scans', right: 'read2' },
-  { from: APPEAR.read2 - 0.4, center: 'read2', left: 'ocr', right: 'code' },
-  { from: APPEAR.code - 0.4, center: 'code', left: 'read2', right: 'queue' },
-  { from: APPEAR.queue - 0.4, center: 'queue', left: 'code', right: 'human1' },
-];
+/** Длительность смены раскладки, с (правило: 0.6–0.8 с с easing). */
 export const STAGE_MOVE = 0.8;
+/** Узел раскрывается из своей карточки через EXPAND_DELAY после появления на свои слова. */
+const EXPAND_DELAY = 0.3;
 
-/** Окна, где работает сцена панелей (вход/выход по 0.8 с). */
+export type Stage = { win: 1 | 3; from: number; center: string; left: string | null; right: string | null };
+/** Блок 3а начинается панелью «Скани» одновременно с уходом окна стенда блока 2 (без пустого кадра). */
+const B3A_START = block('b2').to - 0.6;
+export const STAGE_LIST: Stage[] = [
+  { win: 1, from: APPEAR.scans - 0.2, center: 'scans', left: null, right: null },
+  { win: 3, from: B3A_START, center: 'scans', left: null, right: 'ocr' },
+  { win: 3, from: APPEAR.ocr + EXPAND_DELAY, center: 'ocr', left: 'scans', right: 'read2' },
+  { win: 3, from: APPEAR.read2 + EXPAND_DELAY, center: 'read2', left: 'ocr', right: 'code' },
+  { win: 3, from: APPEAR.code + EXPAND_DELAY, center: 'code', left: 'read2', right: 'queue' },
+  { win: 3, from: APPEAR.queue + EXPAND_DELAY, center: 'queue', left: 'code', right: 'human1' },
+];
+
+/** Окна сцены панелей [вход, выход]; переходы мир ↔ панели — по STAGE_MOVE. */
 const WINDOWS: [number, number][] = [
   [APPEAR.scans - 0.2, block('b1').to - 0.8],
-  [APPEAR.ocr - 0.9, block('b3b').from - 0.3],
+  [B3A_START, block('b3b').from + 0.6],
 ];
-export function stageMix(t: number): number {
-  for (const [a, b] of WINDOWS) if (t >= a - 0.01 && t <= b + STAGE_MOVE) return smoother(seg(t, a, a + STAGE_MOVE)) * (1 - smoother(seg(t, b, b + STAGE_MOVE)));
+export function stageMix(t: number, move = STAGE_MOVE): number {
+  for (const [a, b] of WINDOWS) if (t >= a - 0.01 && t <= b + move) return smoother(seg(t, a, a + move)) * (1 - smoother(seg(t, b, b + move)));
   return 0;
 }
-export function stageAt(t: number): { cur: Stage; prev: Stage | null; u: number } {
+/** Начало текущего окна (для непрерывных трасс каналов). */
+export function windowStart(t: number): number {
+  for (const [a, b] of WINDOWS) if (t >= a - 0.01 && t <= b + STAGE_MOVE) return a;
+  return 0;
+}
+export function stageAt(t: number, move = STAGE_MOVE): { cur: Stage; prev: Stage | null; u: number } {
   let i = 0;
   for (let k = 0; k < STAGE_LIST.length; k++) if (STAGE_LIST[k].from <= t) i = k;
   const cur = STAGE_LIST[i];
-  // переход между соседними сценами только внутри одного окна (блок 1 → 3а — через мировой режим)
-  const prev = i > 0 && STAGE_LIST[i].center !== 'ocr' ? STAGE_LIST[i - 1] : null;
-  return { cur, prev, u: smoother(clamp((t - cur.from) / STAGE_MOVE)) };
+  const prev = i > 0 && STAGE_LIST[i - 1].win === cur.win ? STAGE_LIST[i - 1] : null;
+  return { cur, prev, u: smoother(clamp((t - cur.from) / move)) };
 }
 function slotIn(s: Stage, id: string): Slot | null {
   if (s.center === id) return 'center';
@@ -59,41 +71,46 @@ function slotIn(s: Stage, id: string): Slot | null {
   return i < c ? 'offL' : 'offR';
 }
 const lerpR = (a: Rect, b: Rect, u: number): Rect => ({ x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u, w: a.w + (b.w - a.w) * u, h: a.h + (b.h - a.h) * u });
-/** Прямоугольник узла в сцене панелей и его «раскрытость» (0 — карточка, 1 — панель); null — узел не в цепочке. */
-export function stageRectOf(id: string, t: number): { rect: Rect; open: number; slot: Slot } | null {
-  const { cur, prev, u } = stageAt(t);
+/** Прямоугольник узла в сцене панелей, раскрытость (0 — карточка, 1 — панель) и видимость слота; null — не в цепочке. */
+export function stageRectOf(id: string, t: number, move = STAGE_MOVE): { rect: Rect; open: number; shown: number } | null {
+  const { cur, prev, u } = stageAt(t, move);
   const sc = slotIn(cur, id);
   if (!sc) return null;
   const sp = prev ? slotIn(prev, id) ?? sc : sc;
   const rect = lerpR(SLOT[sp], SLOT[sc], u);
   const open = (sp === 'center' ? 1 - u : 0) + (sc === 'center' ? u : 0);
-  return { rect, open, slot: sc };
+  const vis = (s: Slot) => (s === 'offL' || s === 'offR' ? 0 : 1);
+  const shown = vis(sp) + (vis(sc) - vis(sp)) * u;
+  return { rect, open, shown };
 }
 
 // ---------------------------------------------------------------- события панелей (на слова диктора; бит-лист brief.md)
-const R2 = APPEAR.read2;
-const CD = APPEAR.code;
-const QU = APPEAR.queue;
+const open = (id: string) => APPEAR[id] + EXPAND_DELAY + STAGE_MOVE * 0.75; // панель раскрыта настолько, что видно содержимое
 export const EV = {
-  /** блок 2: экраны стенда в окне по словам — план → договір → скан (накладки: охровые рамки) */
+  /** блок 2: окно стенда — план (проезд) → вкладка «Договір» (рамка на «Ставка чинна») → скан с рамкой стенда */
   b2: {
     open: FLASH.ghostBy + 0.6,
-    tabs: wordAt('b2', 'чинних умов'),
-    plan: wordAt('b2', 'поруч планування'),
+    planPan: [FLASH.ghostBy + 0.8, wordAt('b2', 'поруч планування')] as const,
+    room: wordAt('b2', 'поруч планування'),
     contract: wordAt('b2', 'і договір'),
     rate: wordAt('b2', 'і договір') + 0.8,
     scan: wordAt('b2', 'посилання на місце в скані'),
-    close: block('b2').to - 0.6,
+    close: B3A_START,
   },
-  scans: { list: 2.2, scroll: [3.0, 11.0] as const, pages: [12.0, 13.2, 14.4, 15.6] as const },
+  /** Скани: 25 названий файлов проезжают и уходят в стопку сканов — в блоке 1 и в начале блока 3а */
+  scans: {
+    b1: { list: 2.2, scroll: [3.0, 11.0] as const, pages: [12.0, 13.2, 14.4, 15.6] as const },
+    b3a: { list: B3A_START + 0.6, scroll: [B3A_START + 0.9, B3A_START + 2.5] as const, pages: [B3A_START + 2.6, B3A_START + 2.85, B3A_START + 3.1, B3A_START + 3.35] as const },
+  },
   ocr: [
-    { at: wordAt('b3a', 'пропускає'), crop: 's5_crop_4.png', w: 554, h: 122, cause: 'сума, яку OCR пропустив' },
-    { at: wordAt('b3a', 'печатку поверх суми'), crop: 's5_crop_1.png', w: 404, h: 242, cause: 'печатка на тексті' },
-    { at: wordAt('b3a', 'бліду сторінку'), crop: 's5_crop_2.png', w: 1760, h: 120, cause: 'бліде' },
-    { at: wordAt('b3a', 'рукописну правку'), crop: 's5_crop_3.png', w: 246, h: 126, cause: 'рукописна дата' },
+    { at: wordAt('b3a', 'пропускає'), crop: 's5_crop_4.png', w: 554, h: 122, k: 1.15, cause: 'сума, яку OCR пропустив' },
+    { at: wordAt('b3a', 'печатку поверх суми'), crop: 's5_crop_1.png', w: 404, h: 242, k: 1.0, cause: 'печатка на тексті' },
+    { at: wordAt('b3a', 'бліду сторінку'), crop: 's5_crop_2.png', w: 1760, h: 120, k: 0.56, cause: 'бліде' },
+    { at: wordAt('b3a', 'рукописну правку'), crop: 's5_crop_3.png', w: 246, h: 126, k: 1.8, cause: 'рукописна дата' },
   ],
   /** «Два читання»: пары A/B — совпавшие сливаются, расхождение (реальный пример стенда: різні пункти 6.1 і 6.14) уходит в чергу */
-  read2: { streams: R2 + 0.3, pairs: [R2 + 1.2, R2 + 2.3], diverge: R2 + 3.3, toQueue: R2 + 4.1 },
-  code: { rows: [CD + 0.3, CD + 0.75, CD + 1.2, CD + 1.65], failRow: 2, out: CD + 2.0 },
-  queue: { cursor: [QU + 0.05, QU + 0.5] as const, click: QU + 0.55, green: QU + 0.7, human: APPEAR.human1 + 0.35 },
+  read2: { streams: open('read2'), pairs: [open('read2') + 0.8, open('read2') + 1.9] as const, diverge: open('read2') + 2.9, toQueue: open('read2') + 3.7 },
+  code: { rows: [open('code'), open('code') + 0.4, open('code') + 0.8, open('code') + 1.2] as const, failRow: 2, out: open('code') + 1.5 },
+  /** Черга: камера на значения → проезд к «Підтвердити» → клик → назад к значениям → зеленеет → Людина №1 заливается */
+  queue: { toButton: open('queue') + 0.1, cursor: [open('queue') + 0.3, open('queue') + 0.75] as const, click: open('queue') + 0.8, back: open('queue') + 0.95, green: open('queue') + 1.4, human: open('queue') + 1.75 },
 } as const;
