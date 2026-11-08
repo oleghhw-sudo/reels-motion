@@ -1,0 +1,1850 @@
+{
+ "$comment": "производное: videos/yurkontur/voice-full.mjs (задача 032); время — секунды ролика; match:false — слово без пары в распознавании (время интерполировано), проверить на слух",
+ "voice": "Gero",
+ "model": "gemini-3.8-flash-tts",
+ "engine": "whisperx",
+ "lead": 0.6,
+ "tail": 0.8,
+ "hold": 4,
+ "durationSec": 154.176,
+ "blocks": [
+  {
+   "id": "b1",
+   "from": 0,
+   "to": 21.08,
+   "voiceAt": 0.6,
+   "voiceEnd": 20.28,
+   "transcript": "Договори оренди аптек ведуться в обліковій системі. Кожен розкладено на 13 вкладок. Строки, ставка, юридичні умови, перелік файлів. Що змінила кожна додаткова угода, видно лише з назви файлу. Цілої картини з цього не скласти. Ні нагадувань про строки, ні аналітики по мережі.",
+   "words": [
+    {
+     "text": "договори",
+     "start": 0.691,
+     "end": 1.212,
+     "match": true
+    },
+    {
+     "text": "оренди",
+     "start": 1.292,
+     "end": 1.713,
+     "match": true
+    },
+    {
+     "text": "аптек",
+     "start": 1.813,
+     "end": 2.294,
+     "match": true
+    },
+    {
+     "text": "ведуться",
+     "start": 2.334,
+     "end": 2.775,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 2.815,
+     "end": 2.855,
+     "match": true
+    },
+    {
+     "text": "обліковій",
+     "start": 2.895,
+     "end": 3.436,
+     "match": true
+    },
+    {
+     "text": "системі",
+     "start": 3.476,
+     "end": 4.017,
+     "match": true
+    },
+    {
+     "text": "кожен",
+     "start": 4.358,
+     "end": 4.718,
+     "match": true
+    },
+    {
+     "text": "розкладено",
+     "start": 4.759,
+     "end": 5.32,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 5.36,
+     "end": 5.48,
+     "match": true
+    },
+    {
+     "text": "тринадцять",
+     "start": 5.981,
+     "end": 6.161,
+     "match": true
+    },
+    {
+     "text": "вкладок",
+     "start": 6.201,
+     "end": 6.722,
+     "match": true
+    },
+    {
+     "text": "строки",
+     "start": 6.943,
+     "end": 7.504,
+     "match": true
+    },
+    {
+     "text": "ставка",
+     "start": 7.544,
+     "end": 8.105,
+     "match": true
+    },
+    {
+     "text": "юридичні",
+     "start": 8.245,
+     "end": 8.746,
+     "match": true
+    },
+    {
+     "text": "умови",
+     "start": 8.786,
+     "end": 9.267,
+     "match": true
+    },
+    {
+     "text": "перелік",
+     "start": 9.607,
+     "end": 9.988,
+     "match": true
+    },
+    {
+     "text": "файлів",
+     "start": 10.068,
+     "end": 10.509,
+     "match": true
+    },
+    {
+     "text": "що",
+     "start": 11.15,
+     "end": 11.311,
+     "match": true
+    },
+    {
+     "text": "змінила",
+     "start": 11.331,
+     "end": 11.711,
+     "match": true
+    },
+    {
+     "text": "кожна",
+     "start": 11.771,
+     "end": 12.072,
+     "match": true
+    },
+    {
+     "text": "додаткова",
+     "start": 12.112,
+     "end": 12.593,
+     "match": true
+    },
+    {
+     "text": "угода",
+     "start": 12.653,
+     "end": 13.074,
+     "match": true
+    },
+    {
+     "text": "видно",
+     "start": 13.134,
+     "end": 13.414,
+     "match": true
+    },
+    {
+     "text": "лише",
+     "start": 13.434,
+     "end": 13.715,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 13.755,
+     "end": 13.795,
+     "match": true
+    },
+    {
+     "text": "назви",
+     "start": 13.835,
+     "end": 14.156,
+     "match": true
+    },
+    {
+     "text": "файлу",
+     "start": 14.236,
+     "end": 14.597,
+     "match": true
+    },
+    {
+     "text": "цілої",
+     "start": 15.017,
+     "end": 15.338,
+     "match": true
+    },
+    {
+     "text": "картини",
+     "start": 15.378,
+     "end": 15.799,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 15.819,
+     "end": 15.859,
+     "match": true
+    },
+    {
+     "text": "цього",
+     "start": 15.899,
+     "end": 16.079,
+     "match": true
+    },
+    {
+     "text": "не",
+     "start": 16.099,
+     "end": 16.179,
+     "match": true
+    },
+    {
+     "text": "скласти",
+     "start": 16.22,
+     "end": 16.74,
+     "match": true
+    },
+    {
+     "text": "ні",
+     "start": 17.041,
+     "end": 17.281,
+     "match": true
+    },
+    {
+     "text": "нагадувань",
+     "start": 17.322,
+     "end": 17.883,
+     "match": true
+    },
+    {
+     "text": "про",
+     "start": 17.923,
+     "end": 18.043,
+     "match": true
+    },
+    {
+     "text": "строки",
+     "start": 18.083,
+     "end": 18.584,
+     "match": true
+    },
+    {
+     "text": "ні",
+     "start": 18.904,
+     "end": 19.125,
+     "match": true
+    },
+    {
+     "text": "аналітики",
+     "start": 19.185,
+     "end": 19.686,
+     "match": true
+    },
+    {
+     "text": "по",
+     "start": 19.746,
+     "end": 19.826,
+     "match": true
+    },
+    {
+     "text": "мережі",
+     "start": 19.846,
+     "end": 20.307,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b2",
+   "from": 21.08,
+   "to": 32.894,
+   "voiceAt": 21.68,
+   "voiceEnd": 32.094,
+   "transcript": "Юридичний контур, модуль до Алі і єдина база чинних умов. У картці аптеки поруч планування і договір, а кожна умова має посилання на місце в скані.",
+   "words": [
+    {
+     "text": "юридичний",
+     "start": 21.832,
+     "end": 22.394,
+     "match": true
+    },
+    {
+     "text": "контур",
+     "start": 22.435,
+     "end": 22.897,
+     "match": true
+    },
+    {
+     "text": "модуль",
+     "start": 23.198,
+     "end": 23.56,
+     "match": true
+    },
+    {
+     "text": "до",
+     "start": 23.621,
+     "end": 23.741,
+     "match": true
+    },
+    {
+     "text": "ali",
+     "start": 23.842,
+     "end": 24.123,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 24.324,
+     "end": 24.384,
+     "match": true
+    },
+    {
+     "text": "єдина",
+     "start": 24.465,
+     "end": 24.806,
+     "match": true
+    },
+    {
+     "text": "база",
+     "start": 24.867,
+     "end": 25.108,
+     "match": true
+    },
+    {
+     "text": "чинних",
+     "start": 25.188,
+     "end": 25.53,
+     "match": true
+    },
+    {
+     "text": "умов",
+     "start": 25.59,
+     "end": 25.912,
+     "match": true
+    },
+    {
+     "text": "у",
+     "start": 26.455,
+     "end": 26.515,
+     "match": true
+    },
+    {
+     "text": "картці",
+     "start": 26.575,
+     "end": 26.917,
+     "match": true
+    },
+    {
+     "text": "аптеки",
+     "start": 26.957,
+     "end": 27.42,
+     "match": true
+    },
+    {
+     "text": "поруч",
+     "start": 27.58,
+     "end": 27.922,
+     "match": true
+    },
+    {
+     "text": "планування",
+     "start": 27.982,
+     "end": 28.565,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 28.666,
+     "end": 28.726,
+     "match": true
+    },
+    {
+     "text": "договір",
+     "start": 28.806,
+     "end": 29.249,
+     "match": true
+    },
+    {
+     "text": "а",
+     "start": 29.53,
+     "end": 29.57,
+     "match": true
+    },
+    {
+     "text": "кожна",
+     "start": 29.631,
+     "end": 29.912,
+     "match": true
+    },
+    {
+     "text": "умова",
+     "start": 29.972,
+     "end": 30.334,
+     "match": true
+    },
+    {
+     "text": "має",
+     "start": 30.414,
+     "end": 30.636,
+     "match": true
+    },
+    {
+     "text": "посилання",
+     "start": 30.696,
+     "end": 31.239,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 31.259,
+     "end": 31.359,
+     "match": true
+    },
+    {
+     "text": "місце",
+     "start": 31.399,
+     "end": 31.701,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 31.721,
+     "end": 31.761,
+     "match": true
+    },
+    {
+     "text": "скані",
+     "start": 31.801,
+     "end": 32.123,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b3a",
+   "from": 32.894,
+   "to": 57.567,
+   "voiceAt": 33.494,
+   "voiceEnd": 56.767,
+   "transcript": "Спершу система читає скан. Те, що звичайне розпізнавання пропускає, вона збирає і показує людині. Печатку поверх суми, бліду сторінку, рукописну правку. Далі договір читають два незалежні агенти, і другий не бачить відповіді першого. Код перевіряє ЄРДРПУ, дати й суми. Критичні значення підтверджує юрист або відділ оренди.",
+   "words": [
+    {
+     "text": "спершу",
+     "start": 33.625,
+     "end": 34.126,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 34.186,
+     "end": 34.607,
+     "match": true
+    },
+    {
+     "text": "читає",
+     "start": 34.668,
+     "end": 35.008,
+     "match": true
+    },
+    {
+     "text": "скан",
+     "start": 35.068,
+     "end": 35.549,
+     "match": true
+    },
+    {
+     "text": "те",
+     "start": 35.95,
+     "end": 36.091,
+     "match": true
+    },
+    {
+     "text": "що",
+     "start": 36.151,
+     "end": 36.271,
+     "match": true
+    },
+    {
+     "text": "звичайне",
+     "start": 36.311,
+     "end": 36.832,
+     "match": true
+    },
+    {
+     "text": "розпізнавання",
+     "start": 36.852,
+     "end": 37.614,
+     "match": true
+    },
+    {
+     "text": "пропускає",
+     "start": 37.654,
+     "end": 38.376,
+     "match": true
+    },
+    {
+     "text": "вона",
+     "start": 38.676,
+     "end": 38.857,
+     "match": true
+    },
+    {
+     "text": "збирає",
+     "start": 38.897,
+     "end": 39.338,
+     "match": true
+    },
+    {
+     "text": "й",
+     "start": 39.358,
+     "end": 39.398,
+     "match": true
+    },
+    {
+     "text": "показує",
+     "start": 39.458,
+     "end": 39.959,
+     "match": true
+    },
+    {
+     "text": "людині",
+     "start": 39.979,
+     "end": 40.4,
+     "match": true
+    },
+    {
+     "text": "печатку",
+     "start": 40.721,
+     "end": 41.102,
+     "match": true
+    },
+    {
+     "text": "поверх",
+     "start": 41.162,
+     "end": 41.462,
+     "match": true
+    },
+    {
+     "text": "суми",
+     "start": 41.523,
+     "end": 41.923,
+     "match": true
+    },
+    {
+     "text": "бліду",
+     "start": 42.204,
+     "end": 42.465,
+     "match": true
+    },
+    {
+     "text": "сторінку",
+     "start": 42.505,
+     "end": 43.106,
+     "match": true
+    },
+    {
+     "text": "рукописну",
+     "start": 43.326,
+     "end": 43.787,
+     "match": true
+    },
+    {
+     "text": "правку",
+     "start": 43.848,
+     "end": 44.228,
+     "match": true
+    },
+    {
+     "text": "далі",
+     "start": 44.85,
+     "end": 45.09,
+     "match": true
+    },
+    {
+     "text": "договір",
+     "start": 45.15,
+     "end": 45.531,
+     "match": true
+    },
+    {
+     "text": "читають",
+     "start": 45.591,
+     "end": 46.012,
+     "match": true
+    },
+    {
+     "text": "два",
+     "start": 46.052,
+     "end": 46.273,
+     "match": true
+    },
+    {
+     "text": "незалежні",
+     "start": 46.313,
+     "end": 46.814,
+     "match": true
+    },
+    {
+     "text": "агенти",
+     "start": 46.894,
+     "end": 47.335,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 47.656,
+     "end": 47.716,
+     "match": true
+    },
+    {
+     "text": "другий",
+     "start": 47.756,
+     "end": 48.157,
+     "match": true
+    },
+    {
+     "text": "не",
+     "start": 48.297,
+     "end": 48.378,
+     "match": true
+    },
+    {
+     "text": "бачить",
+     "start": 48.438,
+     "end": 48.738,
+     "match": true
+    },
+    {
+     "text": "відповіді",
+     "start": 48.758,
+     "end": 49.179,
+     "match": true
+    },
+    {
+     "text": "першого",
+     "start": 49.219,
+     "end": 50.382,
+     "match": true
+    },
+    {
+     "text": "код",
+     "start": 50.442,
+     "end": 50.643,
+     "match": true
+    },
+    {
+     "text": "перевіряє",
+     "start": 50.703,
+     "end": 51.204,
+     "match": true
+    },
+    {
+     "text": "єдрпоу",
+     "start": 51.204,
+     "end": 52.326,
+     "match": false
+    },
+    {
+     "text": "дати",
+     "start": 52.326,
+     "end": 52.627,
+     "match": true
+    },
+    {
+     "text": "й",
+     "start": 52.647,
+     "end": 52.687,
+     "match": true
+    },
+    {
+     "text": "суми",
+     "start": 52.747,
+     "end": 53.108,
+     "match": true
+    },
+    {
+     "text": "критичні",
+     "start": 53.509,
+     "end": 53.97,
+     "match": true
+    },
+    {
+     "text": "значення",
+     "start": 54.01,
+     "end": 54.451,
+     "match": true
+    },
+    {
+     "text": "підтверджує",
+     "start": 54.511,
+     "end": 55.072,
+     "match": true
+    },
+    {
+     "text": "юрист",
+     "start": 55.172,
+     "end": 55.513,
+     "match": true
+    },
+    {
+     "text": "або",
+     "start": 55.854,
+     "end": 56.034,
+     "match": true
+    },
+    {
+     "text": "відділ",
+     "start": 56.074,
+     "end": 56.375,
+     "match": true
+    },
+    {
+     "text": "оренди",
+     "start": 56.395,
+     "end": 56.796,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b3b",
+   "from": 57.567,
+   "to": 79.31,
+   "voiceAt": 58.167,
+   "voiceEnd": 78.51,
+   "transcript": "Потім система розбирає ланцюг – договір, додаткові угоди, акти, розірвання. Новий документ змінює лише ті умови, які в ньому названо. Так ставка може прийти із додаткової угоди, а площа і строк – з договору. Якщо два документи суперечать один одному, система не обирає. Вирішує юрист.",
+   "words": [
+    {
+     "text": "потім",
+     "start": 58.198,
+     "end": 58.539,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 58.599,
+     "end": 59.039,
+     "match": true
+    },
+    {
+     "text": "розбирає",
+     "start": 59.079,
+     "end": 59.701,
+     "match": true
+    },
+    {
+     "text": "ланцюг",
+     "start": 59.761,
+     "end": 60.322,
+     "match": true
+    },
+    {
+     "text": "договір",
+     "start": 60.562,
+     "end": 61.143,
+     "match": true
+    },
+    {
+     "text": "додаткові",
+     "start": 61.283,
+     "end": 61.824,
+     "match": true
+    },
+    {
+     "text": "угоди",
+     "start": 61.864,
+     "end": 62.345,
+     "match": true
+    },
+    {
+     "text": "акти",
+     "start": 62.625,
+     "end": 63.066,
+     "match": true
+    },
+    {
+     "text": "розірвання",
+     "start": 63.347,
+     "end": 64.008,
+     "match": true
+    },
+    {
+     "text": "новий",
+     "start": 64.549,
+     "end": 64.749,
+     "match": true
+    },
+    {
+     "text": "документ",
+     "start": 64.769,
+     "end": 65.21,
+     "match": true
+    },
+    {
+     "text": "змінює",
+     "start": 65.27,
+     "end": 65.691,
+     "match": true
+    },
+    {
+     "text": "лише",
+     "start": 65.731,
+     "end": 65.991,
+     "match": true
+    },
+    {
+     "text": "ті",
+     "start": 66.091,
+     "end": 66.271,
+     "match": true
+    },
+    {
+     "text": "умови",
+     "start": 66.372,
+     "end": 66.792,
+     "match": true
+    },
+    {
+     "text": "які",
+     "start": 66.832,
+     "end": 67.073,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 67.113,
+     "end": 67.133,
+     "match": true
+    },
+    {
+     "text": "ньому",
+     "start": 67.193,
+     "end": 67.453,
+     "match": true
+    },
+    {
+     "text": "названо",
+     "start": 67.514,
+     "end": 68.115,
+     "match": true
+    },
+    {
+     "text": "так",
+     "start": 68.415,
+     "end": 68.615,
+     "match": true
+    },
+    {
+     "text": "ставка",
+     "start": 68.655,
+     "end": 68.996,
+     "match": true
+    },
+    {
+     "text": "може",
+     "start": 69.036,
+     "end": 69.256,
+     "match": true
+    },
+    {
+     "text": "прийти",
+     "start": 69.297,
+     "end": 69.597,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 69.597,
+     "end": 69.737,
+     "match": false
+    },
+    {
+     "text": "додаткової",
+     "start": 69.737,
+     "end": 70.278,
+     "match": true
+    },
+    {
+     "text": "угоди",
+     "start": 70.298,
+     "end": 70.719,
+     "match": true
+    },
+    {
+     "text": "а",
+     "start": 71.039,
+     "end": 71.14,
+     "match": true
+    },
+    {
+     "text": "площа",
+     "start": 71.2,
+     "end": 71.721,
+     "match": true
+    },
+    {
+     "text": "й",
+     "start": 71.741,
+     "end": 71.781,
+     "match": true
+    },
+    {
+     "text": "строк",
+     "start": 71.821,
+     "end": 72.181,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 72.241,
+     "end": 72.302,
+     "match": true
+    },
+    {
+     "text": "договору",
+     "start": 72.342,
+     "end": 72.863,
+     "match": true
+    },
+    {
+     "text": "якщо",
+     "start": 73.383,
+     "end": 73.644,
+     "match": true
+    },
+    {
+     "text": "два",
+     "start": 73.684,
+     "end": 73.864,
+     "match": true
+    },
+    {
+     "text": "документи",
+     "start": 73.884,
+     "end": 74.325,
+     "match": true
+    },
+    {
+     "text": "суперечать",
+     "start": 74.385,
+     "end": 74.906,
+     "match": true
+    },
+    {
+     "text": "один",
+     "start": 74.946,
+     "end": 75.146,
+     "match": true
+    },
+    {
+     "text": "одному",
+     "start": 75.166,
+     "end": 75.547,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 75.888,
+     "end": 76.328,
+     "match": true
+    },
+    {
+     "text": "не",
+     "start": 76.388,
+     "end": 76.549,
+     "match": true
+    },
+    {
+     "text": "обирає",
+     "start": 76.609,
+     "end": 77.15,
+     "match": true
+    },
+    {
+     "text": "вирішує",
+     "start": 77.47,
+     "end": 77.991,
+     "match": true
+    },
+    {
+     "text": "юрист",
+     "start": 78.111,
+     "end": 78.532,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b3c",
+   "from": 79.31,
+   "to": 100.419,
+   "voiceAt": 79.91,
+   "voiceEnd": 99.619,
+   "transcript": "Строки рахують правила, а не модель. І система нагадує про останній день заяви та автопролонгацію. Договір орендодавця система порівнює з типовим. Кожен пункт розкладено на смислові твердження, і для кожного вона пропонує вердикт. Ставить його юрист, критичні умови – першими.",
+   "words": [
+    {
+     "text": "строки",
+     "start": 80.001,
+     "end": 80.402,
+     "match": true
+    },
+    {
+     "text": "рахують",
+     "start": 80.442,
+     "end": 80.883,
+     "match": true
+    },
+    {
+     "text": "правила",
+     "start": 80.963,
+     "end": 81.484,
+     "match": true
+    },
+    {
+     "text": "а",
+     "start": 81.584,
+     "end": 81.624,
+     "match": true
+    },
+    {
+     "text": "не",
+     "start": 81.644,
+     "end": 81.724,
+     "match": true
+    },
+    {
+     "text": "модель",
+     "start": 81.764,
+     "end": 82.185,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 82.686,
+     "end": 82.806,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 82.846,
+     "end": 83.267,
+     "match": true
+    },
+    {
+     "text": "нагадує",
+     "start": 83.307,
+     "end": 83.727,
+     "match": true
+    },
+    {
+     "text": "про",
+     "start": 83.787,
+     "end": 83.908,
+     "match": true
+    },
+    {
+     "text": "останній",
+     "start": 84.008,
+     "end": 84.589,
+     "match": true
+    },
+    {
+     "text": "день",
+     "start": 84.649,
+     "end": 84.849,
+     "match": true
+    },
+    {
+     "text": "заяви",
+     "start": 84.889,
+     "end": 85.31,
+     "match": true
+    },
+    {
+     "text": "та",
+     "start": 85.39,
+     "end": 85.49,
+     "match": true
+    },
+    {
+     "text": "автопролонгацію",
+     "start": 85.651,
+     "end": 86.853,
+     "match": true
+    },
+    {
+     "text": "договір",
+     "start": 87.554,
+     "end": 87.954,
+     "match": true
+    },
+    {
+     "text": "орендодавця",
+     "start": 88.055,
+     "end": 88.816,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 88.876,
+     "end": 89.357,
+     "match": true
+    },
+    {
+     "text": "порівнює",
+     "start": 89.417,
+     "end": 89.838,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 89.858,
+     "end": 89.898,
+     "match": true
+    },
+    {
+     "text": "типовим",
+     "start": 89.958,
+     "end": 90.499,
+     "match": true
+    },
+    {
+     "text": "кожен",
+     "start": 90.879,
+     "end": 91.18,
+     "match": true
+    },
+    {
+     "text": "пункт",
+     "start": 91.28,
+     "end": 91.601,
+     "match": true
+    },
+    {
+     "text": "розкладено",
+     "start": 91.641,
+     "end": 92.202,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 92.242,
+     "end": 92.362,
+     "match": true
+    },
+    {
+     "text": "смислові",
+     "start": 92.422,
+     "end": 92.923,
+     "match": true
+    },
+    {
+     "text": "твердження",
+     "start": 92.963,
+     "end": 93.524,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 93.844,
+     "end": 93.884,
+     "match": true
+    },
+    {
+     "text": "для",
+     "start": 93.924,
+     "end": 94.065,
+     "match": true
+    },
+    {
+     "text": "кожного",
+     "start": 94.125,
+     "end": 94.566,
+     "match": true
+    },
+    {
+     "text": "вона",
+     "start": 94.606,
+     "end": 94.866,
+     "match": true
+    },
+    {
+     "text": "пропонує",
+     "start": 94.906,
+     "end": 95.367,
+     "match": true
+    },
+    {
+     "text": "вердикт",
+     "start": 95.407,
+     "end": 95.948,
+     "match": true
+    },
+    {
+     "text": "ставить",
+     "start": 96.409,
+     "end": 96.749,
+     "match": true
+    },
+    {
+     "text": "його",
+     "start": 96.769,
+     "end": 96.97,
+     "match": true
+    },
+    {
+     "text": "юрист",
+     "start": 97.07,
+     "end": 97.47,
+     "match": true
+    },
+    {
+     "text": "критичні",
+     "start": 97.851,
+     "end": 98.352,
+     "match": true
+    },
+    {
+     "text": "умови",
+     "start": 98.392,
+     "end": 98.753,
+     "match": true
+    },
+    {
+     "text": "першими",
+     "start": 99.133,
+     "end": 99.634,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b4",
+   "from": 100.419,
+   "to": 128.011,
+   "voiceAt": 101.019,
+   "voiceEnd": 127.211,
+   "transcript": "Кожне рішення людини працюватиме на систему. Виправлене значення стане контрольним прикладом. Щотижня помилки розбиратимуться за типами і з'являтиметься пропозиція – доповнити словник, бібліотеку формулювань чи навичку читання. Нову навичку прийматимуть лише тоді, коли на еталоні немає жодної нової помилки в критичних полях. Інакше – відкат. Юридичних висновків система не вчиться ніколи.",
+   "words": [
+    {
+     "text": "кожне",
+     "start": 101.05,
+     "end": 101.331,
+     "match": true
+    },
+    {
+     "text": "рішення",
+     "start": 101.351,
+     "end": 101.731,
+     "match": true
+    },
+    {
+     "text": "людини",
+     "start": 101.751,
+     "end": 102.092,
+     "match": true
+    },
+    {
+     "text": "працюватиме",
+     "start": 102.152,
+     "end": 102.813,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 102.853,
+     "end": 102.934,
+     "match": true
+    },
+    {
+     "text": "систему",
+     "start": 102.974,
+     "end": 103.515,
+     "match": true
+    },
+    {
+     "text": "виправлене",
+     "start": 104.216,
+     "end": 104.737,
+     "match": true
+    },
+    {
+     "text": "значення",
+     "start": 104.797,
+     "end": 105.238,
+     "match": true
+    },
+    {
+     "text": "стане",
+     "start": 105.278,
+     "end": 105.559,
+     "match": true
+    },
+    {
+     "text": "контрольним",
+     "start": 105.619,
+     "end": 106.12,
+     "match": true
+    },
+    {
+     "text": "прикладом",
+     "start": 106.16,
+     "end": 106.661,
+     "match": true
+    },
+    {
+     "text": "щотижня",
+     "start": 107.282,
+     "end": 107.823,
+     "match": true
+    },
+    {
+     "text": "помилки",
+     "start": 107.883,
+     "end": 108.264,
+     "match": true
+    },
+    {
+     "text": "розбиратимуться",
+     "start": 108.284,
+     "end": 109.025,
+     "match": true
+    },
+    {
+     "text": "за",
+     "start": 109.065,
+     "end": 109.145,
+     "match": true
+    },
+    {
+     "text": "типами",
+     "start": 109.206,
+     "end": 109.586,
+     "match": true
+    },
+    {
+     "text": "і",
+     "start": 109.907,
+     "end": 109.987,
+     "match": true
+    },
+    {
+     "text": "з’являтиметься",
+     "start": 110.027,
+     "end": 110.648,
+     "match": true
+    },
+    {
+     "text": "пропозиція",
+     "start": 110.688,
+     "end": 111.33,
+     "match": true
+    },
+    {
+     "text": "доповнити",
+     "start": 111.65,
+     "end": 112.151,
+     "match": true
+    },
+    {
+     "text": "словник",
+     "start": 112.191,
+     "end": 112.772,
+     "match": true
+    },
+    {
+     "text": "бібліотеку",
+     "start": 112.973,
+     "end": 113.494,
+     "match": true
+    },
+    {
+     "text": "формулювань",
+     "start": 113.554,
+     "end": 114.195,
+     "match": true
+    },
+    {
+     "text": "чи",
+     "start": 114.295,
+     "end": 114.416,
+     "match": true
+    },
+    {
+     "text": "навичку",
+     "start": 114.456,
+     "end": 114.856,
+     "match": true
+    },
+    {
+     "text": "читання",
+     "start": 114.896,
+     "end": 115.357,
+     "match": true
+    },
+    {
+     "text": "нову",
+     "start": 116.339,
+     "end": 116.54,
+     "match": true
+    },
+    {
+     "text": "навичку",
+     "start": 116.56,
+     "end": 116.96,
+     "match": true
+    },
+    {
+     "text": "прийматимуть",
+     "start": 117.02,
+     "end": 117.602,
+     "match": true
+    },
+    {
+     "text": "лише",
+     "start": 117.642,
+     "end": 117.882,
+     "match": true
+    },
+    {
+     "text": "тоді",
+     "start": 117.942,
+     "end": 118.283,
+     "match": true
+    },
+    {
+     "text": "коли",
+     "start": 118.543,
+     "end": 118.764,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 118.784,
+     "end": 118.884,
+     "match": true
+    },
+    {
+     "text": "еталоні",
+     "start": 118.964,
+     "end": 119.445,
+     "match": true
+    },
+    {
+     "text": "немає",
+     "start": 119.505,
+     "end": 119.886,
+     "match": true
+    },
+    {
+     "text": "жодної",
+     "start": 119.966,
+     "end": 120.427,
+     "match": true
+    },
+    {
+     "text": "нової",
+     "start": 120.467,
+     "end": 120.808,
+     "match": true
+    },
+    {
+     "text": "помилки",
+     "start": 120.848,
+     "end": 121.249,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 121.289,
+     "end": 121.309,
+     "match": true
+    },
+    {
+     "text": "критичних",
+     "start": 121.349,
+     "end": 121.83,
+     "match": true
+    },
+    {
+     "text": "полях",
+     "start": 121.87,
+     "end": 122.21,
+     "match": true
+    },
+    {
+     "text": "інакше",
+     "start": 122.731,
+     "end": 123.132,
+     "match": true
+    },
+    {
+     "text": "відкат",
+     "start": 123.373,
+     "end": 124.515,
+     "match": true
+    },
+    {
+     "text": "юридичних",
+     "start": 124.615,
+     "end": 125.076,
+     "match": true
+    },
+    {
+     "text": "висновків",
+     "start": 125.116,
+     "end": 125.557,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 125.597,
+     "end": 126.018,
+     "match": true
+    },
+    {
+     "text": "не",
+     "start": 126.058,
+     "end": 126.138,
+     "match": true
+    },
+    {
+     "text": "вчиться",
+     "start": 126.158,
+     "end": 126.599,
+     "match": true
+    },
+    {
+     "text": "ніколи",
+     "start": 126.759,
+     "end": 127.24,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b5",
+   "from": 128.011,
+   "to": 141.379,
+   "voiceAt": 128.611,
+   "voiceEnd": 140.579,
+   "transcript": "Ось увесь контур разом. Чинні умови кожної аптеки з доказом на скані і уся мережа в одному реєстрі. З кожним рішенням юриста система помилятиметься рідше, а вирішує завжди людина.",
+   "words": [
+    {
+     "text": "ось",
+     "start": 128.722,
+     "end": 128.963,
+     "match": true
+    },
+    {
+     "text": "увесь",
+     "start": 129.023,
+     "end": 129.303,
+     "match": true
+    },
+    {
+     "text": "контур",
+     "start": 129.344,
+     "end": 129.704,
+     "match": true
+    },
+    {
+     "text": "разом",
+     "start": 129.724,
+     "end": 130.185,
+     "match": true
+    },
+    {
+     "text": "чинні",
+     "start": 130.647,
+     "end": 130.967,
+     "match": true
+    },
+    {
+     "text": "умови",
+     "start": 131.007,
+     "end": 131.308,
+     "match": true
+    },
+    {
+     "text": "кожної",
+     "start": 131.348,
+     "end": 131.709,
+     "match": true
+    },
+    {
+     "text": "аптеки",
+     "start": 131.729,
+     "end": 132.21,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 132.25,
+     "end": 132.27,
+     "match": true
+    },
+    {
+     "text": "доказом",
+     "start": 132.33,
+     "end": 132.731,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 132.751,
+     "end": 132.831,
+     "match": true
+    },
+    {
+     "text": "скані",
+     "start": 132.892,
+     "end": 133.373,
+     "match": true
+    },
+    {
+     "text": "й",
+     "start": 133.513,
+     "end": 133.593,
+     "match": true
+    },
+    {
+     "text": "уся",
+     "start": 133.633,
+     "end": 133.954,
+     "match": true
+    },
+    {
+     "text": "мережа",
+     "start": 134.014,
+     "end": 134.435,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 134.455,
+     "end": 134.495,
+     "match": true
+    },
+    {
+     "text": "одному",
+     "start": 134.515,
+     "end": 134.816,
+     "match": true
+    },
+    {
+     "text": "реєстрі",
+     "start": 134.836,
+     "end": 135.377,
+     "match": true
+    },
+    {
+     "text": "з",
+     "start": 136.139,
+     "end": 136.159,
+     "match": true
+    },
+    {
+     "text": "кожним",
+     "start": 136.199,
+     "end": 136.5,
+     "match": true
+    },
+    {
+     "text": "рішенням",
+     "start": 136.52,
+     "end": 136.881,
+     "match": true
+    },
+    {
+     "text": "юриста",
+     "start": 137.001,
+     "end": 137.342,
+     "match": true
+    },
+    {
+     "text": "система",
+     "start": 137.382,
+     "end": 137.743,
+     "match": true
+    },
+    {
+     "text": "помилятиметься",
+     "start": 137.803,
+     "end": 138.524,
+     "match": true
+    },
+    {
+     "text": "рідше",
+     "start": 138.544,
+     "end": 138.965,
+     "match": true
+    },
+    {
+     "text": "а",
+     "start": 139.346,
+     "end": 139.386,
+     "match": true
+    },
+    {
+     "text": "вирішує",
+     "start": 139.426,
+     "end": 139.827,
+     "match": true
+    },
+    {
+     "text": "завжди",
+     "start": 139.887,
+     "end": 140.168,
+     "match": true
+    },
+    {
+     "text": "людина",
+     "start": 140.208,
+     "end": 140.589,
+     "match": true
+    }
+   ]
+  },
+  {
+   "id": "b6",
+   "from": 141.379,
+   "to": 154.176,
+   "voiceAt": 141.979,
+   "voiceEnd": 150.176,
+   "transcript": "4-5 місяців до робочого модуля. Еталони калібровка, пілот на найгірших сканах, оцифрування всього корпусу, модуль в Алі.",
+   "words": [
+    {
+     "text": "чотири",
+     "start": 142.13,
+     "end": 142.612,
+     "match": true
+    },
+    {
+     "text": "п’ять",
+     "start": 142.13,
+     "end": 142.612,
+     "match": true
+    },
+    {
+     "text": "місяців",
+     "start": 142.652,
+     "end": 143.033,
+     "match": true
+    },
+    {
+     "text": "до",
+     "start": 143.073,
+     "end": 143.133,
+     "match": true
+    },
+    {
+     "text": "робочого",
+     "start": 143.153,
+     "end": 143.555,
+     "match": true
+    },
+    {
+     "text": "модуля",
+     "start": 143.595,
+     "end": 144.016,
+     "match": true
+    },
+    {
+     "text": "еталон",
+     "start": 144.016,
+     "end": 144.367,
+     "match": false
+    },
+    {
+     "text": "і",
+     "start": 144.367,
+     "end": 144.718,
+     "match": false
+    },
+    {
+     "text": "калібровка",
+     "start": 144.718,
+     "end": 145.42,
+     "match": true
+    },
+    {
+     "text": "пілот",
+     "start": 145.661,
+     "end": 146.002,
+     "match": true
+    },
+    {
+     "text": "на",
+     "start": 146.022,
+     "end": 146.202,
+     "match": true
+    },
+    {
+     "text": "найгірших",
+     "start": 146.262,
+     "end": 146.744,
+     "match": true
+    },
+    {
+     "text": "сканах",
+     "start": 146.784,
+     "end": 147.326,
+     "match": true
+    },
+    {
+     "text": "оцифрування",
+     "start": 147.506,
+     "end": 148.068,
+     "match": true
+    },
+    {
+     "text": "всього",
+     "start": 148.088,
+     "end": 148.308,
+     "match": true
+    },
+    {
+     "text": "корпусу",
+     "start": 148.369,
+     "end": 148.97,
+     "match": true
+    },
+    {
+     "text": "модуль",
+     "start": 149.372,
+     "end": 149.733,
+     "match": true
+    },
+    {
+     "text": "в",
+     "start": 149.793,
+     "end": 149.833,
+     "match": true
+    },
+    {
+     "text": "ali",
+     "start": 149.913,
+     "end": 150.194,
+     "match": true
+    }
+   ]
+  }
+ ]
+}
