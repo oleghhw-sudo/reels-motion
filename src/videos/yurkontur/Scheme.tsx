@@ -9,9 +9,9 @@ import { clamp, expoOut, seg, smoother, type Pt } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import { camAt, ZONE, type Cam } from './camera.ts';
 import { along, Field, type Track } from './Field.tsx';
-import { CARD_FIELDS, CHIP, CONTRACT_HUMAN_K, CONTRACT_ROUTE, EDGES, FLOW, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES, type Node } from './schema.ts';
+import { CARD_FIELDS, CHIP, CONTRACT_HUMAN_K, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES, type Node } from './schema.ts';
 import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, STAGES, block, blockAt, densityAt, subtitleAt } from './timeline.ts';
-import { C, FONT, TEXTURE_ATTR } from './tokens.ts';
+import { C, FONT, SUB_STYLES, TEXTURE_ATTR, type SubStyle } from './tokens.ts';
 
 /** Порог «камера близко»: название 24 px мира · s ≥ 32 px, пояснение 18 px мира · s ≥ 24 px. */
 const LABEL_PX = 24;
@@ -229,7 +229,7 @@ const TITLE_FROM: Record<string, number> = {
   b4: block('b4').from + 0.8,
 };
 
-export const Scheme: React.FC<{ t: number }> = ({ t }) => {
+export const Scheme: React.FC<{ t: number; subStyle: SubStyle }> = ({ t, subStyle }) => {
   const cam = camAt(t);
   const s = cam.s;
   const b = blockAt(t);
@@ -250,16 +250,17 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
   const ck = smoother(seg(t, CONTRACT.from, CONTRACT.to));
   const contractOn = b5 && t >= CONTRACT.from;
   const cPos = along(CONTRACT_ROUTE, ck);
-  const trail = subPolyline(CONTRACT_ROUTE, Math.max(0, ck - 0.07), ck);
   const conflict = contractOn ? clamp(1 - Math.abs(ck - CONTRACT_HUMAN_K) / 0.05) : 0;
 
-  const lastFlow = FLOW.reduce((k, n, i) => (t >= (APPEAR[n.id] ?? Infinity) ? i : k), -1);
-  const flowBand: Pt[] = lastFlow >= 1 ? FLOW.slice(0, lastFlow + 1).map((n) => [n.x, n.y] as Pt) : [];
+  // бегущие трассы: по каждой включённой связи, по петле (прорисованная часть) и выделенный договор блока 5
   const tracks: Track[] = [
-    { pts: flowBand, w: flowBand.length ? 0.9 * Math.min(...FLOW.slice(0, lastFlow + 1).map((n) => visOf(n.id, t, true).dim)) : 0, particles: 'ink' },
-    ...edges.map(({ e, p, dim }) => ({ pts: e.pts, w: p * dim * (b5 ? 1 : 0.8), particles: (e.human ? 'accent' : 'ink') as Track['particles'] })),
-    { pts: loopPts, w: loopP > 0 ? 0.9 : 0, particles: 'accent' },
+    ...edges.map(({ e, dim }): Track => ({ pts: e.pts, on: APPEAR[e.to] === undefined ? null : APPEAR[e.to] - 0.35, kind: 'flow', alpha: dim })),
+    { pts: LOOP_PTS, on: LOOP_DRAW.from, kind: 'loop', maxK: loopP, alpha: visOf('chip:0', t, false).dim },
+    { pts: LOOP_ROLLBACK, on: APPEAR['chip:5'] + 0.2, kind: 'loop', alpha: visOf('chip:5', t, false).dim },
+    ...(contractOn ? [{ pts: CONTRACT_ROUTE, on: CONTRACT.from, kind: 'contract', headK: ck } as Track] : []),
   ];
+  // 6 трасс на канал в начале, 10 — в блоке 5 (плотность до максимума)
+  const perChannel = 6 + Math.round(4 * clamp((densityAt(t) - 0.25) / 0.75));
 
   const nearestNode = (p: Pt): string | null => {
     for (const n of NODES) if (Math.abs(p[0] - n.x) <= n.w / 2 && Math.abs(p[1] - n.y) <= n.h / 2) return n.id;
@@ -275,31 +276,22 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
 
   return (
     <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, background: C.paper, overflow: 'hidden' }}>
-      <Field t={t} cam={cam} tracks={tracks} density={densityAt(t)} width={1920} height={1080} />
+      <Field t={t} cam={cam} tracks={tracks} perChannel={perChannel} width={1920} height={1080} />
       <div style={{ position: 'absolute', left: 0, top: 0, width: 1920, height: 1080, transformOrigin: '0 0', transform: `translate(${cam.ox}px, ${cam.oy}px) scale(${s})` }}>
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1920} height={1080}>
           {edges.map(({ e, p, ghost, flash, dim }) => (
             <g key={e.id} opacity={dim}>
-              {ghost > 0 && p < 1 ? <path d={roundedPath(e.pts)} fill="none" stroke={C.ink} strokeWidth={1.2 + 1.8 * flash} strokeDasharray={flash > 0.2 ? undefined : '3 6'} opacity={0.22 + 0.6 * flash} /> : null}
-              {p > 0 ? <path d={roundedPath(e.pts)} pathLength={1} fill="none" stroke={e.human ? C.accent : C.ink} strokeWidth={1.8} strokeDasharray={e.human ? undefined : '1'} strokeDashoffset={e.human ? undefined : 1 - p} opacity={(e.human ? 0.85 : 0.7) * p} /> : null}
+              {ghost > 0 && p < 1 ? <path d={roundedPath(e.pts)} fill="none" stroke={C.ink} strokeWidth={1.2 + 1.8 * flash} strokeDasharray={flash > 0.2 ? undefined : '3 6'} opacity={0.1 + 0.7 * flash} /> : null}
+              {/* бледная нить самой связи: --ink ~6 %; движение показывают трассы (Field.tsx) */}
+              {p > 0 ? <path d={roundedPath(e.pts)} pathLength={1} fill="none" stroke={C.ink} strokeWidth={1.4} strokeDasharray="1" strokeDashoffset={1 - p} opacity={0.06} /> : null}
             </g>
           ))}
-          {/* договор блока 5: охровая трасса-хвост — под узлами (не пересекает текст) */}
-          {contractOn ? <path d={roundedPath(trail, 12)} fill="none" stroke={C.tight} strokeWidth={6} strokeLinecap="round" opacity={0.95} /> : null}
-          {/* петля навчання («так працюватиме») — пунктир */}
-          {loopPts.length > 1 ? <path d={roundedPath(loopPts, 22)} fill="none" stroke={C.accent} strokeWidth={2} strokeDasharray="8 7" opacity={0.85 * visOf('chip:0', t, false).dim} /> : null}
-          {loopPts.length > 1
-            ? [0.1, 0.3, 0.5, 0.68, 0.9].filter((k) => k < loopP - 0.02).map((k) => {
-                const p = along(LOOP_PTS, k);
-                const q = along(LOOP_PTS, k + 0.005);
-                const ang = (Math.atan2(q[1] - p[1], q[0] - p[0]) * 180) / Math.PI;
-                return <path key={k} d="M-7,-8 L4,0 L-7,8" transform={`translate(${p[0]},${p[1]}) rotate(${ang})`} fill="none" stroke={C.accent} strokeWidth={2.4} opacity={0.9} />;
-              })
-            : null}
+          {/* петля навчання («так працюватиме»): бледная пунктирная нить; движение — зелёные трассы (Field.tsx) */}
+          {loopPts.length > 1 ? <path d={roundedPath(loopPts, 14)} fill="none" stroke={C.loopTrace} strokeWidth={1.4} strokeDasharray="6 7" opacity={0.18 * visOf('chip:0', t, false).dim} /> : null}
           {rollP > 0 ? (
-            <g opacity={rollP}>
-              <path d={roundedPath(LOOP_ROLLBACK)} fill="none" stroke={C.accent} strokeWidth={2} strokeDasharray="8 7" />
-              <path d={`M${LOOP_ROLLBACK[1][0] + 10},${LOOP_ROLLBACK[1][1] - 9} L${LOOP_ROLLBACK[1][0]},${LOOP_ROLLBACK[1][1]} L${LOOP_ROLLBACK[1][0] + 10},${LOOP_ROLLBACK[1][1] + 9}`} fill="none" stroke={C.accent} strokeWidth={2} />
+            <g opacity={rollP * 0.5}>
+              <path d={roundedPath(LOOP_ROLLBACK)} fill="none" stroke={C.loopTrace} strokeWidth={1.4} strokeDasharray="6 7" opacity={0.5} />
+              <path d={`M${LOOP_ROLLBACK[1][0] + 10},${LOOP_ROLLBACK[1][1] - 9} L${LOOP_ROLLBACK[1][0]},${LOOP_ROLLBACK[1][1]} L${LOOP_ROLLBACK[1][0] + 10},${LOOP_ROLLBACK[1][1] + 9}`} fill="none" stroke={C.loopTrace} strokeWidth={1.8} />
             </g>
           ) : null}
         </svg>
@@ -364,7 +356,7 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
       {/* зона субтитров: нижние 16 % */}
       <div style={{ position: 'absolute', left: 0, top: ZONE.subs.y0 - 40, width: 1920, height: 1080 - ZONE.subs.y0 + 40, background: 'linear-gradient(rgba(249,243,232,0) 0%, rgba(249,243,232,0.96) 35%, rgba(249,243,232,0.98) 100%)' }} />
       {subtitle ? (
-        <div style={{ position: 'absolute', left: 960, top: ZONE.subs.y0 + 4, width: 1560, transform: 'translateX(-50%)', textAlign: 'center', fontFamily: FONT.ui, fontSize: 40, fontWeight: 500, lineHeight: 1.25, color: C.ink }}>
+        <div style={{ position: 'absolute', left: 960, top: ZONE.subs.y0 + 4, width: 1560, transform: 'translateX(-50%)', textAlign: 'center', ...SUB_STYLES[subStyle], lineHeight: 1.3 }}>
           <Readable id={`sub.${b.id}.${subtitle.slice(0, 24)}`} text={subtitle}>
             {subtitle}
           </Readable>

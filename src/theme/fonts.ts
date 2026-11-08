@@ -16,7 +16,9 @@ export type FontId =
   | 'Montserrat'
   | 'PlayfairDisplayItalic'
   | 'Manrope'
-  | 'Anton';
+  | 'Anton'
+  | 'SourceSerif4Cyr'
+  | 'SourceSerif4Lat';
 
 export type FontDef = {
   /** CSS-семейство с префиксом RM, чтобы никогда не подхватить системный шрифт с тем же именем. */
@@ -32,6 +34,10 @@ export type FontDef = {
    * Текст с U+0400–U+04FF или ’ этим шрифтом — громкая ошибка сборки (fontFor) и нарушение LATIN_ONLY в readcheck.
    */
   latinOnly?: string;
+  /** Формат файла для @font-face (по умолчанию truetype). */
+  format?: 'truetype' | 'woff2';
+  /** unicode-range: несколько файлов одного семейства (подмножества из стенда) делят символы. */
+  unicodeRange?: string;
 };
 
 export const FONTS: Record<FontId, FontDef> = {
@@ -57,6 +63,21 @@ export const FONTS: Record<FontId, FontDef> = {
   Manrope: { family: 'RM Manrope', file: 'fonts/Manrope/Manrope-VF.ttf', weight: '200 800' },
   // В Anton нет ґ є і ї (решение Олега 2026-10-18: только латиница, тексты аутро MIA английские).
   Anton: { family: 'RM Anton', file: 'fonts/Anton/Anton-Regular.ttf', weight: '400', latinOnly: 'только латиница, тексты аутро MIA английские' },
+  // Source Serif 4 Regular из стенда юрконтура (задача 031): два подмножества одного семейства, как в @font-face стенда.
+  SourceSerif4Cyr: {
+    family: 'RM Source Serif 4',
+    file: 'fonts/SourceSerif4/SourceSerif4-Regular-cyrillic.woff2',
+    weight: '400',
+    format: 'woff2',
+    unicodeRange: 'U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116',
+  },
+  SourceSerif4Lat: {
+    family: 'RM Source Serif 4',
+    file: 'fonts/SourceSerif4/SourceSerif4-Regular-latin.woff2',
+    weight: '400',
+    format: 'woff2',
+    unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
+  },
 };
 
 /** Символы, которых нельзя набирать шрифтом latinOnly: кириллица U+0400–U+04FF и украинский апостроф ’. */

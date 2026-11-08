@@ -73,9 +73,18 @@ const bottom = (n: Node) => n.y + n.h / 2;
 
 export type Edge = { id: string; from: string; to: string; pts: Pt[]; human: boolean };
 
+/** Шина потока под рядом узлов: связь i → i+1 выходит из низа узла (x + 40), идёт по шине и входит снизу в следующий (x − 40).
+ * Прямой зазор между узлами — 36 px мира, его закрывают подложки узлов; по шине трасса видна на всей длине. */
+export const BUS_Y = FLOW_Y + NODE_H / 2 + 34;
+const DROP = 40;
+function flowEdgePts(a: Node, b: Node): Pt[] {
+  if (b.id === 'card') return [[a.x + DROP, bottom(a)], [a.x + DROP, BUS_Y], [b.x - b.w / 2, BUS_Y]]; // картка выше шины по низу — вход слева
+  return [[a.x + DROP, bottom(a)], [a.x + DROP, BUS_Y], [b.x - DROP, BUS_Y], [b.x - DROP, bottom(b)]];
+}
+
 /** Рёбра — ортогональные трассы (вершины ломаной; углы скругляются при рисовании). Включается ребро, когда появился узел `to`. */
 export const EDGES: Edge[] = [
-  ...FLOW.slice(1).map((n, i): Edge => ({ id: `${FLOW[i].id}-${n.id}`, from: FLOW[i].id, to: n.id, human: false, pts: [[FLOW[i].x + FLOW[i].w / 2, FLOW_Y], [n.x - n.w / 2, FLOW_Y]] })),
+  ...FLOW.slice(1).map((n, i): Edge => ({ id: `${FLOW[i].id}-${n.id}`, from: FLOW[i].id, to: n.id, human: false, pts: flowEdgePts(FLOW[i], n) })),
   { id: 'queue-human1', from: 'queue', to: 'human1', human: true, pts: [[queue.x, top(queue)], [queue.x, bottom(HUMANS[0])]] },
   // конфликт документов → людина №2: вертикаль под карткой; позже на ней же материализуется «Відхилення»
   { id: 'card-human2', from: 'card', to: 'human2', human: true, pts: [[COL_X, bottom(card)], [COL_X, top(HUMANS[1])]] },
@@ -114,16 +123,14 @@ export const LOOP_ROLLBACK: Pt[] = [
 /** Основной путь частиц: центры узлов потока слева направо. */
 export const FLOW_PATH: Pt[] = FLOW.map((n) => [n.x, n.y]);
 
-/** Маршрут одного договора в блоке 5: потік → картка → відхилення → людина №2 (конфлікт) → назад у картку. */
-export const CONTRACT_ROUTE: Pt[] = [
-  ...FLOW_PATH,
-  [COL_X, FLOW_Y],
-  [COL_X, HUMANS[1].y],
-  [COL_X + 12, HUMANS[1].y],
-  [COL_X + 12, card.y + 30],
-];
-/** Доля длины маршрута, где договор доходит до людини №2. */
-export const CONTRACT_HUMAN_K = (() => {
-  const len = (P: Pt[]) => P.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - P[i][0], p[1] - P[i][1]), 0);
-  return len(CONTRACT_ROUTE.slice(0, FLOW_PATH.length + 2)) / len(CONTRACT_ROUTE);
+/** Маршрут одного договора в блоке 5: по шине потока → картка → вниз через «Відхилення» к людині №2 (конфлікт) → назад у картку.
+ * Участки внутри узлов скрыты подложками (хвост рисуется под узлами). */
+export const CONTRACT_ROUTE: Pt[] = (() => {
+  const P: Pt[] = [[FLOW[0].x, FLOW[0].y]];
+  for (let i = 1; i < FLOW.length; i++) P.push(...flowEdgePts(FLOW[i - 1], FLOW[i]));
+  P.push([card.x, card.y], [COL_X, card.y], [COL_X, HUMANS[1].y], [COL_X + 12, HUMANS[1].y], [COL_X + 12, card.y + 30]);
+  return P;
 })();
+const polyLen = (P: Pt[]) => P.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - P[i][0], p[1] - P[i][1]), 0);
+/** Доля длины маршрута, где договор доходит до людини №2. */
+export const CONTRACT_HUMAN_K = polyLen(CONTRACT_ROUTE.slice(0, CONTRACT_ROUTE.length - 2)) / polyLen(CONTRACT_ROUTE);

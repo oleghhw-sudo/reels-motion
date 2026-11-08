@@ -15,7 +15,8 @@ export function loadAllFonts(): void {
       url: staticFile(def.file),
       weight: def.weight,
       style: def.style ?? 'normal',
-      format: 'truetype',
+      format: def.format ?? 'truetype',
+      ...(def.unicodeRange ? { unicodeRange: def.unicodeRange } : {}),
     }).catch(
       (e: unknown) => {
         throw new Error(`Шрифт ${def.family} не загрузился: ${String(e)}`);
