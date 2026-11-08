@@ -8,21 +8,20 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 import { ttsHint, ttsText } from '../../voice/pronounce.mjs';
-import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, STAGES, WORDS_PER_SEC, block, wordAt } from '../../src/videos/yurkontur/timeline.ts';
+import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, STAGES, block, voiceEnd, wordAt } from '../../src/videos/yurkontur/timeline.ts';
 import { EV, STAGE_LIST } from '../../src/videos/yurkontur/stage.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const r1 = (x) => Math.round(x * 10) / 10;
 const sentences = (s) => s.split(/(?<=[.!?])\s+/).filter(Boolean);
 
-/** Фрагменты голоса: предложение, время начала/конца (гипотеза темпа), текст для TTS и подсказка произношения. */
+/** Фрагменты голоса: предложение, время начала/конца (по выравниванию озвучки), текст для TTS и подсказка произношения. */
 function fragments(id) {
   const b = block(id);
   const ss = sentences(b.voice);
   const starts = ss.map((s) => wordAt(id, s.split(/\s+/).slice(0, 3).join(' ')));
   return ss.map((s, i) => {
-    const words = s.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-    const end = i + 1 < ss.length ? starts[i + 1] : starts[i] + words / WORDS_PER_SEC;
+    const end = i + 1 < ss.length ? starts[i + 1] : voiceEnd(id);
     const tts = ttsText(s);
     const hint = ttsHint(s);
     return { text: s, from: r1(starts[i]), to: r1(end), ...(tts !== s ? { tts } : {}), ...(hint ? { ttsHint: hint } : {}) };
@@ -51,9 +50,11 @@ ev('b2', EV.b2.scan, 'скан крупно: п. 3.1 «24700,00 грн», рам
 ev('b2', EV.b2.close, 'окно стенда уходит одновременно с раскрытием «Скани»', {});
 // блок 3а
 ev('b3a', EV.scans.b3a.list, 'панель «Скани»: 25 файлов → стопка сканов', { words: 'Спершу система читає скан', node: 'scans' });
+EV.scans.b3a.pages.forEach((p, i) => ev('b3a', p, `страница ${i + 1} ложится в стопку сканов`, { node: 'scans' }));
 ev('b3a', STAGE_LIST.find((s) => s.center === 'ocr').from + 0.6, 'чип «05.12.2013» по входу', { node: 'ocr' });
 ev('b3a', APPEAR.ocr, 'Розпізнавання — карточкой справа, раскрывается из неё', { words: 'Те, що звичайне', node: 'ocr', accent: 'S' });
-EV.ocr.forEach((c) => ev('b3a', c.at, `вырезка «${c.cause}» → обводка → лоток «людині»`, { node: 'ocr' }));
+EV.ocr.forEach((c) => ev('b3a', c.at, `вырезка «${c.cause}» → обводка; причина в список`, { node: 'ocr' }));
+EV.ocr.forEach((c) => ev('b3a', c.at + 1.4, `вырезка «${c.cause}» улетает в лоток «людині»`, { node: 'ocr' }));
 ev('b3a', APPEAR.read2, 'Два читання — карточкой справа, раскрывается', { words: 'Далі договір читають', node: 'read2', accent: 'S' });
 EV.read2.pairs.forEach((p, i) => ev('b3a', p, `пара A/B ${i + 1} совпала — слились`, { node: 'read2' }));
 ev('b3a', EV.read2.diverge, '«п. 6.1 / п. 6.14» — расхождение → черга', { node: 'read2', accent: 'S' });
@@ -73,6 +74,7 @@ ev('b3b', APPEAR.card, 'Картка чинних умов — раскрыва�
 ['Ставка', 'Діє до', 'Останній день заяви', 'Площа', 'Комунальні', 'Орендодавець'].forEach((f) => ev('b3b', APPEAR[`field:${f}`], `поле «${f}» + нитка к документу`, { node: 'card' }));
 ev('b3b', EV.card.area, 'площа тричі (договір · план БТІ · ліцензія)', { node: 'card' });
 ev('b3b', EV.card.conflict, 'конфлікт: «БТІ відрізняється» → Людина №2 (красный чип)', { words: 'суперечать один одному', node: 'human2', accent: 'S' });
+ev('b3b', EV.card.conflict + 0.9, 'рамка красным: «БТІ відрізняється від договору»', { node: 'card' });
 ev('b3b', EV.card.resolve, 'Людина №2 решает: граница зелёная', { words: 'Вирішує юрист', node: 'human2' });
 // блок 3в
 ev('b3c', APPEAR.deadlines, 'Строки — карточкой справа, раскрывается', { words: 'Строки рахують', node: 'deadlines', accent: 'S' });
@@ -80,7 +82,10 @@ ev('b3c', EV.deadlines.windows, 'рамка: вікна ≤ 30 / ≤ 90 / ≤ 18
 ev('b3c', EV.deadlines.group, 'рамка: группа «≤ 30 днів»', { node: 'deadlines' });
 ev('b3c', EV.deadlines.last, 'рамка: строка «Останній день заяви» → проезд к датам', { words: 'останній день заяви', node: 'deadlines' });
 ev('b3c', EV.deadlines.auto, 'рамка: строка «Автопролонгація відбулася»', { words: 'автопролонгацію', node: 'deadlines' });
-ev('b3c', APPEAR.deviations, 'Відхилення від еталона — раскрывается', { words: 'порівнює з типовим', node: 'deviations', accent: 'S' });
+ev('b3c', APPEAR.deviations, 'Відхилення від еталона — раскрывается', { words: 'Будь-який договір орендодавця', node: 'deviations', accent: 'S' });
+ev('b3c', EV.deviations.current, 'старі договори: рамка на «18 відхилення»', { words: 'і чинний', node: 'deviations' });
+ev('b3c', EV.deviations.fresh, 'вкладка «Новий договір на бланку орендодавця», рамка на вкладке', { words: 'і новий на його бланку', node: 'deviations' });
+ev('b3c', EV.deviations.compare, 'проезд к п. 4.15: «180 днів замість 60 · неприйнятне», рамка', { words: 'порівнює з типовим', node: 'deviations' });
 ev('b3c', EV.deviations.split, 'пункт → 4 смислові твердження (умовний приклад)', { words: 'Кожен пункт розкладено', node: 'deviations' });
 [0, 1, 2, 3].forEach((i) => ev('b3c', EV.deviations.split + 0.3 + i * 0.35, `твердження ${i + 1}`, { node: 'deviations' }));
 ev('b3c', EV.deviations.search, 'поиск каждого твердження по договору (полоса по строкам)', { node: 'deviations' });
@@ -135,5 +140,5 @@ for (const b of BLOCKS) {
 }
 const gaps = rows.slice(1).map((e, i) => ({ d: e.t - rows[i].t, at: rows[i].t, b: e.block }));
 const longest = gaps.filter((g) => ['b2', 'b3a', 'b3b', 'b3c'].includes(g.b)).sort((a, z) => z.d - a.d)[0];
-writeFileSync(join(ROOT, 'videos/yurkontur/beats.md'), `<!-- сгенерировано videos/yurkontur/gen-scenes.mjs — не править руками -->\n## Бит-лист (весь ролик)\nВремя — гипотеза до озвучки (2.2 слова/с); события привязаны к словам. Блоки 2–3в собраны (самый длинный промежуток между событиями — ${longest.d.toFixed(1)} с на ${longest.at.toFixed(1)} с); блоки 1, 4–6 — план для следующей задачи.\n\n${md}\n## Карта акцентов\nБюджет: 0 L, ≤ 3 M (вспышка схемы в блоке 2, включение петли в блоке 4, выход на весь механизм в блоке 5). S — смены панели, рамки, конфлікт, подтверждения.\n\n${acc}`);
+writeFileSync(join(ROOT, 'videos/yurkontur/beats.md'), `<!-- сгенерировано videos/yurkontur/gen-scenes.mjs — не править руками -->\n## Бит-лист (весь ролик)\nВремя — по выравниванию озвучки (words.json); события привязаны к словам. Блоки 2–3в собраны (самый длинный промежуток между событиями — ${longest.d.toFixed(1)} с на ${longest.at.toFixed(1)} с); блоки 1, 4–6 — план для следующей задачи.\n\n${md}\n## Карта акцентов\nБюджет: 0 L, ≤ 3 M (вспышка схемы в блоке 2, включение петли в блоке 4, выход на весь механизм в блоке 5). S — смены панели, рамки, конфлікт, подтверждения.\n\n${acc}`);
 console.log(`OK: scenes.proposed.yaml (${doc.blocks.length} блоков, ${E.length} событий), beats.md; макс. промежуток 2–3в ${longest.d.toFixed(2)} с`);

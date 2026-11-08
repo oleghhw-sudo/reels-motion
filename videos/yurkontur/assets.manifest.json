@@ -1,6 +1,6 @@
 {
  "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
- "generatedAt": "2026-11-08T22:05:56.144Z",
+ "generatedAt": "2026-11-08T23:22:24.152Z",
  "items": [
   {
    "file": "public/videos/yurkontur/s5_crop_1.png",
@@ -145,6 +145,12 @@
    "source": "YURKONTUR_STAND#/deviations/doc1",
    "how": "Відхилення від еталона: фильтры и первые пункты «Типовий договір 2025 ↔ Договір аптеки», DPR 3",
    "sha256": "25873e3d7eaed9fef0990bd56c6f75aa96d7254fc1896a318adec96f38e14c5c"
+  },
+  {
+   "file": "public/videos/yurkontur/deviations-new.png",
+   "source": "YURKONTUR_STAND#/deviations/doc1 → вкладка «Новий договір на бланку орендодавця»",
+   "how": "Проєкт від орендодавця (демо-приклад): вкладка и таблица пунктов до п. 4.15, DPR 3",
+   "sha256": "2fbbb90c628a14d757d48dcc47fbf9138d4502fbc9d80f9b6436c89fa48db92b"
   }
  ]
 }

@@ -128,5 +128,7 @@ export const EV = {
   deadlines: { windows: open('deadlines'), group: open('deadlines') + 1.8, last: wordAt('b3c', 'останній день заяви'), auto: wordAt('b3c', 'автопролонгацію') },
   /** Відхилення: экран стенда → пункт раскладывается на 4 твердження → вердикты → критична умова первой */
   // search — система ищет каждое твердження по всему договору (ответ архитектора, п. 6): полоса по строкам
-  deviations: { stand: open('deviations'), split: wordAt('b3c', 'Кожен пункт розкладено'), search: wordAt('b3c', 'Кожен пункт розкладено') + 2.6, verdicts: wordAt('b3c', 'пропонує вердикт') - 0.2, lawyer: wordAt('b3c', 'Ставить його юрист'), critical: wordAt('b3c', 'Ставить його юрист') - 0.3 },
+  // current — «і чинний»: рамка «18 відхилення» на старых договорах; fresh — «і новий на його бланку»: вкладка «Новий договір на бланку
+  // орендодавця»; compare — «порівнює з типовим»: проезд к п. 4.15 (пункт · що в проєкті · позиція)
+  deviations: { stand: open('deviations'), current: wordAt('b3c', 'і чинний'), fresh: wordAt('b3c', 'і новий на його бланку'), compare: wordAt('b3c', 'порівнює з типовим'), split: wordAt('b3c', 'Кожен пункт розкладено'), search: wordAt('b3c', 'Кожен пункт розкладено') + 2.6, verdicts: wordAt('b3c', 'пропонує вердикт') - 0.2, lawyer: wordAt('b3c', 'Ставить його юрист'), critical: wordAt('b3c', 'Ставить його юрист') - 0.3 },
 } as const;

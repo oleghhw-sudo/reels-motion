@@ -87,7 +87,8 @@ const Card: React.FC<{ c: CardLayout; t: number }> = ({ c, t }) => {
           </div>
           {detailA > 0.01 && (!fields || open > 0.3) ? (
             <div style={{ marginTop: 6, fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: detailPx, lineHeight: TYPE.detail.lineHeight, color: C.muted, opacity: detailA * textA }}>
-              {detailA > 0.5 ? (
+              {/* читаемой подпись становится только в полном размере (на переходе мир → панель она мельче 24 px) */}
+              {detailA > 0.5 && detailPx >= 24 ? (
                 <Readable id={`node.${n.id}.detail`} text={n.detail}>
                   {n.detail}
                 </Readable>

@@ -25,11 +25,12 @@ type R = { x: number; y: number; w: number; h: number };
 type Key = { at: number; x: number; y: number; dur?: number };
 
 /** Проезд камеры по крупному фрагменту: картинка imgW×imgH в масштабе k (px кадра на px картинки) в окне w×h. */
-const PanView: React.FC<{ t: number; src: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, children }) => {
+const PanView: React.FC<{ t: number; src: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; overscanY?: boolean; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, overscanY = false, children }) => {
   const vw = w / k;
   const vh = h / k;
   const cx = (x: number) => (imgW <= vw ? (imgW - vw) / 2 : clamp(x, 0, imgW - vw));
-  const cy = (y: number) => (imgH <= vh ? (imgH - vh) / 2 : clamp(y, 0, imgH - vh));
+  // overscanY — окно может уйти ниже картинки (под таблицей бумага): кадр по границе строки, без среза текста сверху
+  const cy = (y: number) => (overscanY ? Math.max(0, y) : imgH <= vh ? (imgH - vh) / 2 : clamp(y, 0, imgH - vh));
   let vx = cx(keys[0].x);
   let vy = cy(keys[0].y);
   for (let i = 1; i < keys.length; i++) {
@@ -106,6 +107,8 @@ const ScansPanel: React.FC<{ t: number }> = ({ t }) => {
 };
 
 // ---------------------------------------------------------------- Розпізнавання: непрочитана ділянка → обвести охрой → лоток «людині»
+/** Список причин под вырезками: ниже самой высокой вырезки (30 + 242 px) с запасом. */
+const CAUSE_Y = 300;
 const OcrPanel: React.FC<{ t: number }> = ({ t }) => {
   const tray = { x: 700, y: 250, w: 300, h: 226 };
   return (
@@ -117,7 +120,6 @@ const OcrPanel: React.FC<{ t: number }> = ({ t }) => {
         const next = EV.ocr[i + 1]?.at ?? Infinity;
         const fly = smoother(seg(t, c.at + 1.4, c.at + 2.1));
         const appear = expoOut(seg(t, c.at, c.at + 0.35));
-        const bh = c.h * c.k;
         const mk = Math.min(250 / c.w, 44 / c.h);
         const x = lerp(0, tray.x + 20, fly);
         const y = lerp(30, tray.y + 18 + i * 38, fly);
@@ -129,8 +131,10 @@ const OcrPanel: React.FC<{ t: number }> = ({ t }) => {
               <Img src={A(c.crop)} style={{ width: '100%', height: '100%', display: 'block', border: `1px solid ${C.line2}` }} />
               <Outline r={{ x: 0, y: 0, w: c.w * sc, h: c.h * sc }} p={outline} color={rgba(C.tight, 0.9)} a={1 - fly} />
             </div>
-            {/* решение Олега (031/032): причина держится до следующей вырезки, а не пропадает вместе с улётом в лоток */}
-            {t < next ? <Caption id={`ocr.cause.${i}`} text={c.cause} x={0} y={30 + bh + 18} a={appear * (1 - seg(t, next - 0.15, next))} color={C.tight} /> : null}
+            {/* решение Олега (031/032): причина держится не меньше чем до следующей вырезки. Реальные паузы озвучки 0.8–1.5 с
+                короче времени чтения, поэтому причины копятся списком под вырезками и держатся до смены панели;
+                текущая — охрой, прежние — серым */}
+            <Caption id={`ocr.cause.${i}`} text={c.cause} x={0} y={CAUSE_Y + i * 36} a={appear} color={t < next ? C.tight : C.muted} />
           </React.Fragment>
         );
       })}
@@ -216,11 +220,12 @@ const CodePanel: React.FC<{ t: number }> = ({ t }) => {
         const at = e.rows[i];
         const done = t >= at;
         const fail = i === e.failRow && done;
+        // красная строка отъезжает к правому краю (в сторону «Черги») и держится там до смены панели (решение Олега)
         const out = fail ? smoother(seg(t, e.out, e.out + 0.6)) : 0;
         const pop = expoOut(seg(t, at, at + 0.3));
         const b = fail ? BORDER.conflict : done ? BORDER.human : BORDER.normal;
         return (
-          <div key={r} style={{ position: 'absolute', left: 60 + out * 520, top: 24 + i * 108, width: 760, height: 84, opacity: 1 - out * 0.9, boxSizing: 'border-box', borderRadius: 8, border: `${b.width}px solid ${bcolor(b)}`, background: fail ? rgba(C.crit, 0.06) : C.paper, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between' }}>
+          <div key={r} style={{ position: 'absolute', left: 60 + out * 180, top: 24 + i * 108, width: 760, height: 84, opacity: 1, boxSizing: 'border-box', borderRadius: 8, border: `${b.width}px solid ${bcolor(b)}`, background: fail ? rgba(C.crit, 0.06) : C.paper, display: 'flex', alignItems: 'center', padding: '0 24px', justifyContent: 'space-between' }}>
             <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: 32, fontWeight: 400, color: C.ink }}>
               <Readable id={`code.row.${i}`} text={r}>
                 {r}
@@ -500,14 +505,38 @@ const DeviationsPanel: React.FC<{ t: number }> = ({ t }) => {
   const k = STAND_K;
   const split = smoother(seg(t, e.split, e.split + 0.5));
   const chip = g.chip;
+  const n = GEO.deviationsNew;
+  const fresh = smoother(seg(t, e.fresh, e.fresh + 0.4));
+  // кадр строки п. 4.15: от «Назва» до конца «Позиція» (ширина окна 1000 / 0.7 ≈ 1428 px картинки)
+  const [, name, , pos] = n.cells;
+  // левый край — в отступе ячейки «Назва» (текст начинается ≈ +44 px), правый — после чипа «неприйнятне»
+  const rowX = name.x + 24;
+  const rowBox = { x: name.x + 32, y: n.row.y + 6, w: Math.min(pos.x + pos.w, rowX + CONTENT.w / k) - name.x - 48, h: n.row.h - 12 };
+  // верх кадра — граница предыдущей строки (п. 3.3.2): обе строки целиком, ниже таблицы — бумага
+  const rowTop = n.rows[n.rows.length - 2].y - 4;
   const toneC = { crit: C.crit, green: C.green, ochre: C.tight, muted: C.muted } as const;
   return (
     <>
       {split < 1 ? (
         <div style={frameBox(CONTENT.w, CONTENT.h, { left: 0, top: 0, opacity: 1 - split })}>
-          <PanView t={t} src={A('deviations.png')} imgW={g.w} imgH={g.h} k={k} w={CONTENT.w} h={CONTENT.h} keys={[{ at: 0, x: 0, y: 260 }]}>
-            {(S) => (chip ? <Outline r={S(chip)} p={smoother(seg(t, e.stand + 0.1, e.stand + 0.5))} color={rgba(C.tight, 0.9)} /> : null)}
-          </PanView>
+          {/* «і чинний» — старі договори, рамка на «18 відхилення» */}
+          {fresh < 1 ? (
+            <PanView t={t} src={A('deviations.png')} imgW={g.w} imgH={g.h} k={k} w={CONTENT.w} h={CONTENT.h} keys={[{ at: 0, x: 0, y: (g.tabsY ?? 260) - 16 }]} opacity={1 - fresh}>
+              {(S) => (chip ? <Outline r={S(chip)} p={smoother(seg(t, e.current, e.current + 0.4))} color={rgba(C.tight, 0.9)} /> : null)}
+            </PanView>
+          ) : null}
+          {/* «і новий на його бланку» — вкладка «Новий договір на бланку орендодавця» (проєкт від орендодавця, демо-приклад);
+              «порівнює з типовим» — проезд к п. 4.15: пункт · що в проєкті · позиція (демо-счётчики крупно не берём) */}
+          {fresh > 0 ? (
+            <PanView t={t} src={A('deviations-new.png')} imgW={n.w} imgH={n.h} k={k} w={CONTENT.w} h={CONTENT.h} opacity={fresh} overscanY keys={[{ at: 0, x: 0, y: n.tab.y - 20 }, { at: e.compare - 0.2, x: rowX, y: rowTop, dur: 0.7 }]}>
+              {(S) => (
+                <>
+                  <Outline r={S({ x: n.tab.x, y: n.tab.y, w: n.tab.w, h: n.tab.h })} p={smoother(seg(t, e.fresh + 0.2, e.fresh + 0.6))} color={rgba(C.tight, 0.9)} a={1 - seg(t, e.compare - 0.3, e.compare)} />
+                  <Outline r={S(rowBox)} p={smoother(seg(t, e.compare + 0.5, e.compare + 0.9))} color={rgba(C.crit, 0.85)} />
+                </>
+              )}
+            </PanView>
+          ) : null}
         </div>
       ) : null}
       {split > 0 ? (

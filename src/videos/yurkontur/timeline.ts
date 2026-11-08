@@ -1,35 +1,45 @@
 // Таймлайн видео «Юридичний контур АНЦ» (задача 031) в секундах. Сцены читают время ТОЛЬКО отсюда.
-// До озвучки время слов — гипотеза: начало блока + 0.6 с + номер слова / 2.2 слова/с (темп из задачи).
-// После озвучки wordAt() заменяется на words.json выравнивания (voice/align.mjs), события остаются привязаны к словам.
+// Время слов и границы блоков — из выравнивания полной озвучки videos/yurkontur/voice/words.json (задача 032 п. 1,
+// voice-full.mjs → WhisperX). События привязаны к словам диктора (wordAt), а не к секундам.
 // Тексты диктора и заголовки — script.ts.
 import { clamp } from '../../motion/index.ts';
 import { CARD_FIELDS, LOOP_STEPS } from './schema.ts';
 import { BLOCK_SCRIPT, type BlockId, type BlockScript } from './script.ts';
 
-export const WORDS_PER_SEC = 2.2;
-const LEAD = 0.6;
+import VOICE from '../../../videos/yurkontur/voice/words.json' with { type: 'json' };
+import { tokenize } from '../../../voice/metrics.mjs';
 
+type VWord = { text: string; start: number; end: number; match: boolean };
+type VBlock = { id: string; from: number; to: number; voiceAt: number; voiceEnd: number; words: VWord[] };
+const VB = VOICE.blocks as VBlock[];
+const vblock = (id: string): VBlock => {
+  const v = VB.find((b) => b.id === id);
+  if (!v) throw new Error(`timeline: в words.json нет блока ${id} — перезапустить voice-full.mjs`);
+  return v;
+};
 export type { BlockId } from './script.ts';
 export type Block = BlockScript & { from: number; to: number };
 
-/** Границы блоков — гипотеза до озвучки; после выравнивания (032 п. 1) — из videos/yurkontur/voice/words.json. */
-const BOUNDS: Record<BlockId, [number, number]> = { b1: [0, 20], b2: [20, 32], b3a: [32, 53], b3b: [53, 73], b3c: [73, 90], b4: [90, 117], b5: [117, 137], b6: [137, 150] };
-export const BLOCKS: Block[] = BLOCK_SCRIPT.map((b) => ({ ...b, from: BOUNDS[b.id][0], to: BOUNDS[b.id][1] }));
-export const DURATION = 150;
+/** Границы блоков — из озвучки. Текст сценария обязан совпадать со словами words.json: иначе громкая ошибка. */
+export const BLOCKS: Block[] = BLOCK_SCRIPT.map((b) => {
+  const v = vblock(b.id);
+  const n = tokenize(b.voice).length;
+  if (n !== v.words.length) throw new Error(`timeline: блок ${b.id} — в сценарии ${n} слов, в words.json ${v.words.length}; озвучка устарела (voice-full.mjs --only ${b.id})`);
+  return { ...b, from: v.from, to: v.to };
+});
+export const DURATION: number = VOICE.durationSec;
 export const block = (id: BlockId): Block => BLOCKS.find((b) => b.id === id)!;
 export const blockAt = (t: number): Block => BLOCKS.find((b) => t >= b.from && t < b.to) ?? BLOCKS[BLOCKS.length - 1];
 
-const norm = (w: string) => w.toLowerCase().replace(/[^\p{L}\p{N}'’]/gu, '');
-const wordsOf = (s: string) => s.split(/\s+/).filter((w) => norm(w).length > 0);
-
-/** Время начала фразы phrase в тексте блока (гипотеза темпа). Нет фразы — громкая ошибка. */
+/** Время начала фразы phrase в озвучке блока (по выравниванию). Нет фразы — громкая ошибка. */
 export function wordAt(id: BlockId, phrase: string): number {
-  const b = block(id);
-  const W = wordsOf(b.voice).map(norm);
-  const P = wordsOf(phrase).map(norm);
-  for (let i = 0; i + P.length <= W.length; i++) if (P.every((p, k) => W[i + k] === p)) return b.from + LEAD + i / WORDS_PER_SEC;
+  const W = vblock(id).words.map((w) => w.text);
+  const P = tokenize(phrase);
+  for (let i = 0; i + P.length <= W.length; i++) if (P.every((p, k) => W[i + k] === p)) return vblock(id).words[i].start;
   throw new Error(`timeline: в блоке ${id} нет фразы «${phrase}»`);
 }
+/** Конец голоса блока. */
+export const voiceEnd = (id: BlockId): number => vblock(id).voiceEnd;
 
 /** Время появления каждого элемента схемы (узлы, поля картки, станции петли). Нет в таблице — не появляется. */
 export const APPEAR: Record<string, number> = {
@@ -56,10 +66,12 @@ export const APPEAR: Record<string, number> = {
   human2: wordAt('b3b', 'суперечать один одному'),
   // блок 3в: из картки вырастают
   deadlines: wordAt('b3c', 'Строки рахують'),
-  deviations: wordAt('b3c', 'порівнює з типовим'),
+  // правка Олега 09.11: «Будь-який договір орендодавця, і чинний, і новий на його бланку…» — панель раскрывается на начале фразы
+  deviations: wordAt('b3c', 'Будь-який договір орендодавця'),
   // блок 4: станции петли по очереди, в конце развилка
-  'chip:0': wordAt('b4', 'Кожне рішення людини'),
-  'chip:1': wordAt('b4', 'Виправлене значення'),
+  // текст блока 4 — правка Олега 09.11; петля включается на «І головне» (M, LOOP_ON)
+  'chip:0': wordAt('b4', 'людина підтверджує або виправляє'),
+  'chip:1': wordAt('b4', 'кожне виправлення стане'),
   'chip:2': wordAt('b4', 'Щотижня помилки'),
   'chip:3': wordAt('b4', "з'являтиметься пропозиція"),
   'chip:4': wordAt('b4', 'Нову навичку прийматимуть'),
@@ -67,6 +79,9 @@ export const APPEAR: Record<string, number> = {
 };
 export const FIELD_KEYS = CARD_FIELDS.map((f) => `field:${f}`);
 export const CHIP_KEYS = LOOP_STEPS.map((_, i) => `chip:${i}`);
+
+/** Блок 4: «І головне» — включение петли (акцент M). */
+export const LOOP_ON = wordAt('b4', 'І головне');
 
 /** Петля: прорисовка трассы от людини №2 до розпізнавання за время от первой до последней станции. */
 export const LOOP_DRAW = { from: APPEAR['chip:0'] - 0.6, to: APPEAR['chip:5'] + 0.4 } as const;
@@ -122,17 +137,18 @@ export const CAMERA: CamKey[] = [
 ];
 export const CAM_MOVE_SEC = 1.4;
 
-/** Субтитр в момент t: предложение (длинное — до запятой/тире), в котором сейчас звучит слово. Текст — дословно, с тире. */
+/** Субтитр в момент t: предложение (длинное — до запятой/тире), в котором сейчас звучит слово. Текст — дословно, с тире.
+ *  Между фразами держится предыдущая, после последнего слова блока — ещё 0.4 с. */
 export function subtitleAt(t: number): string | null {
   const b = blockAt(t);
+  const v = vblock(b.id);
+  if (t < v.words[0].start - 0.1 || t > v.voiceEnd + 0.4) return null;
+  let i = 0;
+  for (let k = 0; k < v.words.length; k++) if (v.words[k].start - 0.1 <= t) i = k;
   const tokens = b.voice.split(/\s+/).filter(Boolean);
-  // номер звучащего слова → индекс токена (тире «—» не слово, но остаётся в тексте)
+  // номер слова озвучки → индекс токена сценария (тире «—» не слово; «Чотири-п'ять» — два слова в одном токене)
   const wordTok: number[] = [];
-  tokens.forEach((tk, k) => {
-    if (norm(tk).length > 0) wordTok.push(k);
-  });
-  const i = Math.floor((t - b.from - LEAD) * WORDS_PER_SEC);
-  if (i < 0 || i >= wordTok.length + 2) return null;
+  tokens.forEach((tk, k) => tokenize(tk).forEach(() => wordTok.push(k)));
   const cur = wordTok[Math.min(i, wordTok.length - 1)];
   const frags: { from: number; to: number }[] = [];
   let start = 0;

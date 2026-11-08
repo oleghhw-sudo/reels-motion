@@ -167,6 +167,25 @@ const geo = { dpr: DPR };
     geo.deviations = await save('deviations.png', vClip, 'YURKONTUR_STAND#/deviations/doc1', 'Відхилення від еталона: фильтры и первые пункты «Типовий договір 2025 ↔ Договір аптеки», DPR 3');
     const chip = await rectOf(`[...document.querySelectorAll('button,span,label')].find(e => e.textContent.trim().replace(/\\s+/g,' ') === '18 відхилення' || e.textContent.trim().replace(/\\s+/g,'') === '18відхилення')`);
     geo.deviations.chip = chip ? inPx(chip, vClip) : null;
+    const oldTabs = await rectOf(`[...document.querySelectorAll('button,a,[role=tab]')].find(e => e.textContent.trim().replace(/\\s+/g,' ') === 'Старі договори')`);
+    geo.deviations.tabsY = oldTabs ? (oldTabs.y - vClip.y) * DPR : null;
+    // 032: вкладка «Новий договір на бланку орендодавця» (проєкт від орендодавця, демо-приклад) — на слова «і новий на його бланку»
+    const clicked = await b.evaluate(`(() => { const e = [...document.querySelectorAll('button,a,[role=tab]')].find(e => e.textContent.trim().replace(/\\s+/g,' ') === 'Новий договір на бланку орендодавця'); if (!e) return false; e.click(); return true; })()`);
+    if (!clicked) throw new Error('Стенд «Відхилення»: нет вкладки «Новий договір на бланку орендодавця»');
+    await new Promise((r) => setTimeout(r, 1500));
+    const tab = await rectOf(`[...document.querySelectorAll('button,a,[role=tab]')].find(e => e.textContent.trim().replace(/\\s+/g,' ') === 'Новий договір на бланку орендодавця')`, 2);
+    const row = await rectOf(`[...document.querySelectorAll('tr')].find(r => r.textContent.includes('4.15'))`);
+    if (!tab || !row) throw new Error('Стенд «Відхилення», новий договір: не найдены вкладка или строка п. 4.15');
+    const nClip = { x: 296, y: tab.y - 12, width: 940, height: row.y + row.height + 8 - (tab.y - 12) };
+    geo.deviationsNew = await save('deviations-new.png', nClip, 'YURKONTUR_STAND#/deviations/doc1 → вкладка «Новий договір на бланку орендодавця»', 'Проєкт від орендодавця (демо-приклад): вкладка и таблица пунктов до п. 4.15, DPR 3');
+    geo.deviationsNew.tab = inPx(tab, nClip);
+    geo.deviationsNew.row = inPx(row, nClip);
+    // колонки строки п. 4.15: «Назва» … «Позиція» (для кадра «пункт · що в проєкті · позиція»)
+    const cells = await b.evaluate(`(() => { const r = [...document.querySelectorAll('tr')].find(r => r.textContent.includes('4.15')); return [...r.children].map(c => { const q = c.getBoundingClientRect(); return { x: q.x, w: q.width, t: c.textContent.trim().replace(/\\s+/g,' ').slice(0, 40) }; }); })()`);
+    const trs = await b.evaluate(`[...document.querySelectorAll('tr')].filter(r => r.querySelector('td')).map(r => { const q = r.getBoundingClientRect(); return { y: q.y, h: q.height }; })`);
+    geo.deviationsNew.rows = trs.map((r) => ({ y: (r.y - nClip.y) * DPR, h: r.h * DPR }));
+    // старые договоры: верх ряда вкладок (кадр начинается с него, без среза текста)
+    geo.deviationsNew.cells = cells.map((c) => ({ x: (c.x - nClip.x) * DPR, w: c.w * DPR, text: c.t }));
   } finally {
     b.close();
   }
