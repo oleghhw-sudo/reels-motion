@@ -42,6 +42,12 @@ for (const f of ['s5_crop_1.png', 's5_crop_2.png', 's5_crop_3.png', 's5_crop_4.p
   if (r.status !== 0) throw new Error('ffmpeg: вырезка legacy_2 не удалась');
   add(o, 'YURKONTUR_LEGACY_DIR/legacy_2.png', 'crop=900:906:748:620 (столбец «Название файла», 25 строк)');
 }
+// 2б. legacy_1…4 целиком, исходными байтами (блок 1: плоско, фрагментами в масштабе 1:1 — шрифт ≈ 21 px исходника ≥ 20 px)
+for (const f of ['legacy_1.png', 'legacy_2.png', 'legacy_3.png', 'legacy_4.png']) {
+  const o = join(OUT, f);
+  copyFileSync(join(LEGACY, f), o);
+  add(o, `YURKONTUR_LEGACY_DIR/${f}`, 'копия без изменений (блок 1)');
+}
 
 // 3. Стенд — крупные фрагменты для показа с мелким текстом ≥ 20 px на кадре 1920×1080 (правки Олега 08.11):
 //    съёмка deviceScaleFactor 3 (запас под наезды), PNG без пережатия; встроенные в стенд картинки (план, скан) — исходные

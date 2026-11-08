@@ -1,6 +1,6 @@
 {
  "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
- "generatedAt": "2026-11-08T23:22:24.152Z",
+ "generatedAt": "2026-11-08T23:30:30.216Z",
  "items": [
   {
    "file": "public/videos/yurkontur/s5_crop_1.png",
@@ -55,6 +55,30 @@
    "source": "YURKONTUR_LEGACY_DIR/legacy_2.png",
    "how": "crop=900:906:748:620 (столбец «Название файла», 25 строк)",
    "sha256": "4be4e1b590d79b6ffd4b62004baa28f99e31ce94e43a53010910b8656d19f3a7"
+  },
+  {
+   "file": "public/videos/yurkontur/legacy_1.png",
+   "source": "YURKONTUR_LEGACY_DIR/legacy_1.png",
+   "how": "копия без изменений (блок 1)",
+   "sha256": "7fd49acc03358ca5248589c99559061952a24d828d5307f92d3da8669af34493"
+  },
+  {
+   "file": "public/videos/yurkontur/legacy_2.png",
+   "source": "YURKONTUR_LEGACY_DIR/legacy_2.png",
+   "how": "копия без изменений (блок 1)",
+   "sha256": "d4e2d9022977c5711a64e9743586671e3cdfbd9c4d43babc1f7c1b213e08bf1c"
+  },
+  {
+   "file": "public/videos/yurkontur/legacy_3.png",
+   "source": "YURKONTUR_LEGACY_DIR/legacy_3.png",
+   "how": "копия без изменений (блок 1)",
+   "sha256": "20309514b63658fe91ba6b1765e5409461600e93bf28622738b801fe44b5e224"
+  },
+  {
+   "file": "public/videos/yurkontur/legacy_4.png",
+   "source": "YURKONTUR_LEGACY_DIR/legacy_4.png",
+   "how": "копия без изменений (блок 1)",
+   "sha256": "80752345b0a9f57ac64286f34d9b17f91af93b142fdec55cf8c5345dbe359123"
   },
   {
    "file": "public/videos/yurkontur/stand-queue-card.png",

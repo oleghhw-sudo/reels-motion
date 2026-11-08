@@ -2,7 +2,7 @@
 // по краям (слева сверху — откуда пришло, справа снизу — куда уходит). Раскладка в экранных px 1920×1080; время — секунды.
 // Смена активного узла: следующий узел появляется карточкой справа (на свои слова), через 0.3 с раскрывается из неё в панель,
 // панель сжимается в левую карточку — позиция, размер и обводка интерполируются за STAGE_MOVE с easing (без скачков).
-// Окна сцены: блок 1 (Скани) и блок 3а (Скани → Розпізнавання → Два читання → Перевірки кодом → Черга перевірки).
+// Окно сцены: блоки 3а–3в (Скани → Розпізнавання → … → Відхилення від еталона). Блок 1 — старая база плоско (EV.b1).
 import { clamp, seg, smoother, type Pt } from '../../motion/index.ts';
 import { APPEAR, FLASH, block, wordAt } from './timeline.ts';
 
@@ -29,11 +29,10 @@ export const STAGE_MOVE = 0.8;
 /** Узел раскрывается из своей карточки через EXPAND_DELAY после появления на свои слова. */
 const EXPAND_DELAY = 0.3;
 
-export type Stage = { win: 1 | 3; from: number; center: string; left: string | null; right: string | null };
+export type Stage = { win: 3; from: number; center: string; left: string | null; right: string | null };
 /** Блок 3а начинается панелью «Скани» одновременно с уходом окна стенда блока 2 (без пустого кадра). */
 const B3A_START = block('b2').to - 0.6;
 export const STAGE_LIST: Stage[] = [
-  { win: 1, from: APPEAR.scans - 0.2, center: 'scans', left: null, right: null },
   { win: 3, from: B3A_START, center: 'scans', left: null, right: 'ocr' },
   { win: 3, from: APPEAR.ocr + EXPAND_DELAY, center: 'ocr', left: 'scans', right: 'read2' },
   { win: 3, from: APPEAR.read2 + EXPAND_DELAY, center: 'read2', left: 'ocr', right: 'code' },
@@ -48,10 +47,11 @@ export const STAGE_LIST: Stage[] = [
 
 /** Окна сцены панелей [вход, выход]; переходы мир ↔ панели — по STAGE_MOVE. */
 const WINDOWS: [number, number][] = [
-  [APPEAR.scans - 0.2, block('b1').to - 0.8],
   // окно до конца блока 3в (+0.2 с): вердикты и «критична умова» успевают прочитаться
   [B3A_START, block('b3c').to + 0.2],
 ];
+/** Конец окна панелей 3а–3в (выход в мировую схему перед блоком 4). */
+export const PANELS_END = WINDOWS[WINDOWS.length - 1][1];
 export function stageMix(t: number, move = STAGE_MOVE): number {
   for (const [a, b] of WINDOWS) if (t >= a - 0.01 && t <= b + move) return smoother(seg(t, a, a + move)) * (1 - smoother(seg(t, b, b + move)));
   return 0;
@@ -104,9 +104,26 @@ export const EV = {
     scan: wordAt('b2', 'посилання на місце в скані'),
     close: B3A_START,
   },
-  /** Скани: 25 названий файлов проезжают и уходят в стопку сканов — в блоке 1 и в начале блока 3а */
+  /** Блок 1 (032): старая база legacy_1…4 плоско, проходы по словам диктора → экраны расходятся → 25 файлов падают в «Скани» */
+  b1: {
+    in: 0.3,
+    title: wordAt('b1', 'обліковій системі'),
+    tabs: wordAt('b1', 'кожен розкладено'),
+    sweep: wordAt('b1', 'тринадцять вкладок'),
+    rent: wordAt('b1', 'строки ставка'),
+    rate: wordAt('b1', 'ставка юридичні'),
+    legal: wordAt('b1', 'юридичні умови'),
+    box: wordAt('b1', 'юридичні умови') + 0.55,
+    files: wordAt('b1', 'перелік файлів'),
+    scroll: wordAt('b1', 'Що змінила'),
+    du: wordAt('b1', 'додаткова угода'),
+    names: wordAt('b1', 'назви файлу'),
+    spread: wordAt('b1', 'Цілої картини'),
+    fall: [wordAt('b1', 'ні нагадувань'), wordAt('b1', 'ні аналітики') + 0.6] as const,
+    out: block('b1').to - 0.9,
+  },
+  /** Скани: 25 названий файлов проезжают и уходят в стопку сканов — в начале блока 3а */
   scans: {
-    b1: { list: 2.2, scroll: [3.0, 11.0] as const, pages: [12.0, 13.2, 14.4, 15.6] as const },
     b3a: { list: B3A_START + 0.6, scroll: [B3A_START + 0.9, B3A_START + 2.5] as const, pages: [B3A_START + 2.6, B3A_START + 2.85, B3A_START + 3.1, B3A_START + 3.35] as const },
   },
   ocr: [
@@ -130,5 +147,5 @@ export const EV = {
   // search — система ищет каждое твердження по всему договору (ответ архитектора, п. 6): полоса по строкам
   // current — «і чинний»: рамка «18 відхилення» на старых договорах; fresh — «і новий на його бланку»: вкладка «Новий договір на бланку
   // орендодавця»; compare — «порівнює з типовим»: проезд к п. 4.15 (пункт · що в проєкті · позиція)
-  deviations: { stand: open('deviations'), current: wordAt('b3c', 'і чинний'), fresh: wordAt('b3c', 'і новий на його бланку'), compare: wordAt('b3c', 'порівнює з типовим'), split: wordAt('b3c', 'Кожен пункт розкладено'), search: wordAt('b3c', 'Кожен пункт розкладено') + 2.6, verdicts: wordAt('b3c', 'пропонує вердикт') - 0.2, lawyer: wordAt('b3c', 'Ставить його юрист'), critical: wordAt('b3c', 'Ставить його юрист') - 0.3 },
+  deviations: { stand: open('deviations'), current: wordAt('b3c', 'і чинний'), fresh: wordAt('b3c', 'і новий на його бланку'), compare: wordAt('b3c', 'порівнює з типовим'), split: wordAt('b3c', 'Кожен пункт розкладено'), search: wordAt('b3c', 'Кожен пункт розкладено') + 2.6, verdicts: wordAt('b3c', 'пропонує вердикт') - 0.2, lawyer: wordAt('b3c', 'Ставить його юрист'), critical: wordAt('b3c', 'критичні умови') },
 } as const;

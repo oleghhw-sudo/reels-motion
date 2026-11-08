@@ -8,8 +8,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 import { ttsHint, ttsText } from '../../voice/pronounce.mjs';
-import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, STAGES, block, voiceEnd, wordAt } from '../../src/videos/yurkontur/timeline.ts';
-import { EV, STAGE_LIST } from '../../src/videos/yurkontur/stage.ts';
+import { APPEAR, BLOCKS, CONTRACT, DEAD, FLASH, LOOP_DRAW, LOOP_EV, LOOP_ON, STAGES, block, voiceEnd, wordAt } from '../../src/videos/yurkontur/timeline.ts';
+import { EV, PANELS_END, STAGE_LIST } from '../../src/videos/yurkontur/stage.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const r1 = (x) => Math.round(x * 10) / 10;
@@ -31,12 +31,26 @@ function fragments(id) {
 // ---------------------------------------------------------------- события по блокам (t, событие, слова, акцент, узел)
 const E = [];
 const ev = (b, t, what, opts = {}) => E.push({ block: b, t: r1(t), what, ...opts });
-// блок 1 — только «Скани» (панель «Скани»: 25 файлов → стопка); полная сборка — следующая задача
-ev('b1', APPEAR.scans, 'Скани появляется и раскрывается в панель', { node: 'scans', accent: 'S' });
-ev('b1', EV.scans.b1.list, '25 названий файлов legacy_2 проявляются', { node: 'scans' });
-ev('b1', EV.scans.b1.scroll[0], 'список проезжает (≈ 20 px)', { node: 'scans' });
-EV.scans.b1.pages.forEach((p, i) => ev('b1', p, `страница ${i + 1} ложится в стопку сканов`, { node: 'scans', accent: i === 0 ? 'S' : undefined }));
-ev('b1', block('b1').to - 1.4, 'камера выходит на общий план (силуэт схемы готовится)', {});
+// блок 1 — старая база плоско (legacy_1…4), проходы по словам → экраны расходятся → 25 файлов падают в «Скани» мёртвой схемы
+const b1 = EV.b1;
+ev('b1', b1.in, 'legacy_1 «Основное» плоско, фрагмент 1:1', { words: 'Договори оренди аптек', accent: 'S' });
+ev('b1', b1.title, 'рамка охрой: заголовок окна учётной системы', { words: 'обліковій системі' });
+ev('b1', b1.tabs, 'проезд к ряду вкладок', { words: 'кожен розкладено' });
+ev('b1', b1.sweep, 'подчёркивание бежит по 13 вкладкам, камера за ним', { words: 'тринадцять вкладок' });
+ev('b1', b1.rent, 'legacy_3 «Арендная плата»', { words: 'строки, ставка' });
+ev('b1', b1.rate, 'рамка охрой: «Порядок изменения оплаты» свободным текстом', { words: 'ставка' });
+ev('b1', b1.legal, 'legacy_4 «Юридические условия»', { words: 'юридичні умови' });
+ev('b1', b1.box, 'рамка охрой: «№ коробки 79 · № папки 637»', {});
+ev('b1', b1.files, 'legacy_2 «Файлы»: список из 25 файлов', { words: 'перелік файлів' });
+ev('b1', b1.scroll, 'проезд по списку файлов', { words: 'Що змінила' });
+ev('b1', b1.du, 'рамка охрой: «додаткова угода, Княжий Затон, 10-2.pdf»', { words: 'додаткова угода' });
+ev('b1', b1.names, 'рамка охрой: столбец «Название файла»', { words: 'назви файлу' });
+ev('b1', b1.spread, 'четыре экрана расходятся плоскими карточками, не соединяются', { words: 'Цілої картини', accent: 'S' });
+ev('b1', DEAD.at, '«мёртвая» схема: призраки узлов, ничего не течёт; карточки к краям', {});
+ev('b1', APPEAR.scans, '«Скани» — единственный живой узел', { node: 'scans' });
+ev('b1', b1.fall[0], '25 строк файлов отрываются и падают в «Скани»', { words: 'ні нагадувань' });
+ev('b1', (b1.fall[0] + b1.fall[1]) / 2, 'файлы падают (середина)', { words: 'ні аналітики' });
+ev('b1', b1.out, 'карточки уходят, остаётся мёртвая схема', {});
 // блок 2
 ev('b2', FLASH.at, 'вспышка силуэта всей схемы, целиком в кадре', { accent: 'M', words: 'начало блока' });
 ev('b2', FLASH.ghostBy, 'схема гаснет до призраков', {});
@@ -90,11 +104,20 @@ ev('b3c', EV.deviations.split, 'пункт → 4 смислові твердже
 [0, 1, 2, 3].forEach((i) => ev('b3c', EV.deviations.split + 0.3 + i * 0.35, `твердження ${i + 1}`, { node: 'deviations' }));
 ev('b3c', EV.deviations.search, 'поиск каждого твердження по договору (полоса по строкам)', { node: 'deviations' });
 ev('b3c', EV.deviations.verdicts, 'вердикты по очереди', { words: 'пропонує вердикт', node: 'deviations' });
-ev('b3c', EV.deviations.critical, '«критична умова» — первой; вердикт к Людині №2', { words: 'Ставить його юрист', node: 'human2', accent: 'S' });
+ev('b3c', EV.deviations.critical, '«критична умова» — первой; вердикт к Людині №2', { words: 'критичні умови — першими', node: 'human2', accent: 'S' });
 // блоки 4–6 — мировая схема (панели и запись — следующая задача)
-LOOP_DRAW && ev('b4', block('b4').from, 'камера отходит; под потоком загорается петля', { accent: 'M', words: 'начало блока' });
+ev('b3c', PANELS_END, 'панели сворачиваются в мировую схему', {});
+// блок 4 (032): петля «так працюватиме» — M на «І головне», 6 станций по словам, развилка, кадр-граница
+ev('b4', LOOP_ON, 'камера отходит на всю петлю; петля вспыхивает зелёным призраком', { accent: 'M', words: 'І головне' });
+ev('b4', LOOP_EV.jurist, 'импульс на «Людина №2»', { words: 'рішенні юриста', node: 'human2' });
+ev('b4', LOOP_EV.model, 'охровый импульс на «Відхилення від еталона» (пропонує модель)', { words: 'Модель пропонує', node: 'deviations' });
 ['рішення людини', 'контрольний приклад', 'щотижневий розбір', 'пропозиція', 'перевірка на еталоні', 'нова версія / відкат'].forEach((s, i) => ev('b4', APPEAR[`chip:${i}`], `станция петли «${s}»`, { node: `chip:${i}`, accent: i === 5 ? 'S' : undefined }));
-ev('b4', wordAt('b4', 'Юридичних висновків'), 'граница: «вчиться / не вчиться ніколи: юридичні висновки»', { words: 'Юридичних висновків', accent: 'S' });
+['словник', 'бібліотека формулювань', 'навичка читання'].forEach((w, i) => ev('b4', LOOP_EV.tags[i], `метка-предложение «${w}» над станцией «пропозиція»`, { words: w, node: 'chip:3' }));
+ev('b4', LOOP_EV.check, 'кольцо проверки вокруг «перевірка на еталоні»', { words: 'на еталоні', node: 'chip:4' });
+ev('b4', LOOP_EV.noErr, 'подпись «без нових помилок у критичних полях»', { words: 'немає жодної', node: 'chip:4' });
+ev('b4', LOOP_EV.critical + 0.2, 'кольцо замкнулось — зелёное', { node: 'chip:4' });
+ev('b4', APPEAR['chip:5'] + 0.2, 'отвод «відкат» влево', { words: 'відкат', node: 'chip:5' });
+ev('b4', LOOP_EV.bound, 'кадр-граница: «вчиться: словник · бібліотека формулювань · навичка читання / не вчиться ніколи: юридичні висновки — тільки у людини»', { words: 'Юридичних висновків', accent: 'S' });
 ev('b5', block('b5').from, 'выход на всю схему, плотность до максимума', { accent: 'M', words: 'начало блока' });
 ev('b5', CONTRACT.from, 'камера ведёт один договор по маршруту', {});
 ev('b5', wordAt('b5', 'уся мережа в одному'), 'реєстр «Договори» (запись стенда, шаг 6)', { words: 'уся мережа в одному реєстрі' });
@@ -140,5 +163,5 @@ for (const b of BLOCKS) {
 }
 const gaps = rows.slice(1).map((e, i) => ({ d: e.t - rows[i].t, at: rows[i].t, b: e.block }));
 const longest = gaps.filter((g) => ['b2', 'b3a', 'b3b', 'b3c'].includes(g.b)).sort((a, z) => z.d - a.d)[0];
-writeFileSync(join(ROOT, 'videos/yurkontur/beats.md'), `<!-- сгенерировано videos/yurkontur/gen-scenes.mjs — не править руками -->\n## Бит-лист (весь ролик)\nВремя — по выравниванию озвучки (words.json); события привязаны к словам. Блоки 2–3в собраны (самый длинный промежуток между событиями — ${longest.d.toFixed(1)} с на ${longest.at.toFixed(1)} с); блоки 1, 4–6 — план для следующей задачи.\n\n${md}\n## Карта акцентов\nБюджет: 0 L, ≤ 3 M (вспышка схемы в блоке 2, включение петли в блоке 4, выход на весь механизм в блоке 5). S — смены панели, рамки, конфлікт, подтверждения.\n\n${acc}`);
+writeFileSync(join(ROOT, 'videos/yurkontur/beats.md'), `<!-- сгенерировано videos/yurkontur/gen-scenes.mjs — не править руками -->\n## Бит-лист (весь ролик)\nВремя — по выравниванию озвучки (words.json); события привязаны к словам. Собраны блоки 1–4 (самый длинный промежуток между событиями в 2–3в — ${longest.d.toFixed(1)} с на ${longest.at.toFixed(1)} с; в 1 и 4 — ≤ 2.9 с); блоки 5–6 — план (032 п. 2, второй этап).\n\n${md}\n## Карта акцентов\nБюджет: 0 L, ≤ 3 M (вспышка схемы в блоке 2, включение петли в блоке 4, выход на весь механизм в блоке 5). S — смены панели, рамки, конфлікт, подтверждения.\n\n${acc}`);
 console.log(`OK: scenes.proposed.yaml (${doc.blocks.length} блоков, ${E.length} событий), beats.md; макс. промежуток 2–3в ${longest.d.toFixed(2)} с`);

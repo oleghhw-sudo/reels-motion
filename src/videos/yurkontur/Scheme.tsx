@@ -12,11 +12,11 @@ import { camAt, ZONE, type Cam } from './camera.ts';
 import { Field, type Track } from './Field.tsx';
 import { along, roundedPath } from './geom.ts';
 import { cardLayout, contractAt, frameAmt, visOf, type CardLayout } from './layout.ts';
-import { CARD_FIELDS, CHIP, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES } from './schema.ts';
+import { CARD_FIELDS, CHIP, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES, nodeById } from './schema.ts';
 import { CH_IN, CH_OUT, EV, STAGE_LIST, stageAt, stageMix, windowStart } from './stage.ts';
-import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, block, blockAt, densityAt, subtitleAt } from './timeline.ts';
-import { Block2Stand, CONTENT, PANEL_CONTENT, ValueChip } from './panels.tsx';
-import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, fitLetterSpacing, mixBorder } from './tokens.ts';
+import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, LOOP_EV, LOOP_ON, block, blockAt, densityAt, subtitleAt } from './timeline.ts';
+import { Block1Legacy, Block2Stand, CONTENT, PANEL_CONTENT, ValueChip } from './panels.tsx';
+import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, fitLetterSpacing, mixBorder, rgba, type Border } from './tokens.ts';
 
 /** Подпись станции петли: Inter 30 px мира · s ≥ 24 px. */
 const CHIP_READ_S = 24 / CHIP.font;
@@ -158,6 +158,123 @@ const LoopStation: React.FC<{ i: number; t: number; cam: Cam }> = ({ i, t, cam }
   );
 };
 
+// ---------------------------------------------------------------- блок 4: события петли между станциями (032)
+/** Импульс-кольцо вокруг узла мира (обводка расходится и гаснет за 1.2 с). */
+const NodePulse: React.FC<{ id: string; at: number; color: string; t: number; cam: Cam }> = ({ id, at, color, t, cam }) => {
+  const u = seg(t, at, at + 1.2);
+  if (u <= 0 || u >= 1) return null;
+  const n = nodeById(id);
+  const g = 6 + 22 * expoOut(u);
+  return <div style={{ position: 'absolute', left: n.x - n.w / 2 - g, top: n.y - n.h / 2 - g, width: n.w + g * 2, height: n.h + g * 2, boxSizing: 'border-box', borderRadius: 8 + g * 0.5, border: `${3 / cam.s}px solid ${color}`, opacity: 1 - u }} />;
+};
+/** «доповнити словник, бібліотеку формулювань чи навичку читання» — метки-предложения (охра) над станцией «пропозиція». */
+const PROPOSAL_TAGS = ['словник', 'бібліотека формулювань', 'навичка читання'] as const;
+const LoopTags: React.FC<{ t: number; cam: Cam }> = ({ t, cam }) => {
+  const [x, y] = LOOP_CHIPS[3];
+  // метки держатся, пока камера не уйдёт к «перевірці на еталоні» (время чтения последней метки)
+  const out = smoother(seg(t, APPEAR['chip:4'] + 0.5, APPEAR['chip:4'] + 1.0));
+  return (
+    <>
+      {PROPOSAL_TAGS.map((tag, i) => {
+        const at = LOOP_EV.tags[i];
+        const a = expoOut(seg(t, at, at + 0.4)) * (1 - out);
+        if (a <= 0) return null;
+        const px = 24; // px мира; на кадре 24 · s ≥ 24 при s ≥ 1
+        return (
+          <div key={tag} style={{ position: 'absolute', left: x + 20, top: y - CHIP.h / 2 - 60 - (2 - i) * 52, transform: `translate(-50%, ${(1 - a) * 8}px)`, opacity: a, fontFamily: TYPE.detail.fontFamily, fontSize: px, lineHeight: 1.2, color: C.ink, background: C.warnBg, border: `${2 / cam.s}px solid ${rgba(C.tight, 0.85)}`, borderRadius: 20, padding: '4px 14px', whiteSpace: 'nowrap' }}>
+            {px * cam.s >= 24 ? (
+              <Readable id={`loop.tag.${i}`} text={tag}>
+                {tag}
+              </Readable>
+            ) : (
+              tag
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+};
+/** «перевірка на еталоні»: кольцо проверки прорисовывается вокруг станции, рядом — «без нових помилок у критичних полях». */
+const LoopCheck: React.FC<{ t: number; cam: Cam }> = ({ t, cam }) => {
+  const [x, y] = LOOP_CHIPS[4];
+  const p = smoother(seg(t, LOOP_EV.check, LOOP_EV.critical + 0.3));
+  const done = smoother(seg(t, LOOP_EV.critical + 0.2, LOOP_EV.critical + 0.6));
+  const capA = expoOut(seg(t, LOOP_EV.noErr, LOOP_EV.noErr + 0.4)) * (1 - smoother(seg(t, APPEAR['chip:5'] + 0.6, APPEAR['chip:5'] + 1.2)));
+  if (p <= 0) return null;
+  const pad = 10;
+  const lines = ['без нових помилок', 'у критичних полях'];
+  return (
+    <>
+      <svg style={{ position: 'absolute', left: x - CHIP.w / 2 - pad, top: y - CHIP.h / 2 - pad, overflow: 'visible' }} width={CHIP.w + pad * 2} height={CHIP.h + pad * 2}>
+        <rect x={1} y={1} width={CHIP.w + pad * 2 - 2} height={CHIP.h + pad * 2 - 2} rx={(CHIP.h + pad * 2) / 2} pathLength={1} fill="none" stroke={done > 0 ? rgba(C.green, 0.4 + 0.5 * done) : rgba(C.tight, 0.9)} strokeWidth={3 / cam.s} strokeDasharray="1" strokeDashoffset={1 - p} opacity={1 - smoother(seg(t, APPEAR['chip:5'] + 0.6, APPEAR['chip:5'] + 1.2))} />
+      </svg>
+      {capA > 0 ? (
+        <div style={{ position: 'absolute', left: x + CHIP.w / 2 + 26, top: y - 30, opacity: capA, fontFamily: TYPE.detail.fontFamily, fontSize: 24, lineHeight: 1.25, color: C.green, whiteSpace: 'nowrap' }}>
+          {lines.map((l, i) => (
+            <div key={i}>
+              {24 * cam.s >= 24 ? (
+                <Readable id={`loop.check.${i}`} text={l}>
+                  {l}
+                </Readable>
+              ) : (
+                l
+              )}
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </>
+  );
+};
+/** «Юридичних висновків система не вчиться ніколи» — отдельный кадр: граница двумя колонками поверх приглушённой схемы. */
+const BOUND_LEARN = ['словник', 'бібліотека формулювань', 'навичка читання'] as const;
+const LoopBoundary: React.FC<{ t: number }> = ({ t }) => {
+  const a = smoother(seg(t, LOOP_EV.bound, LOOP_EV.bound + 0.5)) * (1 - smoother(seg(t, block('b4').to - 0.3, block('b4').to + 0.3)));
+  if (a <= 0) return null;
+  const col = (x: number, w: number, b: Border, extra: React.CSSProperties = {}): React.CSSProperties => ({ position: 'absolute', left: x, top: 350, width: w, height: 330, boxSizing: 'border-box', border: `${b.width}px solid ${bcolor(b)}`, borderRadius: 8, background: C.paper, padding: '34px 40px', ...extra });
+  const item = (i: number) => expoOut(seg(t, LOOP_EV.bound + 0.25 + i * 0.12, LOOP_EV.bound + 0.65 + i * 0.12));
+  return (
+    <div style={{ position: 'absolute', inset: 0, opacity: a }}>
+      {/* схема (мир и карточки) приглушается бумагой под кадром-границей */}
+      <div style={{ position: 'absolute', inset: 0, background: C.paper, opacity: 0.9 }} />
+      <div style={col(300, 640, BORDER.human)}>
+        <div style={{ fontFamily: TYPE.node.fontFamily, fontWeight: TYPE.node.fontWeight, textTransform: TYPE.node.textTransform, lineHeight: TYPE.node.lineHeight, fontSize: 36, color: C.green, letterSpacing: '0.1em' }}>
+          <Readable id="bound.learn" text="ВЧИТЬСЯ">
+            ВЧИТЬСЯ
+          </Readable>
+        </div>
+        {BOUND_LEARN.map((w, i) => (
+          <div key={w} style={{ marginTop: i === 0 ? 34 : 18, opacity: item(i), fontFamily: TYPE.detail.fontFamily, fontSize: 30, color: C.ink, display: 'flex', alignItems: 'center', gap: 14 }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: C.green, flex: 'none' }} />
+            <Readable id={`bound.learn.${i}`} text={w}>
+              {w}
+            </Readable>
+          </div>
+        ))}
+      </div>
+      <div style={col(980, 640, BORDER.normal)}>
+        <div style={{ fontFamily: TYPE.node.fontFamily, fontWeight: TYPE.node.fontWeight, textTransform: TYPE.node.textTransform, lineHeight: TYPE.node.lineHeight, fontSize: 36, color: C.ink, letterSpacing: '0.1em' }}>
+          <Readable id="bound.never" text="НЕ ВЧИТЬСЯ НІКОЛИ">
+            НЕ ВЧИТЬСЯ НІКОЛИ
+          </Readable>
+        </div>
+        <div style={{ marginTop: 34, opacity: item(0), fontFamily: TYPE.detail.fontFamily, fontSize: 30, color: C.ink, display: 'flex', alignItems: 'center', gap: 14 }}>
+          <span style={{ width: 10, height: 10, borderRadius: 3, background: C.ink, flex: 'none' }} />
+          <Readable id="bound.never.0" text="юридичні висновки">
+            юридичні висновки
+          </Readable>
+        </div>
+        <div style={{ marginTop: 18, opacity: item(1), fontFamily: TYPE.detail.fontFamily, fontSize: 26, color: C.green }}>
+          <Readable id="bound.never.note" text="тільки у людини">
+            тільки у людини
+          </Readable>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ---------------------------------------------------------------- чипы-значения на каналах сцены панелей
 /** Значения — только сверенные числа (NUMBERS_CHECK стр. 9: 24 700 → 43 155 → 48 355, даты 01.03.2015 / 01.09.2015;
  * стр. 18: 7 450,00 грн) и дата договора doc1 05.12.2013 (стенд, таблица экранов задачи). */
@@ -223,6 +340,9 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
     return { e, p, ghost: vTo.ghost, flash: vTo.flash, dim: Math.min(visOf(e.from, t, true).dim, vTo.dim) };
   });
   const loopP = smoother(seg(t, LOOP_DRAW.from, LOOP_DRAW.to));
+  const loopOn = t >= LOOP_ON ? 1 : 0;
+  const loopFlash = t < LOOP_ON + 0.3 ? seg(t, LOOP_ON, LOOP_ON + 0.3) : 1 - smoother(seg(t, LOOP_ON + 0.3, LOOP_ON + 1.8));
+
   const loopPts = subPolyline(LOOP_PTS, 0, loopP);
   const rollP = smoother(seg(t, APPEAR['chip:5'] + 0.2, APPEAR['chip:5'] + 0.8));
   const insideNode = NODES.some((n) => Math.abs(ct.pos[0] - n.x) <= n.w / 2 + 16 && Math.abs(ct.pos[1] - n.y) <= n.h / 2 + 16);
@@ -260,6 +380,8 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
                 {p > 0 ? <path d={roundedPath(e.pts)} pathLength={1} fill="none" stroke={C.ink} strokeWidth={1.4 / s} strokeDasharray="1" strokeDashoffset={1 - p} opacity={0.06} /> : null}
               </g>
             ))}
+            {/* «І головне» (M): вся петля вспыхивает зелёным призраком и гаснет до контура — дальше прорисовывается по станциям */}
+            {loopOn > 0 ? <path d={roundedPath(LOOP_PTS, 14)} fill="none" stroke={C.green} strokeWidth={(1.6 + 2.4 * loopFlash) / s} strokeDasharray={loopFlash > 0.3 ? undefined : '6 7'} opacity={(0.1 + 0.75 * loopFlash) * loopOn * visOf('chip:0', t, false).dim} /> : null}
             {loopPts.length > 1 ? <path d={roundedPath(loopPts, 14)} fill="none" stroke={C.green} strokeWidth={1.4 / s} strokeDasharray="6 7" opacity={0.18 * visOf('chip:0', t, false).dim} /> : null}
             {rollP > 0 ? (
               <g opacity={rollP * 0.5}>
@@ -271,6 +393,11 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
           {LOOP_STEPS.map((_, i) => (
             <LoopStation key={i} i={i} t={t} cam={cam} />
           ))}
+          {/* блок 4: импульсы «рішенні юриста» / «Модель пропонує», метки предложения, кольцо проверки на эталоне */}
+          <NodePulse id="human2" at={LOOP_EV.jurist} color={rgba(C.green, 0.85)} t={t} cam={cam} />
+          <NodePulse id="deviations" at={LOOP_EV.model} color={rgba(C.tight, 0.9)} t={t} cam={cam} />
+          <LoopTags t={t} cam={cam} />
+          <LoopCheck t={t} cam={cam} />
         </div>
       </div>
       {/* сцена панелей: каналы входа/выхода — бледная нить и трассы */}
@@ -307,6 +434,12 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
           {ct.conflict > 0 ? <circle cx={ct.pos[0] * s + cam.ox} cy={ct.pos[1] * s + cam.oy} r={17 + 9 * ct.conflict} fill="none" stroke={C.crit} strokeWidth={2.4} opacity={ct.conflict} /> : null}
         </svg>
       ) : null}
+
+      {/* блок 4: кадр-граница «вчиться / не вчиться ніколи» */}
+      <LoopBoundary t={t} />
+
+      {/* блок 1: старая база плоско → экраны расходятся → файлы падают в «Скани» мёртвой схемы */}
+      {t < block('b1').to + 0.2 ? <Block1Legacy t={t} scansAt={{ x: nodeById('scans').x * s + cam.ox, y: nodeById('scans').y * s + cam.oy }} /> : null}
 
       {/* блок 2: окно стенда — крупные фрагменты (план → «Договір» → скан), охровые рамки по словам; уходит вместе с появлением «Скани» */}
       {t >= EV.b2.open && t < EV.b2.close + 1 ? <Block2Stand t={t} /> : null}

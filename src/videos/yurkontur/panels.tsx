@@ -11,7 +11,7 @@ import { clamp, expoOut, lerp, seg, smoother } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import GEO from '../../../videos/yurkontur/stand-geometry.json';
 import { EV } from './stage.ts';
-import { APPEAR } from './timeline.ts';
+import { APPEAR, DEAD } from './timeline.ts';
 import { roundedPath } from './geom.ts';
 import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, mixBorder, rgba } from './tokens.ts';
 
@@ -25,7 +25,8 @@ type R = { x: number; y: number; w: number; h: number };
 type Key = { at: number; x: number; y: number; dur?: number };
 
 /** Проезд камеры по крупному фрагменту: картинка imgW×imgH в масштабе k (px кадра на px картинки) в окне w×h. */
-const PanView: React.FC<{ t: number; src: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; overscanY?: boolean; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, overscanY = false, children }) => {
+/** src не задан — только слой накладок с той же камерой (над несколькими картинками, сменяющимися растворением). */
+const PanView: React.FC<{ t: number; src?: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; overscanY?: boolean; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, overscanY = false, children }) => {
   const vw = w / k;
   const vh = h / k;
   const cx = (x: number) => (imgW <= vw ? (imgW - vw) / 2 : clamp(x, 0, imgW - vw));
@@ -42,7 +43,7 @@ const PanView: React.FC<{ t: number; src: string; imgW: number; imgH: number; k:
   const toScreen = (r: R): R => ({ x: (r.x - vx) * k, y: (r.y - vy) * k, w: r.w * k, h: r.h * k });
   return (
     <div style={{ position: 'absolute', left: 0, top: 0, width: w, height: h, overflow: 'hidden', opacity }}>
-      <Img src={src} style={{ position: 'absolute', left: -vx * k, top: -vy * k, width: imgW * k, height: imgH * k, maxWidth: 'none' }} />
+      {src ? <Img src={src} style={{ position: 'absolute', left: -vx * k, top: -vy * k, width: imgW * k, height: imgH * k, maxWidth: 'none' }} /> : null}
       {children ? children(toScreen) : null}
     </div>
   );
@@ -74,10 +75,129 @@ const Outline: React.FC<{ r: R; p: number; color: string; width?: number; a?: nu
   );
 const frameBox = (w: number, h: number, extra: React.CSSProperties = {}): React.CSSProperties => ({ position: 'absolute', width: w, height: h, border: `${BORDER.normal.width}px solid ${bcolor(BORDER.normal)}`, borderRadius: 6, overflow: 'hidden', background: C.paper, ...extra });
 
+// ---------------------------------------------------------------- Блок 1: старая база (legacy_1…4) плоско
+// Скрины учётной системы подаются как есть, без HUD-обработки: окно 1688×660 в рабочей зоне, масштаб 1:1 (шрифт ≈ 21 px
+// исходника ≥ 20 px на кадре). Все четыре скрина одной геометрии (3024×1964, одна шапка и ряд вкладок) — одна траектория
+// камеры по исходным пикселям, скрины сменяются растворением. Фрагменты выбраны без телефона и ФИО; координаты — px исходника.
+const LEG = { w: 3024, h: 1964 } as const;
+const LEG_WIN = { x: 116, y: 214, w: 1688, h: 660 } as const;
+/** 13 вкладок карточки договора (Основное … Файлы): x-границы в px исходника, строка y 471–503. */
+const LEG_TABS: [number, number][] = [[15, 130], [133, 373], [380, 562], [566, 737], [743, 957], [963, 1129], [1135, 1300], [1305, 1536], [1540, 1646], [1650, 1996], [2001, 2229], [2235, 2461], [2467, 2549]];
+const LEG_ROW0 = 627; // верх первой строки списка файлов legacy_2
+const LEG_ROW_H = 36;
+/** Финальные места миниатюр (центр) после «екрани розходяться»: legacy_2 — над «Скани», куда падают файлы. */
+const THUMBS: { f: string; x: number; y: number }[] = [
+  { f: 'legacy_1.png', x: 720, y: 270 },
+  { f: 'legacy_2.png', x: 300, y: 270 },
+  { f: 'legacy_3.png', x: 420, y: 800 },
+  { f: 'legacy_4.png', x: 900, y: 800 },
+];
+const THUMB_W = 380; // промежуточный размер (раскладка по четвертям), финальный ×0.6
+/** Детерминированный «случайный» сдвиг падения (гейт 1: без Math.random). */
+const jitter = (i: number) => Math.sin(i * 12.9898) * 43758.5453 - Math.floor(Math.sin(i * 12.9898) * 43758.5453) - 0.5;
+
+export const Block1Legacy: React.FC<{ t: number; scansAt: { x: number; y: number } }> = ({ t, scansAt }) => {
+  const e = EV.b1;
+  const gone = smoother(seg(t, e.out, e.out + 0.6));
+  if (gone >= 1) return null;
+  const spread = smoother(seg(t, e.spread, e.spread + 0.9));
+  // экран по словам: legacy_1 → (строки, ставка) legacy_3 → (юридичні умови) legacy_4 → (перелік файлів) legacy_2
+  const shots: { f: string; at: number }[] = [
+    { f: 'legacy_1.png', at: 0 },
+    { f: 'legacy_3.png', at: e.rent },
+    { f: 'legacy_4.png', at: e.legal },
+    { f: 'legacy_2.png', at: e.files },
+  ];
+  const keys: Key[] = [
+    { at: 0, x: 0, y: 68 }, // верх — заголовок окна, без чёрной полосы скрина
+    { at: e.tabs - 0.2, x: 0, y: 300, dur: 0.6 },
+    { at: e.sweep, x: LEG_TABS[12][1] + 40 - LEG_WIN.w, y: 300, dur: Math.max(0.5, e.rent - e.sweep - 0.15) },
+    { at: e.rent - 0.1, x: 0, y: 540, dur: 0.6 },
+    { at: e.legal - 0.1, x: 0, y: 532, dur: 0.5 }, // подвкладки «Общая инфо …» целиком
+    { at: e.files - 0.1, x: 0, y: 540, dur: 0.5 },
+    // проезд по списку: верх кадра встаёт на границу строки 7 — строки не режутся пополам
+    { at: e.scroll, x: 0, y: LEG_ROW0 + LEG_ROW_H * 7 - 2, dur: e.names - e.scroll + 0.2 },
+  ];
+  const ochre = rgba(C.tight, 0.9);
+  const frameA = (1 - spread) * expoOut(seg(t, e.in, e.in + 0.5));
+  const tick = (i: number) => smoother(seg(t, e.sweep + i * 0.065, e.sweep + i * 0.065 + 0.2)) * (1 - seg(t, e.rent - 0.2, e.rent));
+  return (
+    <>
+      {frameA > 0 ? (
+        <div style={frameBox(LEG_WIN.w, LEG_WIN.h, { left: LEG_WIN.x, top: LEG_WIN.y, opacity: frameA, transform: `scale(${1 - 0.06 * spread})` })}>
+          {shots.map((sh, i) => {
+            const next = shots[i + 1]?.at ?? Infinity;
+            if (t < sh.at || t > next + 0.4) return null;
+            return <PanView key={sh.f} t={t} src={A(sh.f)} imgW={LEG.w} imgH={LEG.h} k={1} w={LEG_WIN.w} h={LEG_WIN.h} keys={keys} opacity={i === 0 ? 1 : smoother(seg(t, sh.at, sh.at + 0.35))} />;
+          })}
+          <PanView t={t} imgW={LEG.w} imgH={LEG.h} k={1} w={LEG_WIN.w} h={LEG_WIN.h} keys={keys} opacity={1}>
+            {(S) => (
+              <>
+                {/* «в обліковій системі» — заголовок окна учётной системы */}
+                <Outline r={S({ x: 40, y: 72, w: 560, h: 34 })} p={smoother(seg(t, e.title, e.title + 0.4))} color={ochre} a={1 - seg(t, e.tabs - 0.3, e.tabs)} />
+                {/* «тринадцять вкладок» — подчёркивание бежит по вкладкам за камерой */}
+                {LEG_TABS.map(([x0, x1], i) => {
+                  const p = tick(i);
+                  if (p <= 0) return null;
+                  const r = S({ x: x0, y: 505, w: x1 - x0, h: 0 });
+                  return <div key={i} style={{ position: 'absolute', left: r.x, top: r.y, width: r.w * p, height: 4, borderRadius: 2, background: C.tight }} />;
+                })}
+                {/* «ставка» — порядок изменения оплаты свободным текстом */}
+                <Outline r={S({ x: 83, y: 672, w: 1405, h: 68 })} p={smoother(seg(t, e.rate, e.rate + 0.4))} color={ochre} a={1 - seg(t, e.legal - 0.2, e.legal)} />
+                {/* «юридичні умови» — оригиналы в физическом архиве: № коробки 79 · № папки 637 */}
+                <Outline r={S({ x: 60, y: 636, w: 780, h: 40 })} p={smoother(seg(t, e.box, e.box + 0.4))} color={ochre} a={1 - seg(t, e.files - 0.2, e.files)} />
+                {/* «додаткова угода» — смысл документа только в названии файла */}
+                <Outline r={S({ x: 752, y: LEG_ROW0 + LEG_ROW_H * 3, w: 890, h: LEG_ROW_H })} p={smoother(seg(t, e.du, e.du + 0.4))} color={ochre} a={1 - seg(t, e.names - 0.2, e.names)} />
+                {/* «лише з назви файлу» — весь столбец названий */}
+                <Outline r={S({ x: 752, y: LEG_ROW0 + LEG_ROW_H * 7, w: 890, h: LEG_ROW_H * 18 })} p={smoother(seg(t, e.names, e.names + 0.5))} color={ochre} />
+              </>
+            )}
+          </PanView>
+        </div>
+      ) : null}
+      {/* «Цілої картини з цього не скласти»: четыре экрана расходятся плоскими карточками и не соединяются */}
+      {spread > 0
+        ? THUMBS.map((th, i) => {
+            const u = smoother(seg(t, e.spread + i * 0.08, e.spread + i * 0.08 + 0.9));
+            const v = smoother(seg(t, DEAD.at, DEAD.at + 0.9)); // уходят к краям, открывая «мёртвую» схему
+            const quad = { x: i % 2 === 0 ? 560 : 1360, y: i < 2 ? 380 : 700 };
+            const cx = lerp(lerp(960, quad.x, u), th.x, v);
+            const cy = lerp(lerp(544, quad.y, u), th.y, v);
+            const w = THUMB_W * lerp(lerp(1.4, 1, u), 0.6, v);
+            const h = (w * LEG.h) / LEG.w;
+            return (
+              <div key={th.f} style={{ position: 'absolute', left: cx - w / 2, top: cy - h / 2, width: w, height: h, opacity: u * (1 - 0.35 * v) * (1 - gone), border: `${BORDER.normal.width}px solid ${bcolor(BORDER.normal)}`, borderRadius: 6, overflow: 'hidden', background: C.paper }}>
+                <Img src={A(th.f)} style={{ width: '100%', height: '100%', display: 'block' }} />
+              </div>
+            );
+          })
+        : null}
+      {/* «ні нагадувань… ні аналітики»: 25 строк списка файлов отрываются и падают в «Скани» мёртвой схемы — ничего не течёт */}
+      {Array.from({ length: 25 }, (_, i) => {
+        const [f0, f1] = e.fall;
+        const at = f0 + (i / 24) * (f1 - f0 - 0.7);
+        const u = seg(t, at, at + 0.7);
+        if (u <= 0 || u >= 1) return null;
+        const g = u * u; // падение с ускорением
+        const from = { x: THUMBS[1].x + jitter(i) * 120, y: THUMBS[1].y + 30 };
+        const x = lerp(from.x, scansAt.x + jitter(i + 7) * 40, u);
+        const y = lerp(from.y, scansAt.y, g);
+        const sw = 190;
+        const sh = (sw / 900) * LEG_ROW_H;
+        return (
+          <div key={i} style={{ position: 'absolute', left: x - sw / 2, top: y - sh / 2, width: sw, height: sh, overflow: 'hidden', opacity: (1 - seg(u, 0.8, 1)) * (1 - gone), transform: `rotate(${jitter(i + 3) * 10 * u}deg)`, boxShadow: `0 0 0 1px ${C.line2}`, background: C.paper }}>
+            <Img src={A('legacy2-files.png')} style={{ position: 'absolute', left: 0, top: -i * sh, width: sw, height: (sw / 900) * 906, maxWidth: 'none' }} />
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
 // ---------------------------------------------------------------- Скани: 25 названий файлов → стопка сканов
 const LIST_K = 0.92; // шрифт списка ≈ 22 px картинки → ≈ 20 px на кадре
 const ScansPanel: React.FC<{ t: number }> = ({ t }) => {
-  const e = t > 25 ? EV.scans.b3a : EV.scans.b1;
+  const e = EV.scans.b3a;
   const listW = 900 * LIST_K;
   const listH = 906 * LIST_K;
   const reveal = smoother(seg(t, e.list, e.scroll[0]));

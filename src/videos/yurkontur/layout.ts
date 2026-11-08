@@ -6,7 +6,7 @@ import { camAt, ZONE, type Cam } from './camera.ts';
 import { along } from './geom.ts';
 import { CONTRACT_HUMAN_K, CONTRACT_ROUTE, NODES, type Node } from './schema.ts';
 import { EV, stageMix, stageRectOf, STAGE_MOVE, type Rect } from './stage.ts';
-import { APPEAR, CONTRACT, FLASH, STAGES, block } from './timeline.ts';
+import { APPEAR, CONTRACT, DEAD, FLASH, STAGES, block } from './timeline.ts';
 
 /** Мировой режим: название 20 px мира (≥ 32 px экрана при s ≥ 1.6), пояснение 18 px мира (≥ 24 px при s ≥ 1.34). */
 export const WORLD_LABEL = 20;
@@ -21,7 +21,8 @@ export type Vis = { live: number; ghost: number; flash: number; fresh: number; d
 export function visOf(id: string, t: number, ghostable: boolean): Vis {
   const at = APPEAR[id];
   const live = at === undefined || t < at ? 0 : expoOut(seg(t, at, at + 0.55));
-  const ghost = ghostable && t >= FLASH.at ? 1 : 0;
+  // призраки: «мёртвая» схема конца блока 1 (DEAD) и после вспышки блока 2 — непрерывно, без порога
+  const ghost = ghostable ? smoother(seg(t, DEAD.at, DEAD.at + 0.8)) : 0;
   const flash = ghostable ? (t < FLASH.peak ? seg(t, FLASH.at, FLASH.peak) : 1 - smoother(seg(t, FLASH.peak, FLASH.ghostBy))) : 0;
   const fresh = at === undefined || t < at ? 0 : smoother(seg(t, at, at + 0.3)) * (1 - smoother(seg(t, at + 2.2, at + 3.2)));
   const b6 = block('b6').from;
