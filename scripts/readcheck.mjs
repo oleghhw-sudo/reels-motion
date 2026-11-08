@@ -3,6 +3,7 @@
 //
 //   node scripts/readcheck.mjs <CompositionId> [--props JSON] [--step N] [--cps N] [--min-hold S]
 //   node scripts/readcheck.mjs --self-test          позитивный контроль на ReadcheckFixture
+//   --profile 16x9 [--min-px N] [--from S --to S]   ролики 1920×1080: поля 6 %, мелкий текст SMALL, окно проверки по времени
 //
 // Что делает: бандлит проект (@remotion/bundler), открывает headless Chromium на бандле и ставит кадры тем же
 // механизмом, что renderer Remotion (remotion_setBundleMode → remotion_setFrame → ожидание remotion_renderReady,
@@ -20,6 +21,8 @@
 // Нарушения: SHORT (читаем, но меньше нужного), OUT_OF_FRAME (видимый текст режется краем кадра),
 //            UNSAFE (читаемый текст заходит в safe zone), OCCLUDED (виден, но слой data-occluder закрывает > 10 % букв),
 //            NEVER (ни разу не читаем целиком и не OUT_OF_FRAME / OCCLUDED),
+//            (SHORT не ставится озвученному тексту — <Readable voiced>, субтитры диктора: держится столько, сколько звучит)
+//            SMALL (профиль 16x9: читаемый текст на кадре мельче --min-px, по умолчанию 24 px; размер с учётом transform),
 //            LATIN_ONLY (кириллица U+0400–U+04FF или ’ набрана шрифтом latinOnly из env.manifest.json — в <Readable> или вне его).
 // Не проверяется: перекрытие слоями без data-occluder (и z-index), mask-image, clip-path кроме inset, контраст.
 //
@@ -36,11 +39,11 @@ import { fileURLToPath } from 'node:url';
 import { bundle } from '@remotion/bundler';
 import { RenderInternals, openBrowser, selectComposition } from '@remotion/renderer';
 import { NoReactInternals } from 'remotion/no-react';
-import { SAFE } from '../src/labs/safe-zones.ts';
+import { SAFE as SAFE_9x16, SAFE_16x9 } from '../src/labs/safe-zones.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_VERSION = '4.0.534';
-const ATTR = { id: 'data-readable-id', text: 'data-readable-text' }; // = READABLE_ATTR в src/qa/Readable.tsx
+const ATTR = { id: 'data-readable-id', text: 'data-readable-text', voiced: 'data-readable-voiced' }; // = READABLE_ATTR в src/qa/Readable.tsx
 const OPACITY_MIN = 0.9;
 const PAD_SEC = 0.5;
 const TOL = 0.5; // px
@@ -62,9 +65,20 @@ const opt = (k) => {
 const selfTest = argv.includes('--self-test');
 const compId = selfTest ? SELF_TEST.comp : argv[0];
 if (!compId || compId.startsWith('--')) {
-  console.error('Использование: node scripts/readcheck.mjs <CompositionId> [--props JSON] [--step N] [--cps N] [--min-hold S] | --self-test');
+  console.error('Использование: node scripts/readcheck.mjs <CompositionId> [--props JSON] [--step N] [--cps N] [--min-hold S] [--profile 9x16|16x9] [--min-px N] [--from S --to S] | --self-test');
   process.exit(2);
 }
+// профиль safe zones: 9x16 (Reels, по умолчанию) | 16x9 (поля 6 %, проверка мелкого текста SMALL)
+const PROFILE = opt('--profile') ?? '9x16';
+if (!['9x16', '16x9'].includes(PROFILE)) {
+  console.error('readcheck: --profile 9x16 | 16x9');
+  process.exit(2);
+}
+const SAFE = PROFILE === '16x9' ? SAFE_16x9 : SAFE_9x16;
+const MIN_PX = opt('--min-px') !== undefined ? Number(opt('--min-px')) : PROFILE === '16x9' ? SAFE_16x9.minPx : null;
+// окно проверки в секундах (по умолчанию — вся композиция)
+const FROM_SEC = opt('--from') !== undefined ? Number(opt('--from')) : null;
+const TO_SEC = opt('--to') !== undefined ? Number(opt('--to')) : null;
 const STEP = Number(opt('--step') ?? 2);
 const CPS = Number(opt('--cps') ?? 12);
 const MIN_HOLD = Number(opt('--min-hold') ?? 1.0);
@@ -196,7 +210,11 @@ function collect(attrId, attrText, W, H, latinFamilies) {
       rg.selectNodeContents(n);
       const ch = chainOf(n.parentElement);
       const fontPx = parseFloat(getComputedStyle(n.parentElement).fontSize);
-      for (const rc of rg.getClientRects()) if (rc.width > 0 && rc.height > 0) rects.push({ r: { l: rc.left, t: rc.top, r: rc.right, b: rc.bottom }, fontPx, ...ch });
+      // размер на кадре с учётом transform предков (камера мира, раскрытие панели): высота бокса / высота без transform
+      const pe = n.parentElement;
+      const scaleK = pe.offsetHeight > 0 ? pe.getBoundingClientRect().height / pe.offsetHeight : 1;
+      const effPx = fontPx * scaleK;
+      for (const rc of rg.getClientRects()) if (rc.width > 0 && rc.height > 0) rects.push({ r: { l: rc.left, t: rc.top, r: rc.right, b: rc.bottom }, fontPx, effPx, ...ch });
     }
     if (!rects.length) {
       out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), present: false });
@@ -208,7 +226,9 @@ function collect(attrId, attrText, W, H, latinFamilies) {
     let visibleArea = 0;
     const u = { l: 1e9, t: 1e9, r: -1e9, b: -1e9 };
     const ems = [];
+    let minPx = 1e9;
     for (const x of rects) {
+      minPx = Math.min(minPx, x.effPx);
       minOpacity = Math.min(minOpacity, x.opacity);
       hidden ||= x.hidden;
       // обрезку предками меряем по em-полосе строки (font-size по центру бокса): бокс текстового узла —
@@ -227,7 +247,7 @@ function collect(attrId, attrText, W, H, latinFamilies) {
       u.r = Math.max(u.r, em.r);
       u.b = Math.max(u.b, em.b);
     }
-    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), present: true, minOpacity, hidden, contentOk, visibleArea, box: u, occluded: occlusion(el, ems) });
+    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), voiced: el.hasAttribute('data-readable-voiced'), present: true, minOpacity, hidden, contentOk, visibleArea, box: u, minPx, occluded: occlusion(el, ems) });
   }
   // LATIN_ONLY: каждый текстовый узел кадра (не только <Readable>), набранный семейством latinOnly, — без кириллицы и ’
   const latinBad = [];
@@ -342,7 +362,9 @@ try {
 
   // ---- обход кадров
   const frames = [];
-  for (let f = 0; f < D; f += STEP) frames.push(f);
+  const fFrom = FROM_SEC === null ? 0 : Math.max(0, Math.round(FROM_SEC * fps));
+  const fTo = TO_SEC === null ? D : Math.min(D, Math.round(TO_SEC * fps));
+  for (let f = fFrom; f < fTo; f += STEP) frames.push(f);
   const tracks = new Map(); // key id\0text → данные
   let unknownClipFrames = 0;
   const latinBad = new Map(); // текст\0семейство → { …, fromFrame }
@@ -351,6 +373,7 @@ try {
     if (b.t < SAFE.top - TOL) z.push({ zone: 'top', px: Math.round(SAFE.top - b.t) });
     if (b.b > H - SAFE.bottom + TOL) z.push({ zone: 'bottom', px: Math.round(b.b - (H - SAFE.bottom)) });
     if (b.r > W - SAFE.right + TOL) z.push({ zone: 'right', px: Math.round(b.r - (W - SAFE.right)) });
+    if (PROFILE === '16x9' && b.l < SAFE.left - TOL) z.push({ zone: 'left', px: Math.round(SAFE.left - b.l) });
     return z;
   };
   const tLoop = Date.now();
@@ -366,16 +389,16 @@ try {
       const key = `${it.id}\u0000${it.text}`;
       // одинаковые id+text в одном кадре: считаем читаемым, если читаем хотя бы один экземпляр
       const st = (() => {
-        if (!it.present) return { readable: false, out: false, occ: false, occFrac: 0, box: null };
+        if (!it.present) return { readable: false, out: false, occ: false, occFrac: 0, box: null, minPx: null };
         const opOk = it.minOpacity >= OPACITY_MIN && !it.hidden;
         const inFrame = it.box.l >= -TOL && it.box.t >= -TOL && it.box.r <= W + TOL && it.box.b <= H + TOL;
         const seen = opOk && it.contentOk && inFrame && it.visibleArea > 0;
         const occ = seen && it.occluded > OCC_MAX;
-        return { readable: seen && !occ, out: opOk && it.contentOk && !inFrame && it.visibleArea > 0, occ, occFrac: it.occluded, box: it.box };
+        return { readable: seen && !occ, out: opOk && it.contentOk && !inFrame && it.visibleArea > 0, occ, occFrac: it.occluded, box: it.box, minPx: it.minPx };
       })();
       const prev = seenNow.get(key);
       if (!prev || (st.readable && !prev.readable)) seenNow.set(key, { it, st });
-      if (!tracks.has(key)) tracks.set(key, { id: it.id, text: it.text, samples: [], dup: false });
+      if (!tracks.has(key)) tracks.set(key, { id: it.id, text: it.text, voiced: Boolean(it.voiced), samples: [], dup: false });
       else if (prev) tracks.get(key).dup = true;
     }
     for (const [key, { st }] of seenNow) tracks.get(key).samples.push({ f, span, ...st });
@@ -407,6 +430,8 @@ try {
       let occFrom = null;
       let occMax = 0;
       const unsafe = new Map(); // zone → { sec, maxPx, from }
+      let smallPx = null; // самый мелкий размер на кадре, пока текст читаем (профиль 16x9)
+      let smallFrom = null;
       for (const s of tr.samples) {
         const contiguous = lastF !== null && s.f === lastF + STEP;
         if (s.readable) {
@@ -420,6 +445,10 @@ try {
           if (run > best + 1e-9) {
             best = run;
             bestFrom = runFrom;
+          }
+          if (MIN_PX !== null && s.minPx !== null && s.minPx < MIN_PX - 0.5) {
+            if (smallPx === null || s.minPx < smallPx) smallPx = s.minPx;
+            smallFrom ??= s.f;
           }
           for (const z of zoneOf(s.box)) {
             const u = unsafe.get(z.zone) ?? { sec: 0, maxPx: 0, from: s.f };
@@ -443,8 +472,10 @@ try {
       if (outSec > 0) v.push('OUT_OF_FRAME');
       if (occSec > 0) v.push('OCCLUDED');
       if (best === 0 && outSec === 0 && occSec === 0) v.push('NEVER');
-      if (best > 0 && best + 1e-9 < need) v.push('SHORT');
+      // озвученный текст (субтитры диктора, Readable voiced) держится ровно столько, сколько звучит — время чтения не судим
+      if (best > 0 && best + 1e-9 < need && !tr.voiced) v.push('SHORT');
       if (unsafe.size) v.push('UNSAFE');
+      if (smallPx !== null) v.push('SMALL');
       if ([...latinBad.values()].some((b) => b.readableId === tr.id)) v.push('LATIN_ONLY');
       texts.push({
         id: tr.id,
@@ -461,7 +492,10 @@ try {
         occludedFromSec: occFrom === null ? null : +(occFrom / fps).toFixed(3),
         occludedMaxFrac: +occMax.toFixed(3),
         unsafe: [...unsafe].map(([zone, u]) => ({ zone, sec: +u.sec.toFixed(3), maxPx: u.maxPx, fromSec: +(u.from / fps).toFixed(3) })),
+        smallPx: smallPx === null ? null : +smallPx.toFixed(1),
+        smallFromSec: smallFrom === null ? null : +(smallFrom / fps).toFixed(3),
         duplicateInstances: tr.dup,
+        voiced: tr.voiced,
         violations: v,
       });
     }
@@ -470,13 +504,13 @@ try {
     // ---- таблица
     const hyp = thresholdsAreDefault ? ' (ГИПОТЕЗА: пороги по умолчанию, не откалиброваны)' : ' (пороги заданы флагами)';
     console.log(`\nПороги: cps=${CPS}, minHold=${MIN_HOLD} с, +${PAD_SEC} с${hyp}; шаг ${STEP} кадр(а) = ±${(STEP / fps).toFixed(3)} с точность`);
-    console.log(`Safe zones (src/labs/safe-zones.ts): верх ${SAFE.top}, низ ${SAFE.bottom}, право ${SAFE.right} px\n`);
+    console.log(`Профиль ${PROFILE} · safe zones (src/labs/safe-zones.ts): верх ${SAFE.top}, низ ${SAFE.bottom}, право ${SAFE.right}${PROFILE === '16x9' ? `, лево ${SAFE.left}` : ''} px${MIN_PX !== null ? ` · мелкий текст < ${MIN_PX} px — SMALL` : ''}${FROM_SEC !== null || TO_SEC !== null ? ` · окно ${FROM_SEC ?? 0}–${TO_SEC ?? '…'} с` : ''}\n`);
     const pad = (s, n) => String(s).padEnd(n);
     console.log(`${pad('статус', 22)}${pad('id', 26)}${pad('с', 7)}${pad('симв', 6)}${pad('нужно', 7)}${pad('держит', 8)}текст`);
     for (const x of texts) {
       const st = x.violations.length ? x.violations.join(',') : 'OK';
       const at = x.longestFromSec ?? x.outOfFrameFromSec ?? '—';
-      const extra = x.unsafe.map((u) => ` [${u.zone} +${u.maxPx}px ${u.sec.toFixed(2)}с]`).join('') + (x.occludedSec ? ` [закрыто до ${Math.round(x.occludedMaxFrac * 100)}% букв ${x.occludedSec.toFixed(2)}с]` : '');
+      const extra = x.unsafe.map((u) => ` [${u.zone} +${u.maxPx}px ${u.sec.toFixed(2)}с]`).join('') + (x.smallPx !== null ? ` [мелко ${x.smallPx}px < ${MIN_PX} с ${x.smallFromSec} с]` : '') + (x.occludedSec ? ` [закрыто до ${Math.round(x.occludedMaxFrac * 100)}% букв ${x.occludedSec.toFixed(2)}с]` : '');
       console.log(`${pad(st, 22)}${pad(x.id, 26)}${pad(at, 7)}${pad(x.chars, 6)}${pad(x.needSec.toFixed(2), 7)}${pad(x.longestSec.toFixed(2), 8)}${JSON.stringify(x.text.slice(0, 40))}${extra}`);
     }
     // LATIN_ONLY вне <Readable>: отдельной строкой, тоже нарушение
@@ -494,7 +528,7 @@ try {
     result = {
       composition: compId,
       generatedAt: new Date().toISOString(),
-      params: { step: STEP, fps, durationInFrames: D, cps: CPS, minHoldSec: MIN_HOLD, padSec: PAD_SEC, opacityMin: OPACITY_MIN, thresholdsAreHypothesis: thresholdsAreDefault, safe: SAFE },
+      params: { step: STEP, fps, durationInFrames: D, cps: CPS, minHoldSec: MIN_HOLD, padSec: PAD_SEC, opacityMin: OPACITY_MIN, thresholdsAreHypothesis: thresholdsAreDefault, profile: PROFILE, safe: SAFE, minPx: MIN_PX, fromSec: FROM_SEC, toSec: TO_SEC },
       notChecked: ['перекрытие слоями без data-occluder и z-index', 'mask-image', 'clip-path кроме inset', 'контраст'],
       occlusion: { attr: 'img[data-occluder]', maxFrac: OCC_MAX, grid: '24×5 точек на строку', alphaMin: 128 },
       timing,

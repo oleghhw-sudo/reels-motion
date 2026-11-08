@@ -39,6 +39,8 @@ const m2 = matchScript({ text: 'Студія працює з дев’ятої �
 expect('порядковые цифрами: «дев’ятої» ↔ «9», «двадцятої» ↔ «20.»', m2.every((w) => w.match), m2.filter((w) => !w.match).map((w) => w.text).join());
 const m3 = matchScript({ text: 'Ґрунтовний підхід й результат', recognized: [{ text: 'Грунтовний', start: 0, end: 0.6 }, { text: 'підхід', start: 0.6, end: 1 }, { text: 'і', start: 1, end: 1.1 }, { text: 'результат', start: 1.1, end: 1.7 }], durationSec: 2 });
 expect('орфография ASR: «Ґ» ↔ «Г», «й» ↔ «і»', m3.every((w) => w.match));
+const m5 = matchScript({ text: 'модуль до ALI і база', recognized: [{ text: 'модуль', start: 0, end: 0.5 }, { text: 'до', start: 0.5, end: 0.6 }, { text: 'Алі', start: 0.6, end: 1.0 }, { text: 'і', start: 1.0, end: 1.1 }, { text: 'база', start: 1.1, end: 1.5 }], durationSec: 2 });
+expect('словарь произношения: произнесено «Алі» ↔ слово сценария «ALI» (match, текст слова латиницей — без кириллицы, время 0.6–1.0)', m5[2].match && m5[2].text.toLowerCase() === 'ali' && !/[\u0400-\u04FF]/u.test(m5[2].text) && m5[2].start === 0.6 && m5[2].end === 1.0, JSON.stringify(m5[2]));
 const m4 = matchScript({ text: 'раз два три', recognized: [{ text: 'раз', start: 0, end: 0.3 }, { text: 'три', start: 0.9, end: 1.2 }], durationSec: 1.5 });
 expect('пропущенное слово: время между соседями (0.3–0.9), match:false, услышано пусто', !m4[1].match && near(m4[1].start, 0.3) && near(m4[1].end, 0.9) && m4[1].heard === '', JSON.stringify(m4[1]));
 

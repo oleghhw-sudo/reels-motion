@@ -14,3 +14,4 @@ public/fixtures/
 public/matte/
 __pycache__/
 videos/*/assets-*/
+videos/*/voice/probe/

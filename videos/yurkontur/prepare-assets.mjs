@@ -111,6 +111,66 @@ const geo = { dpr: DPR };
     b.close();
   }
 }
+// 3г. Блоки 3б–3в: шкала «Чинна редакція на дату» и «Ставка чинна» в трёх редакциях (doc1), площа тричі (ANC-0412),
+//     «Строки» (без строк «Зміна власника»), «Відхилення від еталона» (doc1). DPR 3, PNG.
+{
+  const b = await launch(ROOT, { width: 1280, height: 1600, scale: DPR });
+  try {
+    const rectOf = (expr, pad = 0) => b.evaluate(`(() => { const e = (${expr}); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x - ${pad}, y: r.y - ${pad}, width: r.width + ${pad * 2}, height: r.height + ${pad * 2} }; })()`);
+    const inPx = (r, o) => ({ x: (r.x - o.x) * DPR, y: (r.y - o.y) * DPR, w: r.width * DPR, h: r.height * DPR });
+    const save = async (name, clip, src, how) => {
+      if (!clip) throw new Error(`Стенд: не найден фрагмент для ${name}`);
+      const o = join(OUT, name);
+      writeFileSync(o, await b.shot(clip));
+      add(o, src, how);
+      return { w: Math.round(clip.width * DPR), h: Math.round(clip.height * DPR) };
+    };
+    await b.goto('file://' + STAND + '#/card/doc1/contract', 6000);
+    const scaleBox = `(() => { const t = [...document.querySelectorAll('span,div')].find(e => e.textContent.trim() === 'Чинна редакція на дату'); let p = t; while (p && !p.textContent.includes('Редакція діє')) p = p.parentElement; return p; })()`;
+    const rateRow = `[...document.querySelectorAll('.d-card-fact')].find(e => /^Ставка чинна на/.test(e.textContent.trim()))`;
+    geo.chain = [];
+    for (const [i, d] of ['05.12.2013', '01.03.2015', '01.09.2015'].entries()) {
+      await b.evaluate(`[...document.querySelectorAll('button')].find(x => x.textContent.trim() === '${d}').click()`);
+      await b.sleep(700);
+      const sr = await rectOf(scaleBox, 6);
+      const rr = await rectOf(rateRow, 6);
+      const scale = await save(`chain-scale-${i}.png`, sr, 'YURKONTUR_STAND#/card/doc1/contract', `шкала «Чинна редакція на дату», выбрана ${d}, DPR 3`);
+      const rate = await save(`chain-rate-${i}.png`, rr, 'YURKONTUR_STAND#/card/doc1/contract', `«Ставка чинна на …» в редакции ${d}, DPR 3`);
+      scale.btn = inPx(await rectOf(`[...document.querySelectorAll('button')].find(x => x.textContent.trim() === '${d}')`), sr);
+      const val = await rectOf(`(() => { const row = ${rateRow}; return [...row.querySelectorAll('*')].find(e => e.textContent.includes('грн/міс') && e.children.length === 0); })()`);
+      rate.value = inPx(val, rr);
+      geo.chain.push({ date: d, scale, rate });
+    }
+    await b.goto('file://' + STAND + '#/card/ANC-0412/contract', 4000);
+    const areaRow = `[...document.querySelectorAll('.d-card-fact')].find(e => /^Площа/.test(e.textContent.trim()))`;
+    const ar = await rectOf(areaRow, 6);
+    geo.area = await save('card-area.png', ar, 'YURKONTUR_STAND#/card/ANC-0412/contract', 'поле «Площа»: договір 111,2 · план БТІ 108,9 · ліцензія 111,2 · «БТІ відрізняється від договору», DPR 3');
+    geo.area.bti = inPx(await rectOf(`(${areaRow}).querySelector('.is-diff')`), ar);
+    geo.area.note = inPx(await rectOf(`(${areaRow}).querySelector('.a-warn')`), ar);
+    // «Строки» — шире (1600 CSS): при 1280 колонка «Подія» сжата и текст стенда наезжает на дату
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1600, height: 1600, deviceScaleFactor: DPR, mobile: false });
+    await b.goto('file://' + STAND + '#/deadlines', 4000);
+    // только первые три строки таблицы: четвёртая — «Зміна власника» (запрет обещаний о внешних событиях)
+    const rows = await b.evaluate(`[...document.querySelectorAll('tr')].filter(r => r.querySelector('td') && r.textContent.includes('ANC-')).slice(0, 4).map(r => { const q = r.getBoundingClientRect(); return { y: q.y, h: q.height, text: r.textContent.replace(/\\s+/g, ' ').slice(0, 80) }; })`);
+    if (!rows.length || !/Зміна власника/.test(rows[3]?.text ?? '')) throw new Error('Стенд «Строки»: ожидалась 4-я строка «Зміна власника» — проверить обрезку: ' + JSON.stringify(rows.map((r) => r.text)));
+    const top = await rectOf(`document.querySelector('h1')`);
+    const dClip = { x: top.x - 8, y: top.y + top.height + 6, width: 1600 - (top.x - 8) - 24, height: rows[3].y - (top.y + top.height + 6) - 2 };
+    geo.deadlines = await save('deadlines.png', dClip, 'YURKONTUR_STAND#/deadlines', 'вікна ≤ 30 / ≤ 90 / ≤ 180 днів и три первые строки (без «Зміна власника»), DPR 3');
+    geo.deadlines.rows = rows.slice(0, 3).map((r) => ({ y: (r.y - dClip.y) * DPR, h: r.h * DPR, text: r.text }));
+    // колонки таблицы (для проезда камеры к «Дата · Залишилось · Кому»)
+    const th = await b.evaluate(`[...document.querySelectorAll('th')].map(e => { const r = e.getBoundingClientRect(); return { t: e.textContent.trim().split(/[ ,]/)[0], x: r.x, w: r.width }; })`);
+    const col = (name) => { const c = th.find((x) => x.t.startsWith(name)); if (!c) throw new Error(`Стенд «Строки»: нет колонки «${name}»: ${JSON.stringify(th.map((x) => x.t))}`); return { x: (c.x - dClip.x) * DPR, w: c.w * DPR }; };
+    geo.deadlines.cols = { event: col('Подія'), date: col('Дата'), who: col('Кому') };
+    await b.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 1600, deviceScaleFactor: DPR, mobile: false });
+    await b.goto('file://' + STAND + '#/deviations/doc1', 4000);
+    const vClip = { x: 296, y: 66, width: 932, height: 560 };
+    geo.deviations = await save('deviations.png', vClip, 'YURKONTUR_STAND#/deviations/doc1', 'Відхилення від еталона: фильтры и первые пункты «Типовий договір 2025 ↔ Договір аптеки», DPR 3');
+    const chip = await rectOf(`[...document.querySelectorAll('button,span,label')].find(e => e.textContent.trim().replace(/\\s+/g,' ') === '18 відхилення' || e.textContent.trim().replace(/\\s+/g,'') === '18відхилення')`);
+    geo.deviations.chip = chip ? inPx(chip, vClip) : null;
+  } finally {
+    b.close();
+  }
+}
 writeFileSync(join(ROOT, 'videos/yurkontur/stand-geometry.json'), JSON.stringify(geo, null, 1) + '\n');
 console.log('stand-geometry.json:', JSON.stringify(geo).slice(0, 400));
 

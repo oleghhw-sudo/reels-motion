@@ -21,7 +21,8 @@ export const CH_IN: Pt[] = [[LEFT.x + LEFT.w / 2, LEFT.y + LEFT.h], [LEFT.x + LE
 export const CH_OUT: Pt[] = [[PANEL.x + PANEL.w, midY], [RIGHT.x + RIGHT.w / 2, midY], [RIGHT.x + RIGHT.w / 2, RIGHT.y]];
 
 /** Порядок цепочки (для «ушёл влево / ещё справа»). */
-const ORDER = ['scans', 'ocr', 'read2', 'code', 'queue', 'human1'];
+// human1 в конце: после «Черга» он уходит вправо за кадр (а не через весь кадр влево)
+const ORDER = ['scans', 'ocr', 'read2', 'code', 'queue', 'chain', 'card', 'deadlines', 'deviations', 'human2', 'human1'];
 
 /** Длительность смены раскладки, с (правило: 0.6–0.8 с с easing). */
 export const STAGE_MOVE = 0.8;
@@ -38,12 +39,18 @@ export const STAGE_LIST: Stage[] = [
   { win: 3, from: APPEAR.read2 + EXPAND_DELAY, center: 'read2', left: 'ocr', right: 'code' },
   { win: 3, from: APPEAR.code + EXPAND_DELAY, center: 'code', left: 'read2', right: 'queue' },
   { win: 3, from: APPEAR.queue + EXPAND_DELAY, center: 'queue', left: 'code', right: 'human1' },
+  // блоки 3б–3в
+  { win: 3, from: APPEAR.chain + EXPAND_DELAY, center: 'chain', left: 'queue', right: 'card' },
+  { win: 3, from: APPEAR.card + EXPAND_DELAY, center: 'card', left: 'chain', right: 'human2' },
+  { win: 3, from: APPEAR.deadlines + EXPAND_DELAY, center: 'deadlines', left: 'card', right: 'deviations' },
+  { win: 3, from: APPEAR.deviations + EXPAND_DELAY, center: 'deviations', left: 'card', right: 'human2' },
 ];
 
 /** Окна сцены панелей [вход, выход]; переходы мир ↔ панели — по STAGE_MOVE. */
 const WINDOWS: [number, number][] = [
   [APPEAR.scans - 0.2, block('b1').to - 0.8],
-  [B3A_START, block('b3b').from + 0.6],
+  // окно до конца блока 3в (+0.2 с): вердикты и «критична умова» успевают прочитаться
+  [B3A_START, block('b3c').to + 0.2],
 ];
 export function stageMix(t: number, move = STAGE_MOVE): number {
   for (const [a, b] of WINDOWS) if (t >= a - 0.01 && t <= b + move) return smoother(seg(t, a, a + move)) * (1 - smoother(seg(t, b, b + move)));
@@ -113,4 +120,13 @@ export const EV = {
   code: { rows: [open('code'), open('code') + 0.4, open('code') + 0.8, open('code') + 1.2] as const, failRow: 2, out: open('code') + 1.5 },
   /** Черга: камера на значения → проезд к «Підтвердити» → клик → назад к значениям → зеленеет → Людина №1 заливается */
   queue: { toButton: open('queue') + 0.1, cursor: [open('queue') + 0.3, open('queue') + 0.75] as const, click: open('queue') + 0.8, back: open('queue') + 0.95, green: open('queue') + 1.4, human: open('queue') + 1.75 },
+  /** Розбір ланцюга: шкала «Чинна редакція на дату» — три редакции doc1 (24 700 → 43 155 → 48 355), рамка на значении */
+  chain: { states: [open('chain'), wordAt('b3b', 'додаткові угоди') + 0.6, wordAt('b3b', 'Новий документ змінює')] as const, rate: wordAt('b3b', 'лише ті умови') },
+  /** Картка: 6 полей по одному (timeline APPEAR field:*), нитки к документам ланцюга; площа тричі → конфлікт → Людина №2 */
+  card: { docs: open('card') - 0.3, area: APPEAR.human2 - 0.4, conflict: APPEAR.human2, resolve: wordAt('b3b', 'Вирішує юрист') },
+  /** Строки: вікна → строка «Останній день заяви» → строка «Автопролонгація» (без строк «Зміна власника») */
+  deadlines: { windows: open('deadlines'), group: open('deadlines') + 1.8, last: wordAt('b3c', 'останній день заяви'), auto: wordAt('b3c', 'автопролонгацію') },
+  /** Відхилення: экран стенда → пункт раскладывается на 4 твердження → вердикты → критична умова первой */
+  // search — система ищет каждое твердження по всему договору (ответ архитектора, п. 6): полоса по строкам
+  deviations: { stand: open('deviations'), split: wordAt('b3c', 'Кожен пункт розкладено'), search: wordAt('b3c', 'Кожен пункт розкладено') + 2.6, verdicts: wordAt('b3c', 'пропонує вердикт') - 0.2, lawyer: wordAt('b3c', 'Ставить його юрист'), critical: wordAt('b3c', 'Ставить його юрист') - 0.3 },
 } as const;

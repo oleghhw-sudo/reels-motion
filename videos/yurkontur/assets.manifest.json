@@ -1,6 +1,6 @@
 {
  "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
- "generatedAt": "2026-11-08T21:19:25.065Z",
+ "generatedAt": "2026-11-08T22:05:56.144Z",
  "items": [
   {
    "file": "public/videos/yurkontur/s5_crop_1.png",
@@ -91,6 +91,60 @@
    "source": "YURKONTUR_STAND#/card/ANC-0412/plan (встроенная картинка 2400×1197)",
    "how": "crop=648:862:896:110 → PNG (без пережатия)",
    "sha256": "0bb0067dc362a27fd5a7aaf8b3dc09bcb720817c1f1e2318308ca045c120e62d"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-scale-0.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "шкала «Чинна редакція на дату», выбрана 05.12.2013, DPR 3",
+   "sha256": "5acd00374c1c56fe227288aa30616546ec24522c49067856ea014ec465cbcf35"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-rate-0.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "«Ставка чинна на …» в редакции 05.12.2013, DPR 3",
+   "sha256": "78e1906e2fb6be582d29d3f9c8e5b2c296038c021cd4bee4ceec0e26a3d75f15"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-scale-1.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "шкала «Чинна редакція на дату», выбрана 01.03.2015, DPR 3",
+   "sha256": "6b07044e53116532aec4c1e729f8abbc1c9eadaadfa0c5c6f842e08fadfb94c6"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-rate-1.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "«Ставка чинна на …» в редакции 01.03.2015, DPR 3",
+   "sha256": "8acd78c59a029ccc46e992537f51e38178d7eba86029bfd887a2a837500e880c"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-scale-2.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "шкала «Чинна редакція на дату», выбрана 01.09.2015, DPR 3",
+   "sha256": "3d8387007ca5e6e59a6e63b886148f86975010831ae37e2952d5cc35585307ca"
+  },
+  {
+   "file": "public/videos/yurkontur/chain-rate-2.png",
+   "source": "YURKONTUR_STAND#/card/doc1/contract",
+   "how": "«Ставка чинна на …» в редакции 01.09.2015, DPR 3",
+   "sha256": "638ac8283197d45ca2436dbf0f3944eac08bb4e2d195b412ec876d95f7533e58"
+  },
+  {
+   "file": "public/videos/yurkontur/card-area.png",
+   "source": "YURKONTUR_STAND#/card/ANC-0412/contract",
+   "how": "поле «Площа»: договір 111,2 · план БТІ 108,9 · ліцензія 111,2 · «БТІ відрізняється від договору», DPR 3",
+   "sha256": "c68c5c38407504f499d3aa6fb2ec11592813493e086c00aab5ddeb02f6e3d835"
+  },
+  {
+   "file": "public/videos/yurkontur/deadlines.png",
+   "source": "YURKONTUR_STAND#/deadlines",
+   "how": "вікна ≤ 30 / ≤ 90 / ≤ 180 днів и три первые строки (без «Зміна власника»), DPR 3",
+   "sha256": "d92b05e93cad37d36431e49fa6a5db3d4757bbdf222ef0e782d7ba3d4bc6f9e3"
+  },
+  {
+   "file": "public/videos/yurkontur/deviations.png",
+   "source": "YURKONTUR_STAND#/deviations/doc1",
+   "how": "Відхилення від еталона: фильтры и первые пункты «Типовий договір 2025 ↔ Договір аптеки», DPR 3",
+   "sha256": "25873e3d7eaed9fef0990bd56c6f75aa96d7254fc1896a318adec96f38e14c5c"
   }
  ]
 }

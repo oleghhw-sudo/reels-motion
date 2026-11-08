@@ -9,7 +9,7 @@
 //        даже если в DOM он разбит на строки/спаны или проявляется по частям.
 import React from 'react';
 
-export const READABLE_ATTR = { id: 'data-readable-id', text: 'data-readable-text' } as const;
+export const READABLE_ATTR = { id: 'data-readable-id', text: 'data-readable-text', voiced: 'data-readable-voiced' } as const;
 
 /**
  * Метка непрозрачного слоя, который может закрыть текст (вырезка героя и т.п.): ставится на <Img>.
@@ -18,8 +18,12 @@ export const READABLE_ATTR = { id: 'data-readable-id', text: 'data-readable-text
  */
 export const OCCLUDER_ATTR = { 'data-occluder': '' } as const;
 
-export const Readable: React.FC<{ id: string; text: string; children: React.ReactNode }> = ({ id, text, children }) => (
-  <span {...{ [READABLE_ATTR.id]: id, [READABLE_ATTR.text]: text }} style={{ display: 'contents' }}>
+/**
+ * voiced — текст, который одновременно звучит голосом (субтитры диктора): держится ровно столько, сколько звучит фраза,
+ * поэтому readcheck не проверяет для него время чтения (SHORT); остальные проверки (кадр, safe zones, размер) — как обычно.
+ */
+export const Readable: React.FC<{ id: string; text: string; voiced?: boolean; children: React.ReactNode }> = ({ id, text, voiced, children }) => (
+  <span {...{ [READABLE_ATTR.id]: id, [READABLE_ATTR.text]: text }} {...(voiced ? { [READABLE_ATTR.voiced]: '' } : {})} style={{ display: 'contents' }}>
     {children}
   </span>
 );

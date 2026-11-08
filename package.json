@@ -28,7 +28,7 @@
     "test:talking": "node --experimental-strip-types --no-warnings src/fx/talking/talking.test.ts",
     "audio:analyze": "node audio/analyze/run.mjs",
     "audio:selftest": "node audio/analyze/run.mjs --self-test",
-    "yur:prepare": "node videos/yurkontur/prepare-assets.mjs",
+    "yur:prepare": "node --env-file=.env videos/yurkontur/prepare-assets.mjs",
     "test:yur-jumps": "node --experimental-strip-types --no-warnings src/videos/yurkontur/jumps.test.ts"
   },
   "dependencies": {

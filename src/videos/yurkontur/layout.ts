@@ -5,7 +5,7 @@ import { clamp, expoOut, seg, smoother } from '../../motion/index.ts';
 import { camAt, ZONE, type Cam } from './camera.ts';
 import { along } from './geom.ts';
 import { CONTRACT_HUMAN_K, CONTRACT_ROUTE, NODES, type Node } from './schema.ts';
-import { stageMix, stageRectOf, STAGE_MOVE, type Rect } from './stage.ts';
+import { EV, stageMix, stageRectOf, STAGE_MOVE, type Rect } from './stage.ts';
 import { APPEAR, CONTRACT, FLASH, STAGES, block } from './timeline.ts';
 
 /** Мировой режим: название 20 px мира (≥ 32 px экрана при s ≥ 1.6), пояснение 18 px мира (≥ 24 px при s ≥ 1.34). */
@@ -100,11 +100,12 @@ export function cardLayout(t: number, opts: { move?: number; humanFillAt?: numbe
     const readA = L(worldRead, st ? st.shown : 0);
     const textA = L(fa.shownA, 1);
     const detailA = L(worldRead, smoother(seg(stOpen, 0.5, 0.9)));
-    const opacity = mix > 0 && !st ? 1 - mix : st ? L(1, st.shown) : 1;
+    // уходящая за кадр карточка гаснет быстрее, чем уезжает (shown³): текст не задерживается у края поля
+    const opacity = mix > 0 && !st ? 1 - mix : st ? L(1, st.shown ** 3) : 1;
     const v = visOf(n.id, t, true);
     const active = L(Math.max(v.fresh, ct.hot === n.id ? 1 : 0), Math.max(stOpen, v.fresh));
     const fillAt = opts.humanFillAt;
     const greenFill = n.id === 'human1' && fillAt !== undefined ? smoother(seg(t, fillAt, fillAt + 0.6)) * (1 - smoother(seg(t, block('b3b').from + 0.6, block('b3b').from + 1.4))) : 0;
-    return { n, rect, open: stOpen * m, labelPx, detailPx, textA, readA, detailA, opacity, active, conflict: n.id === 'human2' ? ct.conflict : 0, greenFill, z: stOpen > 0.1 ? 2 : 1, vis: Math.max(v.live, v.ghost * (0.5 + 0.5 * v.flash)) * v.dim * opacity, live: v.live };
+    return { n, rect, open: stOpen * m, labelPx, detailPx, textA, readA, detailA, opacity, active, conflict: n.id === 'human2' ? Math.max(ct.conflict, smoother(seg(t, EV.card.conflict, EV.card.conflict + 0.4)) * (1 - smoother(seg(t, EV.card.resolve, EV.card.resolve + 0.6)))) : 0, greenFill, z: stOpen > 0.1 ? 2 : 1, vis: Math.max(v.live, v.ghost * (0.5 + 0.5 * v.flash)) * v.dim * opacity, live: v.live };
   });
 }

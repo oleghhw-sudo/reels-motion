@@ -11,7 +11,9 @@ import { clamp, expoOut, lerp, seg, smoother } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import GEO from '../../../videos/yurkontur/stand-geometry.json';
 import { EV } from './stage.ts';
-import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, rgba } from './tokens.ts';
+import { APPEAR } from './timeline.ts';
+import { roundedPath } from './geom.ts';
+import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, mixBorder, rgba } from './tokens.ts';
 
 const A = (f: string) => staticFile(`videos/yurkontur/${f}`);
 /** Область содержимого панели (под заголовком). */
@@ -315,4 +317,237 @@ export const Block2Stand: React.FC<{ t: number }> = ({ t }) => {
   );
 };
 
-export const PANEL_CONTENT: Record<string, React.FC<{ t: number }>> = { scans: ScansPanel, ocr: OcrPanel, read2: Read2Panel, code: CodePanel, queue: QueuePanel };
+// ---------------------------------------------------------------- Розбір ланцюга: шкала «Чинна редакція на дату» (doc1)
+/** Три редакции: 05.12.2013 → 24 700, 01.03.2015 → 43 155, 01.09.2015 → 48 355 (NUMBERS_CHECK стр. 9) — кадры стенда. */
+const ChainPanel: React.FC<{ t: number }> = ({ t }) => {
+  const e = EV.chain;
+  const k = STAND_K;
+  const st = e.states;
+  const idx = t >= st[2] ? 2 : t >= st[1] ? 1 : 0;
+  const scaleH = GEO.chain[0].scale.h * k;
+  const vw = CONTENT.w / k;
+  const btnX = (i: number) => clamp(GEO.chain[i].scale.btn.x - vw * 0.42, 0, GEO.chain[i].scale.w - vw);
+  const keys: Key[] = [{ at: 0, x: btnX(0), y: 0 }, { at: st[1], x: btnX(1), y: 0, dur: 0.7 }, { at: st[2], x: btnX(2), y: 0, dur: 0.7 }];
+  const fade = (i: number) => (i === 0 ? 1 - smoother(seg(t, st[1], st[1] + 0.35)) : i === 1 ? smoother(seg(t, st[1], st[1] + 0.35)) * (1 - smoother(seg(t, st[2], st[2] + 0.35))) : smoother(seg(t, st[2], st[2] + 0.35)));
+  const rateTop = scaleH + 28;
+  const rateH = CONTENT.h - rateTop;
+  return (
+    <>
+      <div style={frameBox(CONTENT.w, scaleH, { left: 0, top: 0 })}>
+        {[0, 1, 2].map((i) =>
+          fade(i) > 0 ? (
+            <PanView key={i} t={t} src={A(`chain-scale-${i}.png`)} imgW={GEO.chain[i].scale.w} imgH={GEO.chain[i].scale.h} k={k} w={CONTENT.w} h={scaleH} keys={keys} opacity={fade(i)}>
+              {(S) => <Outline r={S(GEO.chain[i].scale.btn)} p={smoother(seg(t, st[i], st[i] + 0.4))} color={rgba(C.tight, 0.9)} a={i === idx ? 1 : 0} />}
+            </PanView>
+          ) : null,
+        )}
+      </div>
+      <div style={frameBox(CONTENT.w, rateH, { left: 0, top: rateTop })}>
+        {[0, 1, 2].map((i) =>
+          fade(i) > 0 ? (
+            <PanView key={i} t={t} src={A(`chain-rate-${i}.png`)} imgW={GEO.chain[i].rate.w} imgH={GEO.chain[i].rate.h} k={k} w={CONTENT.w} h={rateH} keys={[{ at: 0, x: 0, y: 0 }]} opacity={fade(i)}>
+              {(S) => <Outline r={S(GEO.chain[i].rate.value)} p={smoother(seg(t, Math.max(st[i], i === 2 ? e.rate : st[i]), Math.max(st[i], i === 2 ? e.rate : st[i]) + 0.4))} color={rgba(C.tight, 0.9)} width={3.5} />}
+            </PanView>
+          ) : null,
+        )}
+      </div>
+    </>
+  );
+};
+
+// ---------------------------------------------------------------- Картка чинних умов: 6 полей, нитки к документам, площа тричі
+/** Документы ланцюга doc1 (стенд: договір № 2 від 05.12.2013; допугоди № 1 — NUMBERS_CHECK стр. 9). */
+const DOCS = ['Договір суборенди · 05.12.2013', 'Допугода № 1 · 01.03.2015', 'Допугода № 1 · 01.09.2015'];
+/** Поле → документ-источник (стенд doc1: «Ставка чинна» — допугода від 01.09.2015 · стор. 6; остальные — договір). */
+const FIELDS: { name: string; doc: number }[] = [
+  { name: 'Ставка', doc: 2 },
+  { name: 'Діє до', doc: 0 },
+  { name: 'Останній день заяви', doc: 0 },
+  { name: 'Площа', doc: 0 },
+  { name: 'Комунальні', doc: 0 },
+  { name: 'Орендодавець', doc: 0 },
+];
+const CardPanel: React.FC<{ t: number }> = ({ t }) => {
+  const e = EV.card;
+  // поля — колонка слева, документы — колонка справа; нитки выходят из правого края поля и входят в левый край документа
+  // (ортогональные, по своим вертикальным дорожкам между колонками — не пересекают текст и карточки)
+  const field = (i: number) => ({ x: 0, y: i * 72, w: 340, h: 60 });
+  const doc = (j: number) => ({ x: 650, y: 20 + j * 150, w: 350, h: 100 });
+  const area = smoother(seg(t, e.area, e.area + 0.5));
+  const conflict = smoother(seg(t, e.conflict, e.conflict + 0.4)) * (1 - smoother(seg(t, e.resolve, e.resolve + 0.6)));
+  const resolved = smoother(seg(t, e.resolve, e.resolve + 0.6));
+  const ak = STAND_K;
+  const aH = GEO.area.h * ak;
+  const aW = CONTENT.w - 360;
+  const entries = [0, 0, 0, 0, 0, 0];
+  const entryIdx = FIELDS.map((f) => entries[f.doc]++);
+  return (
+    <>
+      {FIELDS.map((f, i) => {
+        const at = APPEAR[`field:${f.name}`] ?? Infinity;
+        const a = expoOut(seg(t, at, at + 0.4));
+        if (a <= 0) return null;
+        const r = field(i);
+        const isArea = f.name === 'Площа';
+        const b = isArea && conflict > 0 ? mixBorder(BORDER.normal, BORDER.conflict, conflict) : isArea && resolved > 0 ? mixBorder(BORDER.normal, BORDER.human, resolved) : BORDER.normal;
+        return (
+          <div key={f.name} style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h, opacity: a, transform: `translateX(${(1 - a) * -10}px)`, boxSizing: 'border-box', border: `${b.width}px solid ${bcolor(b)}`, borderRadius: 8, background: C.paper, display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px' }}>
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: C.tight, flex: 'none' }} />
+            <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: 26, fontWeight: 400, color: C.ink, whiteSpace: 'nowrap' }}>
+              <Readable id={`card.field.${i}`} text={f.name}>
+                {f.name}
+              </Readable>
+            </div>
+          </div>
+        );
+      })}
+      <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', opacity: 1 - area }} width={CONTENT.w} height={CONTENT.h}>
+        {FIELDS.map((f, i) => {
+          const at = APPEAR[`field:${f.name}`] ?? Infinity;
+          const p = smoother(seg(t, at + 0.2, at + 0.8));
+          if (p <= 0) return null;
+          const r = field(i);
+          const d = doc(f.doc);
+          const lane = 380 + i * 42;
+          const ey = d.y + 18 + entryIdx[i] * 13;
+          const pts: [number, number][] = [[r.x + r.w, r.y + r.h / 2], [lane, r.y + r.h / 2], [lane, ey], [d.x, ey]];
+          return <path key={f.name} d={roundedPath(pts, 10)} pathLength={1} fill="none" stroke={rgba(C.tight, 0.9)} strokeWidth={2.6} strokeDasharray="1" strokeDashoffset={1 - p} />;
+        })}
+      </svg>
+      {DOCS.map((name, j) => {
+        const a = expoOut(seg(t, e.docs + j * 0.15, e.docs + j * 0.15 + 0.4)) * (1 - area);
+        if (a <= 0) return null;
+        const r = doc(j);
+        return (
+          <div key={name} style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h, opacity: a, boxSizing: 'border-box', border: `${BORDER.normal.width}px solid ${bcolor(BORDER.normal)}`, borderRadius: 8, background: C.paper, display: 'flex', alignItems: 'center', padding: '0 18px' }}>
+            <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: 24, fontWeight: 400, color: C.ink, lineHeight: 1.25 }}>
+              <Readable id={`card.doc.${j}`} text={name}>
+                {name}
+              </Readable>
+            </div>
+          </div>
+        );
+      })}
+      {/* площа тричі (стенд ANC-0412): договір · план БТІ · ліцензія — «БТІ відрізняється від договору» → конфлікт */}
+      {area > 0 ? (
+        <div style={frameBox(aW, aH, { left: 360, top: 3 * 72 + 30, opacity: area, borderColor: bcolor(mixBorder(BORDER.normal, BORDER.conflict, conflict)) })}>
+          <PanView t={t} src={A('card-area.png')} imgW={GEO.area.w} imgH={GEO.area.h} k={ak} w={aW} h={aH} keys={[{ at: 0, x: GEO.area.bti.x - 330, y: 0 }, { at: e.conflict + 0.8, x: GEO.area.note.x + GEO.area.note.w + 24 - aW / ak, y: 0, dur: 0.8 }]}>
+            {(S) => (
+              <>
+                <Outline r={S(GEO.area.bti)} p={smoother(seg(t, e.conflict, e.conflict + 0.4))} color={resolved > 0.5 ? rgba(C.green, 0.9) : rgba(C.crit, 0.9)} width={3.5} />
+                <Outline r={S(GEO.area.note)} p={smoother(seg(t, e.conflict + 0.9, e.conflict + 1.3))} color={resolved > 0.5 ? rgba(C.green, 0.9) : rgba(C.crit, 0.9)} />
+              </>
+            )}
+          </PanView>
+        </div>
+      ) : null}
+    </>
+  );
+};
+
+// ---------------------------------------------------------------- Строки: вікна → «Останній день заяви» → «Автопролонгація»
+const DeadlinesPanel: React.FC<{ t: number }> = ({ t }) => {
+  const e = EV.deadlines;
+  const g = GEO.deadlines;
+  const k = STAND_K;
+  const vh = CONTENT.h / k;
+  const rowY = (i: number) => clamp(g.rows[i].y - 140, 0, g.h - vh);
+  const vw = CONTENT.w / k;
+  const windowsBox = { x: 40, y: 70, w: Math.min(vw - 80, 1300), h: 110 };
+  // проезд вправо: от «Подія» к «Дата · Залишилось · Кому» (крупно не помещаются вместе с «Аптека»)
+  const colX = clamp(g.cols.who.x + g.cols.who.w + 20 - vw, 0, g.w - vw);
+  // заголовок группы «≤ 30 днів» — над первой строкой
+  const groupBox = { x: 6, y: g.rows[0].y - 96, w: 620, h: 84 };
+  const rowBox = (i: number) => ({ x: 6, y: g.rows[i].y + 6, w: g.cols.who.x + g.cols.who.w - 12, h: g.rows[i].h - 12 });
+  return (
+    <div style={frameBox(CONTENT.w, CONTENT.h, { left: 0, top: 0 })}>
+      <PanView t={t} src={A('deadlines.png')} imgW={g.w} imgH={g.h} k={k} w={CONTENT.w} h={CONTENT.h} keys={[{ at: 0, x: 0, y: 0 }, { at: e.last - 0.5, x: 0, y: rowY(0), dur: 0.6 }, { at: e.last + 0.8, x: colX, y: rowY(0), dur: 0.7 }, { at: e.auto - 0.5, x: colX, y: rowY(2), dur: 0.6 }]}>
+        {(S) => (
+          <>
+            <Outline r={S(windowsBox)} p={smoother(seg(t, e.windows, e.windows + 0.5))} color={rgba(C.tight, 0.9)} a={1 - seg(t, e.group - 0.3, e.group)} />
+            <Outline r={S(groupBox)} p={smoother(seg(t, e.group, e.group + 0.5))} color={rgba(C.tight, 0.9)} a={1 - seg(t, e.last - 0.6, e.last - 0.3)} />
+            <Outline r={S(rowBox(0))} p={smoother(seg(t, e.last, e.last + 0.5))} color={rgba(C.tight, 0.9)} a={1 - seg(t, e.auto - 0.6, e.auto - 0.3)} />
+            <Outline r={S(rowBox(2))} p={smoother(seg(t, e.auto, e.auto + 0.5))} color={rgba(C.tight, 0.9)} />
+          </>
+        )}
+      </PanView>
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------- Відхилення від еталона: экран стенда → 4 твердження → вердикты
+/** Умовний приклад из ответа архитектора (п. 6, не з реального договору); вердикты — иллюстрация четырёх видов. */
+const CLAUSE = 'Орендар має право достроково розірвати договір в односторонньому порядку, письмово попередивши Орендодавця не пізніше ніж за 60 днів.';
+const STATEMENTS: { text: string; verdict: string; tone: 'crit' | 'green' | 'ochre' | 'muted' }[] = [
+  { text: 'Право ініціювати розірвання належить орендарю.', verdict: 'неприйнятно', tone: 'crit' },
+  { text: 'Розірвання можливе без згоди орендодавця.', verdict: 'рівнозначно', tone: 'green' },
+  { text: 'Попередження — письмове.', verdict: 'допустимо', tone: 'ochre' },
+  { text: 'Строк попередження — не менше 60 днів.', verdict: 'не знайдено', tone: 'muted' },
+];
+const DeviationsPanel: React.FC<{ t: number }> = ({ t }) => {
+  const e = EV.deviations;
+  const g = GEO.deviations;
+  const k = STAND_K;
+  const split = smoother(seg(t, e.split, e.split + 0.5));
+  const chip = g.chip;
+  const toneC = { crit: C.crit, green: C.green, ochre: C.tight, muted: C.muted } as const;
+  return (
+    <>
+      {split < 1 ? (
+        <div style={frameBox(CONTENT.w, CONTENT.h, { left: 0, top: 0, opacity: 1 - split })}>
+          <PanView t={t} src={A('deviations.png')} imgW={g.w} imgH={g.h} k={k} w={CONTENT.w} h={CONTENT.h} keys={[{ at: 0, x: 0, y: 260 }]}>
+            {(S) => (chip ? <Outline r={S(chip)} p={smoother(seg(t, e.stand + 0.1, e.stand + 0.5))} color={rgba(C.tight, 0.9)} /> : null)}
+          </PanView>
+        </div>
+      ) : null}
+      {split > 0 ? (
+        <div style={{ position: 'absolute', inset: 0, opacity: split }}>
+          {/* пункт — контекст (фактура): длинная цитата не читается за время блока, читаются твердження */}
+          <div {...TEXTURE_ATTR} style={{ position: 'absolute', left: 0, top: 0, width: CONTENT.w, fontFamily: TYPE.detail.fontFamily, fontSize: 24, lineHeight: 1.3, color: C.muted }}>
+            «{CLAUSE}»
+          </div>
+          <Caption id="dev.note" text="умовний приклад" x={CONTENT.w - 190} y={CONTENT.h - 34} />
+          {STATEMENTS.map((s, i) => {
+            const at = e.split + 0.3 + i * 0.35;
+            const a = expoOut(seg(t, at, at + 0.4));
+            const vAt = e.verdicts + i * 0.2;
+            const v = expoOut(seg(t, vAt, vAt + 0.35));
+            const crit = i === 0 ? smoother(seg(t, e.critical, e.critical + 0.4)) : 0;
+            // остальные строки чуть отступают (0.92 — выше порога читаемости 0.9): критична умова первой
+            const dim = i === 0 ? 1 : 1 - 0.08 * smoother(seg(t, e.critical, e.critical + 0.4));
+            const b = i === 0 ? mixBorder(BORDER.normal, BORDER.conflict, crit) : BORDER.normal;
+            return (
+              <div key={i} style={{ position: 'absolute', left: 0, top: 96 + i * 82, width: CONTENT.w, height: 70, overflow: 'hidden', opacity: a * dim, transform: `translateY(${(1 - a) * 10}px)`, boxSizing: 'border-box', border: `${b.width}px solid ${bcolor(b)}`, borderRadius: 8, background: C.paper, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 18px' }}>
+                {/* поиск твердження по всему договору: охровая полоса проходит по строке */}
+                <div style={{ position: 'absolute', left: 0, bottom: 0, height: 3, width: `${smoother(seg(t, e.search + i * 0.3, e.search + i * 0.3 + 0.5)) * 100}%`, background: C.tight, opacity: 1 - smoother(seg(t, e.search + i * 0.3 + 0.6, e.search + i * 0.3 + 1.0)) }} />
+                <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: 26, fontWeight: 400, color: C.ink }}>
+                  <Readable id={`dev.s.${i}`} text={s.text}>
+                    {s.text}
+                  </Readable>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                  {crit > 0 ? (
+                    <div style={{ fontFamily: TYPE.detail.fontFamily, fontSize: 24, color: C.crit, opacity: crit, whiteSpace: 'nowrap' }}>
+                      <Readable id="dev.critical" text="критична умова">
+                        критична умова
+                      </Readable>
+                    </div>
+                  ) : null}
+                  {v > 0 ? (
+                    <div style={{ opacity: v, transform: `scale(${0.85 + 0.15 * v})`, fontFamily: TYPE.detail.fontFamily, fontSize: 24, color: toneC[s.tone], border: `2px solid ${rgba(toneC[s.tone], 0.8)}`, borderRadius: 18, padding: '2px 14px', whiteSpace: 'nowrap' }}>
+                      <Readable id={`dev.v.${i}`} text={s.verdict}>
+                        {s.verdict}
+                      </Readable>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </>
+  );
+};
+
+export const PANEL_CONTENT: Record<string, React.FC<{ t: number }>> = { scans: ScansPanel, ocr: OcrPanel, read2: Read2Panel, code: CodePanel, queue: QueuePanel, chain: ChainPanel, card: CardPanel, deadlines: DeadlinesPanel, deviations: DeviationsPanel };

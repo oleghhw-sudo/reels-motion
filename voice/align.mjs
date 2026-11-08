@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { diffWords, tokenize } from './metrics.mjs';
+import { spokenOf } from './pronounce.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 
@@ -56,7 +57,14 @@ const SPELLING = { й: 'і', у: 'в' };
 
 /** Слово (уже tokenize) → канонические подтокены: «24» → [двадцять, чотири], «дві» → [два], «ґанок» → [ганок]. */
 export function canon(token) {
-  const t = token.toLowerCase().replace(/[ʼ']/g, '’').replace(/ґ/g, 'г');
+  // слово из словаря произношения (ALI → «Алі»): сравниваем произнесённое, отображается слово сценария
+  const spoken = spokenOf(token);
+  if (spoken) return tokenize(spoken).flatMap((w) => canonPlain(w));
+  return canonPlain(token);
+}
+function canonPlain(token) {
+  // знак ударения U+0301 (раздел stress словаря) на сравнение не влияет
+  const t = token.normalize('NFC').replace(/\u0301/g, '').toLowerCase().replace(/[ʼ']/g, '’').replace(/ґ/g, 'г');
   if (/^\d+$/.test(t)) return numberToUk(Number(t)) ?? [t];
   if (SPELLING[t]) return [SPELLING[t]];
   const stem = NUM_STEMS.find(([s]) => t.startsWith(s.replace(/ґ/g, 'г')));

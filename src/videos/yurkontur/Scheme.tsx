@@ -10,7 +10,7 @@ import { clamp, expoOut, seg, smoother, type Pt } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import { camAt, ZONE, type Cam } from './camera.ts';
 import { Field, type Track } from './Field.tsx';
-import { along } from './geom.ts';
+import { along, roundedPath } from './geom.ts';
 import { cardLayout, contractAt, frameAmt, visOf, type CardLayout } from './layout.ts';
 import { CARD_FIELDS, CHIP, CONTRACT_ROUTE, EDGES, LOOP_CHIPS, LOOP_PTS, LOOP_ROLLBACK, LOOP_STEPS, NODES } from './schema.ts';
 import { CH_IN, CH_OUT, EV, STAGE_LIST, stageAt, stageMix, windowStart } from './stage.ts';
@@ -22,24 +22,6 @@ import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, fitLetterSpacing, mixBorder } fr
 const CHIP_READ_S = 24 / CHIP.font;
 
 // ---------------------------------------------------------------- геометрия трасс
-/** Ортогональная ломаная → SVG d со скруглёнными углами радиуса r. */
-export function roundedPath(P: readonly Pt[], r = 14): string {
-  if (P.length < 2) return '';
-  let d = `M${P[0][0]},${P[0][1]}`;
-  for (let i = 1; i < P.length - 1; i++) {
-    const [ax, ay] = P[i - 1];
-    const [bx, by] = P[i];
-    const [cx, cy] = P[i + 1];
-    const l1 = Math.hypot(bx - ax, by - ay);
-    const l2 = Math.hypot(cx - bx, cy - by);
-    const rr = Math.min(r, l1 / 2, l2 / 2);
-    const p1: Pt = [bx - ((bx - ax) / l1) * rr, by - ((by - ay) / l1) * rr];
-    const p2: Pt = [bx + ((cx - bx) / l2) * rr, by + ((cy - by) / l2) * rr];
-    d += ` L${p1[0]},${p1[1]} Q${bx},${by} ${p2[0]},${p2[1]}`;
-  }
-  const last = P[P.length - 1];
-  return `${d} L${last[0]},${last[1]}`;
-}
 /** Часть ломаной от доли a до доли b длины. */
 export function subPolyline(P: readonly Pt[], a: number, b: number): Pt[] {
   if (b <= a) return [];
@@ -103,7 +85,7 @@ const Card: React.FC<{ c: CardLayout; t: number }> = ({ c, t }) => {
               n.label
             )}
           </div>
-          {detailA > 0.01 && !fields ? (
+          {detailA > 0.01 && (!fields || open > 0.3) ? (
             <div style={{ marginTop: 6, fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: detailPx, lineHeight: TYPE.detail.lineHeight, color: C.muted, opacity: detailA * textA }}>
               {detailA > 0.5 ? (
                 <Readable id={`node.${n.id}.detail`} text={n.detail}>
@@ -114,7 +96,7 @@ const Card: React.FC<{ c: CardLayout; t: number }> = ({ c, t }) => {
               )}
             </div>
           ) : null}
-          {fields && detailA > 0.01 ? (
+          {fields && detailA > 0.01 && open < 0.3 ? (
             <div style={{ marginTop: 8, opacity: detailA * textA }}>
               {CARD_FIELDS.map((f) => {
                 const at = APPEAR[`field:${f}`];
@@ -178,23 +160,32 @@ const LoopStation: React.FC<{ i: number; t: number; cam: Cam }> = ({ i, t, cam }
 // ---------------------------------------------------------------- чипы-значения на каналах сцены панелей
 /** Значения — только сверенные числа (NUMBERS_CHECK стр. 9: 24 700 → 43 155 → 48 355, даты 01.03.2015 / 01.09.2015;
  * стр. 18: 7 450,00 грн) и дата договора doc1 05.12.2013 (стенд, таблица экранов задачи). */
-const STAGE_VALUES: Record<string, { in?: string; out?: string[] }> = {
-  ocr: { in: '05.12.2013', out: ['7 450,00 грн'] },
-  read2: { in: '7 450,00 грн', out: ['24 700,00 грн', '01.03.2015'] },
-  code: { in: '24 700,00 грн', out: ['43 155,00 грн'] },
-  queue: { in: '43 155,00 грн', out: ['48 355,00 грн'] },
+type ChipDef = { text: string; at?: number; tone?: 'ochre' | 'crit' | 'green' };
+const STAGE_VALUES: Record<string, { in?: ChipDef; out?: ChipDef[] }> = {
+  ocr: { in: { text: '05.12.2013' }, out: [{ text: '7 450,00 грн' }] },
+  read2: { in: { text: '7 450,00 грн' }, out: [{ text: '24 700,00 грн' }, { text: '01.03.2015' }] },
+  code: { in: { text: '24 700,00 грн' }, out: [{ text: '43 155,00 грн' }] },
+  queue: { in: { text: '43 155,00 грн' }, out: [{ text: '48 355,00 грн' }] },
+  // 3б–3в: ставка ланцюга идёт в картку; конфлікт площі — красным к «Людина №2» на словах о конфликте
+  chain: { in: { text: '24 700,00 грн' }, out: [{ text: '48 355,00 грн' }] },
+  card: { in: { text: '48 355,00 грн' }, out: [{ text: 'площа · конфлікт', at: EV.card.conflict + 0.2, tone: 'crit' }] },
+  deadlines: { in: { text: '20.11.2028' } },
+  deviations: { out: [{ text: 'вердикт', at: EV.deviations.lawyer - 0.6 }] },
 };
 const CHIP_TRAVEL = 1.3;
-function stageChips(t: number): { text: string; pts: Pt[]; k: number }[] {
+function stageChips(t: number): { text: string; pts: Pt[]; k: number; tone?: ChipDef['tone'] }[] {
   const { cur } = stageAt(t);
   const vals = STAGE_VALUES[cur.center];
   if (!vals) return [];
-  const next = STAGE_LIST[STAGE_LIST.indexOf(cur) + 1]?.from ?? block('b3b').from + 0.6;
-  const out: { text: string; pts: Pt[]; k: number }[] = [];
-  if (vals.in) out.push({ text: vals.in, pts: CH_IN, k: seg(t, cur.from + 0.6, cur.from + 0.6 + CHIP_TRAVEL) });
+  const next = STAGE_LIST[STAGE_LIST.indexOf(cur) + 1]?.from ?? block('b3c').to - 0.4;
+  const out: { text: string; pts: Pt[]; k: number; tone?: ChipDef['tone'] }[] = [];
+  if (vals.in) {
+    const at = vals.in.at ?? cur.from + 0.6;
+    out.push({ text: vals.in.text, pts: CH_IN, k: seg(t, at, at + CHIP_TRAVEL), tone: vals.in.tone });
+  }
   (vals.out ?? []).forEach((v, i) => {
-    const at = next - CHIP_TRAVEL - 0.3 - (vals.out!.length - 1 - i) * 1.1;
-    out.push({ text: v, pts: CH_OUT, k: seg(t, at, at + CHIP_TRAVEL) });
+    const at = v.at ?? next - CHIP_TRAVEL - 0.3 - (vals.out!.length - 1 - i) * 1.1;
+    out.push({ text: v.text, pts: CH_OUT, k: seg(t, at, at + CHIP_TRAVEL), tone: v.tone });
   });
   return out.filter((c) => c.k > 0 && c.k < 1);
 }
@@ -203,9 +194,15 @@ function stageChips(t: number): { text: string; pts: Pt[]; k: number }[] {
 const TITLE_FROM: Record<string, number> = {
   b2: FLASH.ghostBy + 0.3,
   b3a: APPEAR.read2,
-  b3b: APPEAR.card,
+  b3b: APPEAR.chain + 0.6,
   b3c: APPEAR.deviations,
   b4: block('b4').from + 0.8,
+};
+
+/** Подпись под заголовком сцены (Inter 26): 3а — оговорка к числам; 3б — цепочка ставки (NUMBERS_CHECK стр. 9). */
+const TITLE_NOTE: Record<string, string> = {
+  b3a: 'спостереження на пілоті',
+  b3b: '24 700 → 43 155 → 48 355 грн · три угоди «№ 1»',
 };
 
 export const Scheme: React.FC<{ t: number }> = ({ t }) => {
@@ -293,7 +290,7 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
       {mix > 0.5
         ? stageChips(t).map((ch, i) => {
             const p = along(ch.pts, smoother(ch.k));
-            return <ValueChip key={`${ch.text}-${i}`} text={ch.text} x={p[0]} y={p[1]} a={mix * seg(ch.k, 0.1, 0.2) * (1 - seg(ch.k, 0.85, 0.95))} />;
+            return <ValueChip key={`${ch.text}-${i}`} text={ch.text} x={p[0]} y={p[1]} tone={ch.tone} a={mix * seg(ch.k, 0.1, 0.2) * (1 - seg(ch.k, 0.85, 0.95))} />;
           })
         : null}
       {/* карточки узлов (панель — поверх соседей) */}
@@ -331,10 +328,10 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
               {b.title}
             </Readable>
           </div>
-          {b.id === 'b3a' ? (
+          {TITLE_NOTE[b.id] ? (
             <div style={{ fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: 26, color: C.muted, marginTop: 2 }}>
-              <Readable id="title.b3a.note" text="спостереження на пілоті">
-                спостереження на пілоті
+              <Readable id={`title.${b.id}.note`} text={TITLE_NOTE[b.id]}>
+                {TITLE_NOTE[b.id]}
               </Readable>
             </div>
           ) : null}
@@ -345,7 +342,7 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
       <div style={{ position: 'absolute', left: 0, top: ZONE.subs.y0 - 40, width: 1920, height: 1080 - ZONE.subs.y0 + 40, background: 'linear-gradient(rgba(249,243,232,0) 0%, rgba(249,243,232,0.96) 35%, rgba(249,243,232,0.98) 100%)' }} />
       {subtitle ? (
         <div style={{ position: 'absolute', left: 960, top: ZONE.subs.y0 + 4, width: 1560, transform: 'translateX(-50%)', textAlign: 'center', ...TYPE.voice }}>
-          <Readable id={`sub.${b.id}.${subtitle.slice(0, 24)}`} text={subtitle}>
+          <Readable id={`sub.${b.id}.${subtitle.slice(0, 24)}`} text={subtitle} voiced>
             {subtitle}
           </Readable>
         </div>
