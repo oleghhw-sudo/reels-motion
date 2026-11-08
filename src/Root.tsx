@@ -14,7 +14,7 @@ import { FX_LAB_FPS, FX_LAB_FRAMES, FxLab24 } from './fx/lab/FxLab24.tsx';
 import { AGENT_FPS, AGENT_FRAMES, AgentTerminal } from './videos/agent-terminal/AgentTerminal.tsx';
 import { MATTE_LAB_FPS, MatteLab, matteLabMetadata, matteLabSchema } from './matte/MatteLab.tsx';
 import { PILOT_PLAN, TALKING_FPS, TalkingFxLab, talkingLabMetadata, talkingLabSchema } from './fx/talking/TalkingFxLab.tsx';
-import { HUD_TEST_FPS, HUD_TEST_FRAMES, HudTest, hudTestSchema } from './videos/yurkontur/HudTest.tsx';
+import { ANIMATIC_FPS, SCHEMA_FPS, SCHEMA_FRAMES, YurkonturAnimatic, YurkonturSchema, animaticMetadata, animaticSchema } from './videos/yurkontur/YurkonturSchema.tsx';
 
 const FPS = 30;
 
@@ -87,7 +87,8 @@ export const RemotionRoot: React.FC = () => (
     <Composition id="MatteLab" component={MatteLab} schema={matteLabSchema} defaultProps={{ id: 'smoke-59' }} calculateMetadata={matteLabMetadata} width={1080} height={1920} fps={MATTE_LAB_FPS} durationInFrames={150} />
     {/* лаборатория эффектов говорящей головы (задача 026-А): план videos/talking-fx-pilot/talking-fx.yaml */}
     <Composition id="TalkingFxLab" component={TalkingFxLab} schema={talkingLabSchema} defaultProps={{ matteId: PILOT_PLAN.matteId, plan: PILOT_PLAN }} calculateMetadata={talkingLabMetadata} width={1080} height={1920} fps={TALKING_FPS} durationInFrames={282} />
-    {/* задача 031, шаг 0: тест рендера режима hud (5 с блока 5), 1920×1080@60; density — плотность поля */}
-    <Composition id="YurkonturHudTest" component={HudTest} schema={hudTestSchema} defaultProps={{ density: 1 }} width={1920} height={1080} fps={HUD_TEST_FPS} durationInFrames={HUD_TEST_FRAMES} />
+    {/* задача 031: схема «Юридичний контур» на всю длину (150 с, 1920×1080@60) и черновой аниматик 960×540@30 */}
+    <Composition id="YurkonturSchema" component={YurkonturSchema} width={1920} height={1080} fps={SCHEMA_FPS} durationInFrames={SCHEMA_FRAMES} />
+    <Composition id="YurkonturAnimatic" component={YurkonturAnimatic} schema={animaticSchema} defaultProps={{ fromSec: 20, toSec: 53 }} calculateMetadata={animaticMetadata} width={960} height={540} fps={ANIMATIC_FPS} durationInFrames={990} />
   </>
 );
