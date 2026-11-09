@@ -1,6 +1,6 @@
 {
  "$comment": "Производное: npm run yur:prepare (videos/yurkontur/prepare-assets.mjs). Ассеты в public/videos/yurkontur (gitignore).",
- "generatedAt": "2026-11-08T23:30:30.216Z",
+ "generatedAt": "2026-11-09T04:20:07.610Z",
  "items": [
   {
    "file": "public/videos/yurkontur/s5_crop_1.png",
@@ -115,6 +115,24 @@
    "source": "YURKONTUR_STAND#/card/ANC-0412/plan (встроенная картинка 2400×1197)",
    "how": "crop=648:862:896:110 → PNG (без пережатия)",
    "sha256": "0bb0067dc362a27fd5a7aaf8b3dc09bcb720817c1f1e2318308ca045c120e62d"
+  },
+  {
+   "file": "public/videos/yurkontur/stand-queue-fix.png",
+   "source": "YURKONTUR_STAND#/queue/T-doc3-rent → «Виправити» → причина «не те місце того ж поняття»",
+   "how": "карточка задачи в режиме исправления, примечание пустое, DPR 3",
+   "sha256": "9ddc13d920926b50bb81a0683faecc0b513a4150c781dd0d9acb14d130c0a423"
+  },
+  {
+   "file": "public/videos/yurkontur/contracts-head.png",
+   "source": "YURKONTUR_STAND#/contracts",
+   "how": "заголовок и подзаголовок страницы реестра (без KPI), DPR 3",
+   "sha256": "6d44571ec14e45f6c234defe76c8d62f3d1cfab46c78e458b7edeb13bbcea46e"
+  },
+  {
+   "file": "public/videos/yurkontur/contracts-table.png",
+   "source": "YURKONTUR_STAND#/contracts",
+   "how": "таблица реестра от колонки «ТИП · СТАН» вправо (без колонок «АПТЕКА», «ОРЕНДОДАВЕЦЬ»), DPR 3",
+   "sha256": "c77c7a4bcbdebba86ac50c50836efd78a67fb364efc348387ffd546a68228792"
   },
   {
    "file": "public/videos/yurkontur/chain-scale-0.png",

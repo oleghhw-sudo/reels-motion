@@ -1,0 +1,106 @@
+{
+ "$comment": "Одобренная озвучка (решение Олега 09.11). Файлы вне репо, по path. Пишет videos/yurkontur/voice-approved.mjs --approve (по действию человека); проверяет он же перед рендером и calculateMetadata композиций (full.wav). Не перезаписывать (гейт 5).",
+ "version": "v1",
+ "date": "2026-11-09",
+ "path": "~/Projects/reels-motion-media/yurkontur/voice/2026-11-09_v1",
+ "voice": "Gero",
+ "model": "gemini-3.8-flash-tts",
+ "durationSec": 159.005,
+ "files": [
+  {
+   "name": "full.wav",
+   "sha256": "acdfd6161eb479b42d2b1e6d17c7901af635dcbec259bdbb739ff68f527e19e7",
+   "bytes": 15264558
+  },
+  {
+   "name": "words.json",
+   "sha256": "0997b039ff4fd8494fa112fd047bf1733d37f208abcf27610bb74b4c1843de37",
+   "bytes": 37346
+  },
+  {
+   "name": "fragments/b1.raw.wav",
+   "sha256": "56ec60dd14cfd904baa551eee27194bffb290cf9d140943cd80dbabd90e8e001",
+   "bytes": 1931598
+  },
+  {
+   "name": "fragments/b1.wav",
+   "sha256": "7f00e71a65b8ab845dcbe8fc5a40463b5eb0a8acae5bc29ab47a5680edc2f0b2",
+   "bytes": 1889396
+  },
+  {
+   "name": "fragments/b2.raw.wav",
+   "sha256": "aa1190b545a546d0a6a81afe2f508df2e92a6e9fea3019721a2cebb97fcdc4af",
+   "bytes": 1056078
+  },
+  {
+   "name": "fragments/b2.wav",
+   "sha256": "bfebf90359afe07f2e24e35c941bf753ad25f23c2da4c651ec09f3e0b2392f16",
+   "bytes": 999764
+  },
+  {
+   "name": "fragments/b3a.raw.wav",
+   "sha256": "a76f2a7080e83f5f849c7db09dc39b49d89741ee9a91bbb1904ec281b41413c1",
+   "bytes": 2273358
+  },
+  {
+   "name": "fragments/b3a.wav",
+   "sha256": "c41febc812b9256bc7259e0f9e12bfa54b2dc659131fba32a8c2318147b11d80",
+   "bytes": 2234276
+  },
+  {
+   "name": "fragments/b3b.raw.wav",
+   "sha256": "a37489d105347b283205817b9fbb0113a1101b36fb3a893586875c630dc02149",
+   "bytes": 1993038
+  },
+  {
+   "name": "fragments/b3b.wav",
+   "sha256": "d8f99776ebc6ce729b370e7823ef3fcb420286b986afedcfc47ee852e5a4b8b4",
+   "bytes": 1953016
+  },
+  {
+   "name": "fragments/b3c.raw.wav",
+   "sha256": "7591b216d58cafa917e8700d21d48b4a08238b4d323249fc04f824632f490ee6",
+   "bytes": 2073678
+  },
+  {
+   "name": "fragments/b3c.wav",
+   "sha256": "8f3915a2259d066758db71b29d7e889d18088947fd7c05f872aaed902a31055a",
+   "bytes": 2028116
+  },
+  {
+   "name": "fragments/b4.raw.wav",
+   "sha256": "382683688c4e02eab0fbffa77be9d38b7f2d18d4bf8980f90680b27e1882d4f8",
+   "bytes": 2880078
+  },
+  {
+   "name": "fragments/b4.wav",
+   "sha256": "fe96fae9ef222cb5cb7fd078b0fbe407bc7931d102514830e59b871b5664df0f",
+   "bytes": 2842090
+  },
+  {
+   "name": "fragments/b5.raw.wav",
+   "sha256": "e4309d23993d3c060f0d4bb09ff611b9f412a81ffdb80d0d3827314286d358d6",
+   "bytes": 1194318
+  },
+  {
+   "name": "fragments/b5.wav",
+   "sha256": "f5fe203c725c8c0f806e089a066b9ff737b4a810e94712dc32652e7172aec4e8",
+   "bytes": 1149044
+  },
+  {
+   "name": "fragments/b6.raw.wav",
+   "sha256": "ac4f5a1ab98bd40c39141298ba80094b23f5988f1fcd7153b990c9bec48fb164",
+   "bytes": 829518
+  },
+  {
+   "name": "fragments/b6.wav",
+   "sha256": "00b2c65aede1646e7c4422d46c432efa3e132043fac4eff112165d9e78d6cfd9",
+   "bytes": 787010
+  },
+  {
+   "name": "fragments/fragments.json",
+   "sha256": "954cd2944f4bb91ee46f107fc7cd83ff14bb16ee5732f2a492f6ca5c23616d78",
+   "bytes": 5975
+  }
+ ]
+}

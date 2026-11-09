@@ -1,10 +1,10 @@
 // Раскладка карточек узлов в экранных координатах — одна чистая функция времени для кадра (Scheme.tsx) и для проверки
 // скачков (jumps.test.ts). Мировой режим (камера) и сцена панелей смешиваются непрерывно; всё, что меняет вид карточки
 // (позиция, размер, раскрытость, размер названия, видимость текста, обводка), — непрерывная функция t, без порогов.
-import { clamp, expoOut, seg, smoother } from '../../motion/index.ts';
+import { clamp, expoOut, lerp, seg, smoother } from '../../motion/index.ts';
 import { camAt, ZONE, type Cam } from './camera.ts';
 import { along } from './geom.ts';
-import { CONTRACT_HUMAN_K, CONTRACT_ROUTE, NODES, type Node } from './schema.ts';
+import { CONTRACT_CARD_K, CONTRACT_HUMAN_K, CONTRACT_ROUTE, NODES, type Node } from './schema.ts';
 import { EV, stageMix, stageRectOf, STAGE_MOVE, type Rect } from './stage.ts';
 import { APPEAR, CONTRACT, DEAD, FLASH, STAGES, block } from './timeline.ts';
 
@@ -72,10 +72,18 @@ export type CardLayout = {
 /** Договор блока 5 (бусина на маршруте) — для подсветки узлов и конфликта. */
 export function contractAt(t: number): { on: boolean; k: number; pos: [number, number]; conflict: number; hot: string | null } {
   const b5 = t >= block('b5').from && t < block('b6').from;
-  const k = smoother(seg(t, CONTRACT.from, CONTRACT.to));
+  // по участкам: скан → картка (на «з доказом на скані»), стоянка в картке, картка → Людина №2, решение, назад у картку
+  const k =
+    t < CONTRACT.card
+      ? CONTRACT_CARD_K * smoother(seg(t, CONTRACT.from, CONTRACT.card))
+      : t < CONTRACT.leave
+        ? CONTRACT_CARD_K
+        : t < CONTRACT.decide
+          ? lerp(CONTRACT_CARD_K, CONTRACT_HUMAN_K, smoother(seg(t, CONTRACT.leave, CONTRACT.human)))
+          : lerp(CONTRACT_HUMAN_K, 1, smoother(seg(t, CONTRACT.decide, CONTRACT.to)));
   const on = b5 && t >= CONTRACT.from;
   const pos = along(CONTRACT_ROUTE, k);
-  const conflict = on ? clamp(1 - Math.abs(k - CONTRACT_HUMAN_K) / 0.05) : 0;
+  const conflict = on ? clamp(1 - Math.abs(k - CONTRACT_HUMAN_K) / 0.05) * (1 - smoother(seg(t, CONTRACT.decide, CONTRACT.decide + 0.4))) : 0;
   const hot = on ? NODES.find((n) => Math.abs(pos[0] - n.x) <= n.w / 2 && Math.abs(pos[1] - n.y) <= n.h / 2)?.id ?? null : null;
   return { on, k, pos, conflict, hot };
 }
@@ -104,9 +112,18 @@ export function cardLayout(t: number, opts: { move?: number; humanFillAt?: numbe
     // уходящая за кадр карточка гаснет быстрее, чем уезжает (shown³): текст не задерживается у края поля
     const opacity = mix > 0 && !st ? 1 - mix : st ? L(1, st.shown ** 3) : 1;
     const v = visOf(n.id, t, true);
-    const active = L(Math.max(v.fresh, ct.hot === n.id ? 1 : 0), Math.max(stOpen, v.fresh));
+    // блок 5: подсветка узла, через который идёт бусина договора, — плавно по расстоянию до узла (не рывком)
+    const onA = smoother(seg(t, CONTRACT.from, CONTRACT.from + 0.4)) * (1 - smoother(seg(t, block('b6').from - 0.5, block('b6').from)));
+    const hot = ct.on ? onA * smoother(clamp(1 - Math.hypot(Math.max(0, Math.abs(ct.pos[0] - n.x) - n.w / 2), Math.max(0, Math.abs(ct.pos[1] - n.y) - n.h / 2)) / 260)) : 0;
+    const active = L(Math.max(v.fresh, hot), Math.max(stOpen, v.fresh));
     const fillAt = opts.humanFillAt;
-    const greenFill = n.id === 'human1' && fillAt !== undefined ? smoother(seg(t, fillAt, fillAt + 0.6)) * (1 - smoother(seg(t, block('b3b').from + 0.6, block('b3b').from + 1.4))) : 0;
+    const greenFill =
+      n.id === 'human1' && fillAt !== undefined
+        ? smoother(seg(t, fillAt, fillAt + 0.6)) * (1 - smoother(seg(t, block('b3b').from + 0.6, block('b3b').from + 1.4)))
+        : // блок 5: «вирішує завжди людина» — Людина №2 решает конфликт (заливка), договор уходит назад у картку
+          n.id === 'human2'
+          ? smoother(seg(t, CONTRACT.decide - 0.1, CONTRACT.decide + 0.4)) * (1 - smoother(seg(t, block('b6').from - 0.2, block('b6').from + 0.6)))
+          : 0;
     return { n, rect, open: stOpen * m, labelPx, detailPx, textA, readA, detailA, opacity, active, conflict: n.id === 'human2' ? Math.max(ct.conflict, smoother(seg(t, EV.card.conflict, EV.card.conflict + 0.4)) * (1 - smoother(seg(t, EV.card.resolve, EV.card.resolve + 0.6)))) : 0, greenFill, z: stOpen > 0.1 ? 2 : 1, vis: Math.max(v.live, v.ghost * (0.5 + 0.5 * v.flash)) * v.dim * opacity, live: v.live };
   });
 }

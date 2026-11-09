@@ -10,23 +10,24 @@ import { Img, staticFile } from 'remotion';
 import { clamp, expoOut, lerp, seg, smoother } from '../../motion/index.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import GEO from '../../../videos/yurkontur/stand-geometry.json';
+export { GEO };
 import { EV } from './stage.ts';
 import { APPEAR, DEAD } from './timeline.ts';
 import { roundedPath } from './geom.ts';
 import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, mixBorder, rgba } from './tokens.ts';
 
-const A = (f: string) => staticFile(`videos/yurkontur/${f}`);
+export const A = (f: string) => staticFile(`videos/yurkontur/${f}`);
 /** Область содержимого панели (под заголовком). */
 export const CONTENT = { x: 28, y: 116, w: 1000, h: 476 } as const;
 /** Масштаб кадров стенда: 2.1 CSS-пикселя на кадре на 1 CSS px (мелкий текст 9.5 px → 20 px); картинки сняты с DPR 3. */
-const STAND_K = 2.1 / GEO.dpr;
+export const STAND_K = 2.1 / GEO.dpr;
 
-type R = { x: number; y: number; w: number; h: number };
-type Key = { at: number; x: number; y: number; dur?: number };
+export type R = { x: number; y: number; w: number; h: number };
+export type Key = { at: number; x: number; y: number; dur?: number };
 
 /** Проезд камеры по крупному фрагменту: картинка imgW×imgH в масштабе k (px кадра на px картинки) в окне w×h. */
 /** src не задан — только слой накладок с той же камерой (над несколькими картинками, сменяющимися растворением). */
-const PanView: React.FC<{ t: number; src?: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; overscanY?: boolean; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, overscanY = false, children }) => {
+export const PanView: React.FC<{ t: number; src?: string; imgW: number; imgH: number; k: number; w: number; h: number; keys: Key[]; opacity?: number; overscanY?: boolean; children?: (toScreen: (r: R) => R) => React.ReactNode }> = ({ t, src, imgW, imgH, k, w, h, keys, opacity = 1, overscanY = false, children }) => {
   const vw = w / k;
   const vh = h / k;
   const cx = (x: number) => (imgW <= vw ? (imgW - vw) / 2 : clamp(x, 0, imgW - vw));
@@ -67,13 +68,13 @@ const Caption: React.FC<{ id: string; text: string; x: number; y: number; a?: nu
 );
 
 /** Обводка, прорисовываемая по периметру (pathLength = 1). */
-const Outline: React.FC<{ r: R; p: number; color: string; width?: number; a?: number }> = ({ r, p, color, width = 3, a = 1 }) =>
+export const Outline: React.FC<{ r: R; p: number; color: string; width?: number; a?: number }> = ({ r, p, color, width = 3, a = 1 }) =>
   p <= 0 || a <= 0 ? null : (
     <svg style={{ position: 'absolute', left: r.x - 6, top: r.y - 6, overflow: 'visible', opacity: a }} width={r.w + 12} height={r.h + 12}>
       <rect x={1} y={1} width={r.w + 10} height={r.h + 10} rx={6} pathLength={1} fill="none" stroke={color} strokeWidth={width} strokeDasharray="1" strokeDashoffset={1 - p} />
     </svg>
   );
-const frameBox = (w: number, h: number, extra: React.CSSProperties = {}): React.CSSProperties => ({ position: 'absolute', width: w, height: h, border: `${BORDER.normal.width}px solid ${bcolor(BORDER.normal)}`, borderRadius: 6, overflow: 'hidden', background: C.paper, ...extra });
+export const frameBox = (w: number, h: number, extra: React.CSSProperties = {}): React.CSSProperties => ({ position: 'absolute', width: w, height: h, border: `${BORDER.normal.width}px solid ${bcolor(BORDER.normal)}`, borderRadius: 6, overflow: 'hidden', background: C.paper, ...extra });
 
 // ---------------------------------------------------------------- Блок 1: старая база (legacy_1…4) плоско
 // Скрины учётной системы подаются как есть, без HUD-обработки: окно 1688×660 в рабочей зоне, масштаб 1:1 (шрифт ≈ 21 px
@@ -632,8 +633,12 @@ const DeviationsPanel: React.FC<{ t: number }> = ({ t }) => {
   // левый край — в отступе ячейки «Назва» (текст начинается ≈ +44 px), правый — после чипа «неприйнятне»
   const rowX = name.x + 24;
   const rowBox = { x: name.x + 32, y: n.row.y + 6, w: Math.min(pos.x + pos.w, rowX + CONTENT.w / k) - name.x - 48, h: n.row.h - 12 };
-  // верх кадра — граница предыдущей строки (п. 3.3.2): обе строки целиком, ниже таблицы — бумага
-  const rowTop = n.rows[n.rows.length - 2].y - 4;
+  // верх кадра — над строкой п. 4.15: строка выше (п. 3.3.2) с длинным чипом «допустиме відхилення» резалась правым краем
+  const rowTop = n.row.y - 40;
+  // второй счётчик-чип («1 критичне…») правый край кадра режет: прячем его целиком, кадр по правой границе первого чипа.
+  // Замер по deviations-new.png: первый чип кончается x≈933, второй начинается x≈966, строка счётчиков y≈190…286.
+  const STATS_HIDE = { x: 950, y: 176, w: n.w - 950, h: 124 };
+  const STAND_PAPER = 'rgb(249, 243, 232)';
   const toneC = { crit: C.crit, green: C.green, ochre: C.tight, muted: C.muted } as const;
   return (
     <>
@@ -652,6 +657,10 @@ const DeviationsPanel: React.FC<{ t: number }> = ({ t }) => {
               {(S) => (
                 <>
                   <Outline r={S({ x: n.tab.x, y: n.tab.y, w: n.tab.w, h: n.tab.h })} p={smoother(seg(t, e.fresh + 0.2, e.fresh + 0.6))} color={rgba(C.tight, 0.9)} a={1 - seg(t, e.compare - 0.3, e.compare)} />
+                  {(() => {
+                    const r = S(STATS_HIDE);
+                    return <div style={{ position: 'absolute', left: r.x, top: r.y, width: r.w, height: r.h, background: STAND_PAPER }} />;
+                  })()}
                   <Outline r={S(rowBox)} p={smoother(seg(t, e.compare + 0.5, e.compare + 0.9))} color={rgba(C.crit, 0.85)} />
                 </>
               )}

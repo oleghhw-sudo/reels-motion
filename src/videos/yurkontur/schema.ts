@@ -134,3 +134,5 @@ export const CONTRACT_ROUTE: Pt[] = (() => {
 const polyLen = (P: Pt[]) => P.slice(1).reduce((s, p, i) => s + Math.hypot(p[0] - P[i][0], p[1] - P[i][1]), 0);
 /** Доля длины маршрута, где договор доходит до людини №2. */
 export const CONTRACT_HUMAN_K = polyLen(CONTRACT_ROUTE.slice(0, CONTRACT_ROUTE.length - 2)) / polyLen(CONTRACT_ROUTE);
+/** Доля длины маршрута до центра картки. */
+export const CONTRACT_CARD_K = polyLen(CONTRACT_ROUTE.slice(0, CONTRACT_ROUTE.length - 4)) / polyLen(CONTRACT_ROUTE);

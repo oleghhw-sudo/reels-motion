@@ -73,12 +73,14 @@ const geo = { dpr: DPR };
     geo.card = await save('stand-queue-card.png', cardR, 'YURKONTUR_STAND#/queue/T-doc3-rent', 'карточка задачи «Орендна плата за договором · doc3» до решения, DPR 3');
     geo.card.confirm = inPx(await rectOf(`[...document.querySelectorAll('button')].find(x => x.textContent.trim().startsWith('Підтвердити'))`), cardR);
     geo.card.readings = inPx(await rectOf(readingsBox), cardR);
+    geo.card.fix = inPx(await rectOf(`[...document.querySelectorAll('.d-q-card button')].find(x => x.textContent.trim() === 'Виправити')`), cardR);
     geo.readingsMatch = await save('stand-readings-match.png', await rectOf(readingsBox, 10), 'YURKONTUR_STAND#/queue/T-doc3-rent', '«Два незалежних читання»: A и B совпали, DPR 3');
     await b.evaluate(`[...document.querySelectorAll('button')].find(x => x.textContent.trim().startsWith('Підтвердити')).click()`);
     await b.sleep(1200);
     const title = await b.evaluate(`document.querySelector('.d-q-card h3')?.textContent ?? ''`);
     if (!/Комунальні/.test(title)) throw new Error(`Стенд: после «Підтвердити» ожидалась задача «Комунальні», а открыта «${title}»`);
     geo.readingsDiff = await save('stand-readings-diff.png', await rectOf(readingsBox, 10), 'YURKONTUR_STAND#/queue/T-doc3-rent', '«Два незалежних читання» следующей задачи «Комунальні · doc3»: розійшлися, DPR 3');
+
 
     // 3б. блок 2: картка аптеки — Договір (поле «Ставка чинна») и скан по «Показати в скані» этого поля
     await b.send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 720, deviceScaleFactor: DPR, mobile: false });
@@ -113,6 +115,67 @@ const geo = { dpr: DPR };
     if (r.status !== 0) throw new Error('ffmpeg: обрезка плана не удалась');
     add(planOut, 'YURKONTUR_STAND#/card/ANC-0412/plan (встроенная картинка 2400×1197)', `crop=${PLAN_CROP.w}:${PLAN_CROP.h}:${PLAN_CROP.x}:${PLAN_CROP.y} → PNG (без пережатия)`);
     geo.plan = { w: PLAN_CROP.w, h: PLAN_CROP.h };
+  } finally {
+    b.close();
+  }
+}
+// 3а'. Отдельный запуск браузера (свежее состояние стенда: в первом проходе задача уже подтверждена)
+{
+  const b = await launch(ROOT, { width: 1280, height: 1800, scale: DPR });
+  try {
+    const rectOf = (expr, pad = 0) => b.evaluate(`(() => { const e = (${expr}); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x - ${pad}, y: r.y - ${pad}, width: r.width + ${pad * 2}, height: r.height + ${pad * 2} }; })()`);
+    const inPx = (r, o) => ({ x: (r.x - o.x) * DPR, y: (r.y - o.y) * DPR, w: r.width * DPR, h: r.height * DPR });
+    const save = async (name, clip, src, how) => {
+      if (!clip) throw new Error(`Стенд: не найден фрагмент для ${name}`);
+      const o = join(OUT, name);
+      writeFileSync(o, await b.shot(clip));
+      add(o, src, how);
+      return { w: Math.round(clip.width * DPR), h: Math.round(clip.height * DPR) };
+    };
+
+    // 3а'. блок 4 (032, станция «рішення людини»): та же задача после «Виправити» — поле «Виправлене значення», причина
+    //      «не те місце того ж поняття» (читання збіглися, сторінки різні: A — 3, B — 2), пустая «Примітка»; текст примечания
+    //      печатается в кадре (DOM + Readable), поверх поля
+    await b.goto('file://' + STAND + '#/queue/T-doc3-rent', 6000);
+    await b.evaluate(`[...document.querySelectorAll('.d-q-card button')].find(x => x.textContent.trim() === 'Виправити').click()`);
+    await b.sleep(800);
+    const reasonOk = await b.evaluate(`(() => { const x = [...document.querySelectorAll('.d-q-card button')].find(x => x.textContent.trim() === 'не те місце того ж поняття'); if (!x) return false; x.click(); return true; })()`);
+    if (!reasonOk) throw new Error('Стенд: после «Виправити» нет причины «не те місце того ж поняття»');
+    await b.sleep(500);
+    const fixR = await rectOf(`document.querySelector('.d-q-card')`);
+    geo.fix = await save('stand-queue-fix.png', fixR, 'YURKONTUR_STAND#/queue/T-doc3-rent → «Виправити» → причина «не те місце того ж поняття»', 'карточка задачи в режиме исправления, примечание пустое, DPR 3');
+    geo.fix.note = inPx(await rectOf(`document.querySelector('.d-q-card textarea')`), fixR);
+    geo.fix.save = inPx(await rectOf(`[...document.querySelectorAll('.d-q-card button')].find(x => x.textContent.trim().startsWith('Виправити ·'))`), fixR);
+    geo.fix.value = inPx(await rectOf(`document.querySelector('.d-q-card input')`), fixR);
+  } finally {
+    b.close();
+  }
+}
+// 3д. Блок 5 (032): реестр «Договори оренди та суборенди» (#/contracts) на «уся мережа в одному реєстрі».
+//     В кадр — только заголовок страницы и колонки от «ТИП · СТАН» вправо: колонки «АПТЕКА» (адреса) и «ОРЕНДОДАВЕЦЬ» (ФИО)
+//     и строка KPI демо не снимаются (запреты 032). DPR 3, PNG.
+{
+  const b = await launch(ROOT, { width: 1600, height: 2200, scale: DPR });
+  try {
+    const rectOf = (expr) => b.evaluate(`(() => { const e = (${expr}); if (!e) return null; const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; })()`);
+    await b.goto('file://' + STAND + '#/contracts', 6000);
+    const h1 = await rectOf(`[...document.querySelectorAll('h1,h2')].find(e => e.textContent.trim() === 'Договори оренди та суборенди')`);
+    const sub = await rectOf(`[...document.querySelectorAll('p,div')].find(e => e.textContent.trim().startsWith('Чинні умови з джерелом на скані') && e.getBoundingClientRect().height < 40)`);
+    if (!h1 || !sub) throw new Error('Стенд: на #/contracts нет заголовка или подзаголовка');
+    const head = { x: h1.x - 6, y: h1.y - 6, width: Math.max(h1.width, sub.width) + 12, height: sub.y + sub.height - h1.y + 12 };
+    const o1 = join(OUT, 'contracts-head.png');
+    writeFileSync(o1, await b.shot(head));
+    add(o1, 'YURKONTUR_STAND#/contracts', 'заголовок и подзаголовок страницы реестра (без KPI), DPR 3');
+    const th = await rectOf(`[...document.querySelectorAll('th')].find(e => /^тип/i.test(e.textContent.trim()))`);
+    const tbl = await rectOf(`[...document.querySelectorAll('th')].find(e => /^тип/i.test(e.textContent.trim())).closest('table')`);
+    if (!th || !tbl) throw new Error('Стенд: на #/contracts нет таблицы с колонкой «ТИП · СТАН»');
+    const clip = { x: th.x - 4, y: tbl.y, width: tbl.x + tbl.width - th.x + 4, height: Math.min(tbl.height, 2200 - tbl.y) };
+    const o2 = join(OUT, 'contracts-table.png');
+    writeFileSync(o2, await b.shot(clip));
+    add(o2, 'YURKONTUR_STAND#/contracts', 'таблица реестра от колонки «ТИП · СТАН» вправо (без колонок «АПТЕКА», «ОРЕНДОДАВЕЦЬ»), DPR 3');
+    const rows = await b.evaluate(`[...document.querySelectorAll('tbody tr')].map(r => { const q = r.getBoundingClientRect(); return { y: (q.y - ${clip.y}) * ${DPR}, h: q.height * ${DPR} }; }).filter(r => r.y >= 0 && r.y + r.h <= ${clip.height * DPR})`);
+    geo.contractsHead = { w: Math.round(head.width * DPR), h: Math.round(head.height * DPR) };
+    geo.contractsTable = { w: Math.round(clip.width * DPR), h: Math.round(clip.height * DPR), rows };
   } finally {
     b.close();
   }

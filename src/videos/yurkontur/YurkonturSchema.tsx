@@ -6,11 +6,25 @@ import { z } from 'zod';
 import { loadAllFonts } from '../../theme/loadFonts.ts';
 import { Scheme } from './Scheme.tsx';
 import { DURATION } from './timeline.ts';
+import APPROVED from '../../../videos/yurkontur/voice/approved.json';
 
 loadAllFonts();
 
-/** Полная озвучка (videos/yurkontur/voice-full.mjs → копия в public/, как и остальные ассеты ролика). */
+/** Одобренная озвучка: копия в public/ кладёт videos/yurkontur/voice-approved.mjs после сверки версии вне репо. */
 const VOICE_WAV = staticFile('videos/yurkontur/voice.wav');
+const VOICE_SHA = APPROVED.files.find((f) => f.name === 'full.wav')?.sha256;
+
+/** Рендер и студия падают, если voice.wav в public/ — не одобренная версия (решение Олега 09.11). */
+async function checkVoice(): Promise<void> {
+  const buf = await (await fetch(VOICE_WAV)).arrayBuffer();
+  const hex = [...new Uint8Array(await crypto.subtle.digest('SHA-256', buf))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (!VOICE_SHA || hex !== VOICE_SHA)
+    throw new Error(`voice.wav не совпадает с одобренной озвучкой ${APPROVED.version} (videos/yurkontur/voice/approved.json) — запустите: node videos/yurkontur/voice-approved.mjs`);
+}
+export const schemaMetadata = async () => {
+  await checkVoice();
+  return {};
+};
 
 export const SCHEMA_FPS = 60;
 export const SCHEMA_FRAMES = Math.ceil(DURATION * SCHEMA_FPS);
@@ -42,4 +56,7 @@ export const YurkonturAnimatic: React.FC<AnimaticProps> = ({ fromSec }) => {
     </AbsoluteFill>
   );
 };
-export const animaticMetadata = ({ props }: { props: AnimaticProps }) => ({ durationInFrames: Math.round((props.toSec - props.fromSec) * ANIMATIC_FPS) });
+export const animaticMetadata = async ({ props }: { props: AnimaticProps }) => {
+  await checkVoice();
+  return { durationInFrames: Math.round((props.toSec - props.fromSec) * ANIMATIC_FPS) };
+};

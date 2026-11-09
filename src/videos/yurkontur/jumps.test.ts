@@ -4,6 +4,7 @@
 // --negative — позитивный контроль: смены раскладки за 1 кадр (как в сорванном аниматике) — проверка обязана упасть.
 import { cardLayout } from './layout.ts';
 import { EV } from './stage.ts';
+import { loopLayout } from './loop-layout.ts';
 
 const arg = (k: string, d: number) => {
   const i = process.argv.indexOf(k);
@@ -32,6 +33,20 @@ for (let i = 0; i <= N; i++) {
       series.get(key)!.push(v[m]);
       if (!visible.has(key)) visible.set(key, []);
       visible.get(key)!.push(TEXT.has(m) ? c.vis * c.live : c.vis);
+    }
+  }
+  // станции петли блока 4 (loop.tsx): та же проверка рядов раскладки
+  const loop = loopLayout(t);
+  for (let li = 0; li < 6; li++) {
+    const c = loop.find((x) => x.i === li);
+    const v = c ? { x: c.rect.x, y: c.rect.y, w: c.rect.w, h: c.rect.h, labelPx: c.labelPx, open: c.open, opacity: c.opacity, readA: 0, textA: 0, detailA: 0, active: 0, greenFill: c.fill } : null;
+    for (const m of metrics) {
+      const key = `loop${li}.${m}`;
+      if (!series.has(key)) series.set(key, []);
+      const arr = series.get(key)!;
+      arr.push(v ? v[m] : arr.length ? arr[arr.length - 1] : 0);
+      if (!visible.has(key)) visible.set(key, []);
+      visible.get(key)!.push(c ? c.opacity : 0);
     }
   }
 }
