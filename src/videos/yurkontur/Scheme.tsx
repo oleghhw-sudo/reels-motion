@@ -17,7 +17,7 @@ import { CH_IN, CH_OUT, EV, STAGE_LIST, stageAt, stageMix, windowStart } from '.
 import { APPEAR, BLOCKS, CONTRACT, FLASH, LOOP_DRAW, LOOP_EV, LOOP_ON, STAGES, block, blockAt, densityAt, energyAt, subtitleAt } from './timeline.ts';
 import { Block1Legacy, Block2Stand, CONTENT, PANEL_CONTENT, ValueChip } from './panels.tsx';
 import { LoopStage, NodeVersion, VERSION, loopMix } from './loop.tsx';
-import { ContractFiles, Lockup, ProofThread, Registry, Roadmap } from './finale.tsx';
+import { ContractFiles, Lockup, MusicCredit, ProofThread, Registry, Roadmap } from './finale.tsx';
 import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor, fitLetterSpacing, mixBorder, rgba, type Border } from './tokens.ts';
 
 /** Подпись станции петли: Inter 30 px мира · s ≥ 24 px. */
@@ -498,6 +498,8 @@ export const Scheme: React.FC<{ t: number }> = ({ t }) => {
           </Readable>
         </div>
       ) : null}
+      {/* атрибуция музыки — последним слоем */}
+      <MusicCredit t={t} />
     </div>
   );
 };

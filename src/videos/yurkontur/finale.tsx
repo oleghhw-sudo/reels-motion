@@ -10,8 +10,12 @@ import { ZONE, type Cam } from './camera.ts';
 import { along, roundedPath } from './geom.ts';
 import { A, GEO, frameBox } from './panels.tsx';
 import { LOOP_CHIPS, nodeById } from './schema.ts';
-import { CONTRACT, LOCKUP, STAGES, block } from './timeline.ts';
+import { CONTRACT, DURATION, LOCKUP, STAGES, block } from './timeline.ts';
 import { BORDER, C, TEXTURE_ATTR, TYPE, bcolor } from './tokens.ts';
+import MUSIC from '../../../videos/yurkontur/music/candidates.json';
+
+/** Атрибуция CC BY 3.0 выбранного трека (решение Олега 09.11) — строка из манифеста музыки. */
+const CREDIT = MUSIC.chosen.credit;
 
 const toS = (p: Pt, cam: Cam): Pt => [p[0] * cam.s + cam.ox, p[1] * cam.s + cam.oy];
 
@@ -167,3 +171,14 @@ export const Lockup: React.FC<{ t: number; cam: Cam }> = ({ t, cam }) => {
     </>
   );
 };
+
+/** Атрибуция музыки CC BY 3.0 (решение Олега 09.11): последние 3 с ролика, Inter Regular 20 px, --muted, правый нижний угол
+ *  в пределах полей 6 %. Рисуется последним слоем — поверх бумажной подложки зоны субтитров. */
+export const MusicCredit: React.FC<{ t: number }> = ({ t }) =>
+  t >= DURATION - 3 ? (
+    <div style={{ position: 'absolute', right: 1920 - ZONE.work.x1, bottom: 1080 - 1012, opacity: smoother(seg(t, DURATION - 3, DURATION - 2.7)), fontFamily: TYPE.detail.fontFamily, fontWeight: 400, fontSize: 20, lineHeight: 1.2, color: C.muted, whiteSpace: 'nowrap' }}>
+      <Readable id="credit.music" text={CREDIT} credit>
+        {CREDIT}
+      </Readable>
+    </div>
+  ) : null;

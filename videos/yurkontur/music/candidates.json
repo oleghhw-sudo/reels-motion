@@ -1,6 +1,15 @@
 {
  "$comment": "Кандидаты музыки ролика «Юридичний контур АНЦ» (задача 032 п. 3, решение Олега 09.11: лицензия обязана прямо разрешать коммерческое использование). Поиск — Openverse (задача 027: license_type=commercial, category=music), лицензия сверена со страницей источника. Файлы — вне репо по path, сверяются по sha256 (videos/yurkontur/music-preview.mjs). Гейт 6: лицензия и предупреждение записаны здесь.",
  "path": "~/Projects/reels-motion-media/yurkontur/music/candidates",
+ "chosen": {
+  "id": "72872af1",
+  "decision": "Олег 09.11: вариант 2 — «lounge act», LoFi Theory",
+  "credit": "Музика: «lounge act» — LoFi Theory, CC BY 3.0",
+  "creditPlacement": "на локапе, последние 3 с, Inter Regular 20 px, --muted, правый нижний угол в пределах полей 6 % (src/videos/yurkontur/finale.tsx)",
+  "landing": "https://www.jamendo.com/track/1718274",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "offsetSec": 0
+ },
  "tracks": [
   {
    "id": "2a0f4530",

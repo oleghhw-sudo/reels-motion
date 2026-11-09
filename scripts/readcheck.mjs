@@ -21,7 +21,8 @@
 // Нарушения: SHORT (читаем, но меньше нужного), OUT_OF_FRAME (видимый текст режется краем кадра),
 //            UNSAFE (читаемый текст заходит в safe zone), OCCLUDED (виден, но слой data-occluder закрывает > 10 % букв),
 //            NEVER (ни разу не читаем целиком и не OUT_OF_FRAME / OCCLUDED),
-//            (SHORT не ставится озвученному тексту — <Readable voiced>, субтитры диктора: держится столько, сколько звучит)
+//            (SHORT не ставится озвученному тексту — <Readable voiced>, субтитры диктора: держится столько, сколько звучит;
+//             и служебной подписи <Readable credit> — атрибуции лицензии; для неё же порог SMALL — 20 px)
 //            SMALL (профиль 16x9: читаемый текст на кадре мельче --min-px, по умолчанию 24 px; размер с учётом transform),
 //            LATIN_ONLY (кириллица U+0400–U+04FF или ’ набрана шрифтом latinOnly из env.manifest.json — в <Readable> или вне его).
 // Не проверяется: перекрытие слоями без data-occluder (и z-index), mask-image, clip-path кроме inset, контраст.
@@ -43,7 +44,9 @@ import { SAFE as SAFE_9x16, SAFE_16x9 } from '../src/labs/safe-zones.ts';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const RENDERER_VERSION = '4.0.534';
-const ATTR = { id: 'data-readable-id', text: 'data-readable-text', voiced: 'data-readable-voiced' }; // = READABLE_ATTR в src/qa/Readable.tsx
+const ATTR = { id: 'data-readable-id', text: 'data-readable-text', voiced: 'data-readable-voiced', credit: 'data-readable-credit' }; // = READABLE_ATTR в src/qa/Readable.tsx
+/** Порог мелкого текста для служебной подписи <Readable credit> (атрибуция лицензии, решение Олега 09.11). */
+const CREDIT_MIN_PX = 20;
 const OPACITY_MIN = 0.9;
 const PAD_SEC = 0.5;
 const TOL = 0.5; // px
@@ -247,7 +250,7 @@ function collect(attrId, attrText, W, H, latinFamilies) {
       u.r = Math.max(u.r, em.r);
       u.b = Math.max(u.b, em.b);
     }
-    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), voiced: el.hasAttribute('data-readable-voiced'), present: true, minOpacity, hidden, contentOk, visibleArea, box: u, minPx, occluded: occlusion(el, ems) });
+    out.push({ id: el.getAttribute(attrId), text: el.getAttribute(attrText), voiced: el.hasAttribute('data-readable-voiced'), credit: el.hasAttribute('data-readable-credit'), present: true, minOpacity, hidden, contentOk, visibleArea, box: u, minPx, occluded: occlusion(el, ems) });
   }
   // LATIN_ONLY: каждый текстовый узел кадра (не только <Readable>), набранный семейством latinOnly, — без кириллицы и ’
   const latinBad = [];
@@ -398,7 +401,7 @@ try {
       })();
       const prev = seenNow.get(key);
       if (!prev || (st.readable && !prev.readable)) seenNow.set(key, { it, st });
-      if (!tracks.has(key)) tracks.set(key, { id: it.id, text: it.text, voiced: Boolean(it.voiced), samples: [], dup: false });
+      if (!tracks.has(key)) tracks.set(key, { id: it.id, text: it.text, voiced: Boolean(it.voiced), credit: Boolean(it.credit), samples: [], dup: false });
       else if (prev) tracks.get(key).dup = true;
     }
     for (const [key, { st }] of seenNow) tracks.get(key).samples.push({ f, span, ...st });
@@ -446,7 +449,8 @@ try {
             best = run;
             bestFrom = runFrom;
           }
-          if (MIN_PX !== null && s.minPx !== null && s.minPx < MIN_PX - 0.5) {
+          const minPxHere = MIN_PX === null ? null : tr.credit ? Math.min(MIN_PX, CREDIT_MIN_PX) : MIN_PX;
+          if (minPxHere !== null && s.minPx !== null && s.minPx < minPxHere - 0.5) {
             if (smallPx === null || s.minPx < smallPx) smallPx = s.minPx;
             smallFrom ??= s.f;
           }
@@ -473,7 +477,8 @@ try {
       if (occSec > 0) v.push('OCCLUDED');
       if (best === 0 && outSec === 0 && occSec === 0) v.push('NEVER');
       // озвученный текст (субтитры диктора, Readable voiced) держится ровно столько, сколько звучит — время чтения не судим
-      if (best > 0 && best + 1e-9 < need && !tr.voiced) v.push('SHORT');
+      // служебная подпись (Readable credit, атрибуция лицензии) должна быть в кадре, а не прочитана за время показа
+      if (best > 0 && best + 1e-9 < need && !tr.voiced && !tr.credit) v.push('SHORT');
       if (unsafe.size) v.push('UNSAFE');
       if (smallPx !== null) v.push('SMALL');
       if ([...latinBad.values()].some((b) => b.readableId === tr.id)) v.push('LATIN_ONLY');
@@ -496,6 +501,7 @@ try {
         smallFromSec: smallFrom === null ? null : +(smallFrom / fps).toFixed(3),
         duplicateInstances: tr.dup,
         voiced: tr.voiced,
+        credit: tr.credit,
         violations: v,
       });
     }

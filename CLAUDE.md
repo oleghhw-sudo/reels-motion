@@ -55,6 +55,7 @@
 - `npm run still -- <Composition> <frame>` — кадр в PNG для QA
 - `node scripts/readcheck.mjs <Composition> [--props JSON] [--step N] [--cps N] [--min-hold S]` — проверка читаемости текстов (`<Readable>`), stills не рендерит; отчёт `out/qa/readcheck-<Comp>.json`, exit 1 при нарушениях
 - `node scripts/readcheck.mjs --self-test` — позитивный контроль readcheck на `ReadcheckFixture` (обязан найти ровно SHORT, OUT_OF_FRAME, UNSAFE, OCCLUDED)
+- readcheck credit: служебная подпись (атрибуция лицензии CC BY и т.п.) — `<Readable credit>`: SHORT не ставится, порог SMALL — 20 px (решение Олега 2026-11-09); кадр и safe zones проверяются как обычно
 - readcheck OCCLUDED: слой, способный закрыть текст (вырезка героя), помечается `OCCLUDER_ATTR` из `src/qa/Readable.tsx` на `<Img>` — readcheck считает долю букв под его альфой (> 10 % — нарушение)
 - `npm run test:motion` — тесты `src/motion` (`-- --negative` — позитивный контроль, обязан упасть)
 - `npm run matte -- <video> --id <id> [--engine vision|rvm] [--from S --to S] [--no-thr]` — маска человека и лицо по кадрам → `MATTE_DIR/<id>/{person.mov, matte.mp4, face.json, matte.json}` (задача 025; `MATTE_DIR`, `RVM_DIR` — в `.env`)

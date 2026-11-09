@@ -194,12 +194,25 @@
 - Ритм: самый длинный промежуток 2.9 с (56.2 с).
 - Аниматик блока 5 после переделки: `out/yurkontur/animatic/032-b5.mp4` (130.5–146.8 с, с заходом из кадра-границы); стилл `out/yurkontur/stills/032-b5-135.8s.png`.
 
+## Решение Олега (09.11): музыка — «lounge act», LoFi Theory; блок 5 принят — полный аниматик
+### Музыка и атрибуция
+- Трек: «lounge act» — LoFi Theory, Jamendo https://www.jamendo.com/track/1718274, лицензия CC BY 3.0 https://creativecommons.org/licenses/by/3.0/ (коммерческое использование разрешено; атрибуция обязательна — предупреждение гейта 6). Выбор, строка титра, ссылки и место подписи записаны в `videos/yurkontur/music/candidates.json` → `chosen`.
+- Атрибуция в самом ролике: «Музика: «lounge act» — LoFi Theory, CC BY 3.0» на локапе, последние 3 с (156.0–159.0), Inter Regular 20 px, `--muted`, правый нижний угол в пределах полей 6 % (правый край x 1804, низ y 1012), последним слоем — поверх подложки зоны субтитров. Текст берётся из манифеста (`finale.tsx` → `MusicCredit`).
+- readcheck: введена роль служебной подписи `<Readable credit>` (`src/qa/Readable.tsx`, `scripts/readcheck.mjs`). Для неё не ставится SHORT (как у субтитров `voiced`), порог SMALL — 20 px вместо 24; кадр, safe zones и перекрытие проверяются как обычно. Позитивный контроль: та же строка без `credit` → `credit.music: SHORT, SMALL` (держится 2.7 с, 20 px); с `credit` → 0 нарушений. `--self-test` → «SELF-TEST OK».
+- Сведение на весь ролик (`music-preview.mjs --track 72872af1 --from 0 --to 159.005`): трек с 0 с, приглушение на фразах из `words.json`, затухание к локапу. Итог: −16.0 LUFS, true peak −1.5 dBTP по скрипту, −1.3 dBTP в готовом mp4 после AAC; музыка под речью на 20.0 дБ ниже речи.
+
+### Полный аниматик (остановка — Олег смотрит целиком)
+- `out/yurkontur/animatic/032-full.mp4` — 960×540@30, 159 с, голос (озвучка v1, сверена по манифесту) + музыка.
+- Проверки на всём ролике: скачков нет (`test:yur-jumps 0–159`); readcheck 16:9 0–159 — 140 текстов, 0 нарушений; ритм ≤ 2.9 с.
+- Финальный рендер 1920×1080@60 — только после «да» Олега.
+
 ## Вопросы Олегу
 1. ~~Квота TTS~~ — решено: ключ на оплаченном проекте (Tier 1).
 2. ~~Где хранить одобренную озвучку~~ — решено: вне репо, манифест `approved.json`.
-3. ~~Звук~~ — решено: музыка. Какой из трёх кандидатов взять?
+3. ~~Звук~~ — решено: музыка «lounge act» (LoFi Theory, CC BY 3.0), атрибуция на локапе.
 
 ## Изменённые файлы
 `src/videos/yurkontur/{timeline.ts, stage.ts, panels.tsx, Scheme.tsx, layout.ts, YurkonturSchema.tsx}`, `src/videos/yurkontur/script.ts` (новый), `voice/gemini.mjs` (`retry429`), `voice/metrics.d.mts` (новый), `videos/yurkontur/voice-full.mjs` (новый), `videos/yurkontur/voice/words.json` (производное), `videos/yurkontur/{prepare-assets.mjs, stand-geometry.json, assets.manifest.json, gen-scenes.mjs, scenes.proposed.yaml, beats.md, brief.md}`, `.gitignore`.
 Второй круг: `src/videos/yurkontur/{loop.tsx, loop-layout.ts, finale.tsx}` (новые), `src/videos/yurkontur/{Scheme.tsx, panels.tsx, timeline.ts, layout.ts, schema.ts, YurkonturSchema.tsx, jumps.test.ts}`, `src/Root.tsx`, `videos/yurkontur/voice-approved.mjs` (новый), `videos/yurkontur/voice/approved.json` (новый), `package.json` (`yur:voice`), `videos/yurkontur/{prepare-assets.mjs, stand-geometry.json, assets.manifest.json, gen-scenes.mjs, scenes.proposed.yaml, beats.md, brief.md}`.
 Третий круг: `src/videos/yurkontur/{Field.tsx, Scheme.tsx, finale.tsx, loop.tsx, timeline.ts, schema.ts}`, `videos/yurkontur/music-preview.mjs` (новый), `videos/yurkontur/music/candidates.json` (новый), `package.json` (`yur:music-preview`), `videos/yurkontur/{gen-scenes.mjs, scenes.proposed.yaml, beats.md, brief.md}`.
+Четвёртый круг: `src/qa/Readable.tsx` (роль `credit`), `scripts/readcheck.mjs` (credit: без SHORT, SMALL ≥ 20 px), `src/videos/yurkontur/{finale.tsx, Scheme.tsx}` (подпись атрибуции), `videos/yurkontur/music/candidates.json` (`chosen`).
