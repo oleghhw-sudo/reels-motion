@@ -12,6 +12,7 @@ export { VERSION } from './loop-layout.ts';
 export { loopMix } from './loop-layout.ts';
 import { Readable } from '../../qa/Readable.tsx';
 import { type Cam } from './camera.ts';
+import { frameAmt } from './layout.ts';
 import { Field } from './Field.tsx';
 import { along } from './geom.ts';
 import { A, CONTENT, GEO, Outline, PanView, STAND_K, ValueChip, frameBox } from './panels.tsx';
@@ -276,9 +277,11 @@ const VersionBadge: React.FC<{ t: number; cam: Cam }> = ({ t, cam }) => {
 /** Значок версии на обновлённом узле (экранные px), с прихода значка до конца блока 5. */
 export const NodeVersion: React.FC<{ id: 'ocr' | 'read2'; t: number; cam: Cam; until: number }> = ({ id, t, cam, until }) => {
   const t0 = VERSION[id];
-  const a = expoOut(seg(t, t0, t0 + 0.4)) * (1 - smoother(seg(t, until - 0.6, until)));
-  if (a <= 0) return null;
   const n = nodeById(id);
+  // при наезде камеры значок у края кадра гаснет вместе с текстом узла (не режется краем, не заходит в зону заголовка)
+  const fa = frameAmt(n.x + n.w / 2 - 60, n.y - n.h / 2 - 24, n.x + n.w / 2 + 20, n.y - n.h / 2 + 16, cam);
+  const a = expoOut(seg(t, t0, t0 + 0.4)) * (1 - smoother(seg(t, until - 0.6, until))) * fa.inA;
+  if (a <= 0.01) return null;
   const x = (n.x + n.w / 2) * cam.s + cam.ox;
   const y = (n.y - n.h / 2) * cam.s + cam.oy;
   return (
@@ -326,7 +329,7 @@ export const LoopStage: React.FC<{ t: number; cam: Cam }> = ({ t, cam }) => {
       ) : null}
       {cards
         .filter((cd) => cd.opacity > 0.01)
-        .sort((a, z) => a.open - z.open)
+        .sort((a, z) => z.i - a.i) // пройденная станция (сжимается влево) — поверх растущей панели: подпись не обрезается
         .map((cd) => (
           <StationCard key={cd.i} cd={cd} t={t} />
         ))}

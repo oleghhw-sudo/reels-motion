@@ -75,8 +75,11 @@ const REG_WIN = { x: 340, y: 228, w: 1240, h: 640 } as const;
 const HEAD_K = 0.62;
 const TABLE_K = 0.5;
 export const Registry: React.FC<{ t: number }> = ({ t }) => {
-  const a = expoOut(seg(t, CONTRACT.registry, CONTRACT.registry + 0.45)) * (1 - smoother(seg(t, CONTRACT.registryOut, CONTRACT.registryOut + 0.45)));
-  if (a <= 0) return null;
+  // уход в две ступени (как у кадра-границы): окно гаснет на бумаге, затем бумага открывает механизм — тексты не накладываются
+  const inA = expoOut(seg(t, CONTRACT.registry, CONTRACT.registry + 0.45));
+  const a = inA * (1 - smoother(seg(t, CONTRACT.registryOut - 0.3, CONTRACT.registryOut)));
+  const paperA = inA * (0.8 + 0.2 * smoother(seg(t, CONTRACT.registryOut - 0.45, CONTRACT.registryOut - 0.3))) * (1 - smoother(seg(t, CONTRACT.registryOut, CONTRACT.registryOut + 0.35)));
+  if (paperA <= 0) return null;
   const head = GEO.contractsHead;
   const tbl = GEO.contractsTable;
   const headH = head.h * HEAD_K;
@@ -85,7 +88,7 @@ export const Registry: React.FC<{ t: number }> = ({ t }) => {
   const scroll = Math.min(maxScroll, 1100 * TABLE_K) * smoother(seg(t, CONTRACT.registry + 0.6, CONTRACT.registryOut));
   return (
     <>
-      <div style={{ position: 'absolute', inset: 0, background: C.paper, opacity: 0.8 * a }} />
+      <div style={{ position: 'absolute', inset: 0, background: C.paper, opacity: paperA }} />
       <div style={frameBox(REG_WIN.w, REG_WIN.h, { left: REG_WIN.x, top: REG_WIN.y, opacity: a, transform: `scale(${0.97 + 0.03 * a})`, borderRadius: BORDER.radius, border: `${BORDER.active.width}px solid ${bcolor(BORDER.active)}` })}>
         <img src={A('contracts-head.png')} style={{ position: 'absolute', left: 24, top: 20, width: head.w * HEAD_K, height: headH, maxWidth: 'none' }} />
         <div style={{ position: 'absolute', left: (REG_WIN.w - tbl.w * TABLE_K) / 2, top: headH + 34, width: tbl.w * TABLE_K, height: viewH, overflow: 'hidden', borderTop: `1.5px solid ${C.line}` }}>

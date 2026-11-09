@@ -155,6 +155,14 @@ export function densityAt(t: number): number {
   return prev + (DENSITY[b.id] - prev) * k;
 }
 
+/** Блок 5 — кульминация (правка Олега 09.11): весь механизм работает разом. 0…1: нарастает на входе в блок, к концу блока
+ *  чуть стихает перед блоком 6. Читают Field (плотность трасс), Scheme (поток договоров, вспышки «Людина», пульс v0.3). */
+export function energyAt(t: number): number {
+  const b5 = block('b5');
+  return smootherT(clamp((t - b5.from) / 1.0)) * (1 - 0.55 * smootherT(clamp((t - (b5.to - 2.0)) / 2.0))) * (1 - smootherT(clamp((t - block('b6').from) / 0.8)));
+}
+const smootherT = (x: number) => x * x * x * (x * (x * 6 - 15) + 10);
+
 /** Камера: в кадре новый узел + 2–3 соседа; целиком схема — только в блоках 2 и 5. ids — что вписать. */
 export type CamKey = { at: number; ids: string[] | 'all' };
 export const CAMERA: CamKey[] = [
@@ -176,8 +184,15 @@ export const CAMERA: CamKey[] = [
   // пока идут панели, камера уходит к развилке: последняя панель сжимается в «перевірку на еталоні», значок версии
   // по петле уходит в «Розпізнавання» и «Два читання»
   { at: APPEAR['chip:5'] - 2.6, ids: ['chip:4', 'chip:5', 'ocr', 'read2'] },
-  { at: block('b5').from, ids: 'all' },
-  { at: block('b6').from, ids: 'all' },
+  // блок 5: выход на весь механизм (M), затем камера ведёт выделенный договор поверх потока: скан → … → картка;
+  // после реестра — картка → Відхилення → Людина №2 (конфлікт, решение); к концу блока — снова вся схема
+  // на общий план камера уходит ещё под кадром-границей (схема закрыта бумагой) — блок 5 открывается всем механизмом сразу
+  { at: LOOP_EV.bound + 0.6, ids: 'all' },
+  { at: CONTRACT.from - 0.1, ids: ['scans', 'ocr', 'read2', 'code', 'queue'] },
+  { at: CONTRACT.from + 1.1, ids: ['code', 'queue', 'chain', 'card', 'human1'] },
+  { at: CONTRACT.registryOut - 0.3, ids: ['chain', 'card', 'deadlines', 'deviations', 'human2'] },
+  { at: CONTRACT.decide + 0.3, ids: 'all' },
+  // блок 6 — вся схема: камера уже там с «вирішує завжди людина» (отдельный ключ на границе блока рвал бы проезд)
 ];
 export const CAM_MOVE_SEC = 1.4;
 

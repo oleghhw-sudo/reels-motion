@@ -22,7 +22,8 @@ export type Track = {
   alpha?: number;
 };
 
-export type FieldProps = { t: number; cam: Cam; tracks: Track[]; perChannel: number; width: number; height: number };
+/** energy 0…1 (блок 5, кульминация): хвосты короче и зазор меньше — одновременно на канале больше трасс; ярче и толще. */
+export type FieldProps = { t: number; cam: Cam; tracks: Track[]; perChannel: number; width: number; height: number; energy?: number };
 
 /** Нормы трасс (экранные px / px в секунду). */
 export const TRACE = { headR: 3, tail: [200, 450], width: [1.4, 1.8], speed: [150, 280], tailAlpha: 0.62, corner: 14, gap: 24, maxTailOfChannel: 0.45 } as const;
@@ -113,12 +114,16 @@ export function drawField(ctx: CanvasRenderingContext2D, p: FieldProps): void {
     const tailCol = tr.kind === 'loop' ? C.green : C.ink;
     const headCol = tr.kind === 'loop' ? C.green : C.tight;
     const n = p.perChannel;
+    const e = clamp(p.energy ?? 0);
+    const tailK = 1 - 0.45 * e;
+    const gapK = 1 - 0.6 * e;
+    const aK = 1 + 0.35 * e;
     for (let j = 0; j < n; j++) {
       const seed = ti * 7919 + j * 104729;
       const v = lerp(TRACE.speed[0], TRACE.speed[1], hash(seed + 1)) * px; // мир/с
-      const tail = Math.min(lerp(TRACE.tail[0], TRACE.tail[1], hash(seed + 2)) * px, d.total * TRACE.maxTailOfChannel);
-      const w = lerp(TRACE.width[0], TRACE.width[1], hash(seed + 3)) * px;
-      const cycle = Math.max(d.total + tail, n * (0.6 * tail + TRACE.gap * px));
+      const tail = Math.min(lerp(TRACE.tail[0], TRACE.tail[1], hash(seed + 2)) * px * tailK, d.total * TRACE.maxTailOfChannel);
+      const w = (lerp(TRACE.width[0], TRACE.width[1], hash(seed + 3)) + 0.5 * e) * px;
+      const cycle = Math.max(d.total + tail, n * (0.6 * tail + TRACE.gap * px) * gapK);
       const delay = ((j / n + (0.35 * (hash(seed + 4) - 0.5)) / n) * cycle) / v;
       const run = (t - tr.on - delay) * v;
       if (run < 0) continue; // трасса ещё не вышла из начала связи
@@ -128,7 +133,7 @@ export function drawField(ctx: CanvasRenderingContext2D, p: FieldProps): void {
       const s0 = Math.max(0, head - tail);
       if (s0 >= hVis) continue;
       ctx.lineWidth = w;
-      drawTail(ctx, d, s0, hVis, tail, tailCol, TRACE.tailAlpha * A, px);
+      drawTail(ctx, d, s0, hVis, tail, tailCol, Math.min(0.92, TRACE.tailAlpha * aK) * A, px);
       if (head <= limit) {
         const hp = pointAt(d, head);
         ctx.fillStyle = rgba(headCol, A);

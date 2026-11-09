@@ -1,0 +1,100 @@
+{
+ "$comment": "Кандидаты музыки ролика «Юридичний контур АНЦ» (задача 032 п. 3, решение Олега 09.11: лицензия обязана прямо разрешать коммерческое использование). Поиск — Openverse (задача 027: license_type=commercial, category=music), лицензия сверена со страницей источника. Файлы — вне репо по path, сверяются по sha256 (videos/yurkontur/music-preview.mjs). Гейт 6: лицензия и предупреждение записаны здесь.",
+ "path": "~/Projects/reels-motion-media/yurkontur/music/candidates",
+ "tracks": [
+  {
+   "id": "2a0f4530",
+   "title": "Such a place!",
+   "creator": "K4MMERER",
+   "file": "2a0f4530.mp3",
+   "sha256": "df2a599ad80e095385f210577b79afc428ad4737c4cb021e2a6d94988d933539",
+   "bytes": 6605148,
+   "durationSec": 258.0,
+   "bpmMeasured": 95.7,
+   "loudnessSpread5sDb": 1.3,
+   "style": "lounge · peaceful · electronic (теги Jamendo)",
+   "source": "Openverse → Jamendo",
+   "openverseId": "2a0f4530-1d2d-4214-b987-98596f804c46",
+   "landing": "https://www.jamendo.com/track/384092",
+   "download": "https://prod-1.storage.jamendo.com/?trackid=384092&format=mp32",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+   "licenseClass": "attribution",
+   "commercialUse": true,
+   "licenseCheck": "значок cc-by на странице Jamendo совпадает с Openverse (2026-11-09, встроенный браузер)",
+   "warning": "требует атрибуции: строка attribution — в описание ролика / титры",
+   "attribution": "«Such a place!» — K4MMERER (Jamendo, https://www.jamendo.com/track/384092), CC BY 3.0, https://creativecommons.org/licenses/by/3.0/"
+  },
+  {
+   "id": "72872af1",
+   "title": "lounge act",
+   "creator": "LoFi Theory",
+   "file": "72872af1.mp3",
+   "sha256": "07110b7720162dc35af5bf44b46a4b1251b818abe603a1ae7ee97bc53de7fd5b",
+   "bytes": 6931456,
+   "durationSec": 263.0,
+   "bpmMeasured": 99.4,
+   "loudnessSpread5sDb": 6.8,
+   "style": "dreamy · drums · chillout",
+   "source": "Openverse → Jamendo",
+   "openverseId": "72872af1-70a6-40ff-859f-8637193953da",
+   "landing": "https://www.jamendo.com/track/1718274",
+   "download": "https://prod-1.storage.jamendo.com/?trackid=1718274&format=mp32",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+   "licenseClass": "attribution",
+   "commercialUse": true,
+   "licenseCheck": "значок cc-by на странице Jamendo совпадает с Openverse (2026-11-09, встроенный браузер)",
+   "warning": "требует атрибуции: строка attribution — в описание ролика / титры",
+   "attribution": "«lounge act» — LoFi Theory (Jamendo, https://www.jamendo.com/track/1718274), CC BY 3.0, https://creativecommons.org/licenses/by/3.0/"
+  },
+  {
+   "id": "72861646",
+   "title": "Mind drifting back (Leaving paradise)",
+   "creator": "K4MMERER",
+   "file": "72861646.mp3",
+   "sha256": "76b9861871b54525cd1a35c01502fc241857fe30dd50e6b96fda4ab0d5a78627",
+   "bytes": 7159795,
+   "durationSec": 312.0,
+   "bpmMeasured": 107.7,
+   "loudnessSpread5sDb": 1.1,
+   "style": "lounge · peaceful · chillout/electronic",
+   "source": "Openverse → Jamendo",
+   "openverseId": "72861646-1759-4178-89c1-01128ab6786b",
+   "landing": "https://www.jamendo.com/track/384173",
+   "download": "https://prod-1.storage.jamendo.com/?trackid=384173&format=mp32",
+   "license": "CC BY 3.0",
+   "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+   "licenseClass": "attribution",
+   "commercialUse": true,
+   "licenseCheck": "значок cc-by на странице Jamendo совпадает с Openverse (2026-11-09, встроенный браузер)",
+   "warning": "требует атрибуции: строка attribution — в описание ролика / титры",
+   "attribution": "«Mind drifting back (Leaving paradise)» — K4MMERER (Jamendo, https://www.jamendo.com/track/384173), CC BY 3.0, https://creativecommons.org/licenses/by/3.0/"
+  }
+ ],
+ "rejected": [
+  {
+   "title": "Documentary Background",
+   "creator": "Soundrider/Dope",
+   "why": "99.4 BPM, подходил, но страница jamendo.com/track/1670561 удалена (404) — лицензию не сверить"
+  },
+  {
+   "title": "Ambivert",
+   "creator": "e s c p",
+   "why": "103.4 BPM, страница jamendo.com/track/1888593 удалена (404)"
+  },
+  {
+   "title": "The darkest hour",
+   "creator": "zero-project",
+   "why": "112.3 BPM — выше коридора 95–110"
+  },
+  {
+   "title": "In Your Memory",
+   "creator": "oncoming way",
+   "why": "112 BPM и перепады громкости ~30 дБ (подъёмы)"
+  },
+  {
+   "note": "ND (без переработок) и NC исключены: монтаж под голос — переработка, ролик корпоративный"
+  }
+ ]
+}

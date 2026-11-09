@@ -30,7 +30,8 @@
     "audio:selftest": "node audio/analyze/run.mjs --self-test",
     "yur:prepare": "node --env-file=.env videos/yurkontur/prepare-assets.mjs",
     "test:yur-jumps": "node --experimental-strip-types --no-warnings src/videos/yurkontur/jumps.test.ts",
-    "yur:voice": "node videos/yurkontur/voice-approved.mjs"
+    "yur:voice": "node videos/yurkontur/voice-approved.mjs",
+    "yur:music-preview": "node videos/yurkontur/music-preview.mjs"
   },
   "dependencies": {
     "@paper-design/shaders": "0.0.81",
